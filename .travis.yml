@@ -5,6 +5,7 @@ cache: packages
 
 before_install:
 - sudo apt-get -y install libharfbuzz-dev libfribidi-dev
+- sudo $(which R) CMD javareconf
 
 r:
   - oldrel
