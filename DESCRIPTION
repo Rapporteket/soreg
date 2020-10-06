@@ -26,7 +26,7 @@ Imports:
     shinyalert
 Remotes:
     Rapporteket/rapbase@*release,
-    Rapporteket/raplog
+    Rapporteket/raplog@*release
 Suggests: 
     covr,
     testthat (>= 2.1.0)
