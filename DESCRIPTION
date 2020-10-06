@@ -21,8 +21,12 @@ Imports:
     kableExtra,
     magrittr,
     rapbase,
+    raplog,
     shiny,
     shinyalert
+Remotes:
+    Rapporteket/rapbase@*release,
+    Rapporteket/raplog
 Suggests: 
     covr,
     testthat (>= 2.1.0)
