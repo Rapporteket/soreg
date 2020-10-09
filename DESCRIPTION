@@ -2,7 +2,7 @@ Package: soreg
 Title: soreg at Rapporteket
 Version: 0.1.0.9000
 Authors@R: c(
-    person(given = "First",
+    person(given = "Hannu",
            family = "Last",
            role = c("aut", "cre"),
            email = "first.last@example.com",
