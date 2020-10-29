@@ -11,7 +11,7 @@ services:
   dev:
     depends_on:
       - db
-    image: rapporteket/soreg-base-r
+    image: rapporteket/rap-dev-data:nodata
     volumes:
       - ~/.ssh:/tmp/.ssh
       - ~/.gitconfig:/home/rstudio/.gitconfig
