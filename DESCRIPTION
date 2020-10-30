@@ -31,6 +31,6 @@ Suggests:
     covr,
     lintr,
     testthat (>= 2.1.0)
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.1
 URL: http://github.com/Rapporteket/soreg
 BugReports: http://github.com/Rapporteket/soreg/issues
