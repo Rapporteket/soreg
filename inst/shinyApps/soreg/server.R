@@ -5,6 +5,9 @@ library(soreg)
 
 server <- function(input, output, session) {
 
+  # Faste verdier for applikasjonen
+  registry_name <- "soreg"
+
   # Last inn data
   regData <- soreg::getFakeRegData()
 
@@ -151,6 +154,24 @@ server <- function(input, output, session) {
     rv$subscriptionTab <- rapbase::makeUserSubscriptionTab(session)
   })
 
+  # Metadata
+  meta <- reactive({
+    soreg::describe_db(registry_name)
+  })
+
+  output$meta_control <- renderUI({
+    tabs <- names(meta())
+    selectInput("meta_tab", "Velg tabell:", tabs)
+  })
+
+  output$meta_table <- DT::renderDataTable(
+    meta()[[input$meta_tab]], rownames = FALSE,
+    options = list(lengthMenu=c(25, 50, 100, 200, 400))
+  )
+
+  output$meta_data <- renderUI({
+    DT::dataTableOutput("meta_table")
+  })
 
 
 }

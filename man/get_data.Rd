@@ -3,12 +3,18 @@
 \name{get_data}
 \alias{get_data}
 \alias{get_allevarnum}
+\alias{describe_db}
 \title{Get SoReg data}
 \usage{
 get_allevarnum(registry_name)
+
+describe_db(registry_name, tabs = c())
 }
 \arguments{
 \item{registry_name}{Character string providing the registry name}
+
+\item{tabs}{Character vector where each element represents a database
+table}
 }
 \value{
 A data frame of registry data
