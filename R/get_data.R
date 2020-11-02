@@ -26,6 +26,20 @@ FROM
 
 #' @rdname get_data
 #' @export
+get_arsrp <- function(registry_name) {
+
+  query <- "
+SELECT
+  *
+FROM
+  DatadumpArsrapport;"
+
+  rapbase::loadRegData(registry_name, query)
+}
+
+
+#' @rdname get_data
+#' @export
 describe_db <- function(registry_name, tabs = c()) {
 
   query_tab <- "SHOW TABLES;"

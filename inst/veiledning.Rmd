@@ -9,3 +9,4 @@ output:
 
 # SoReg på Rapporteket
 Foreløpig er dette bare et skall basert på [rapRegTemplate](https://github.com/Rapporteket/rapRegTemplate). Videre utvikling foretas av statistikere i Helse Bergen gjerne i et samarbeid med SKDE.
+testing 1,2,3
