@@ -22,7 +22,20 @@ ui <- tagList(
         tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico"))
       )
     ),
-    tabPanel("Figur og tabell"
+    tabPanel("KI1",
+             sidebarLayout(
+               sidebarPanel(width=2,
+                            selectInput(inputId = "sh",
+                                        label = "sjukehus: ",
+                                        c("Helse Bergen","Helse Stavanger"))
+                                        ),
+                           mainPanel(          tabsetPanel(
+                             tabPanel("Figur", plotOutput("distPlot")),
+                             tabPanel("Tabell", tableOutput("distTable"))
+                           )
+                           ))
+             ),
+    tabPanel("KI og tabell"
       ,
       sidebarLayout(
         sidebarPanel(width = 3,
