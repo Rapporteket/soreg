@@ -3,10 +3,13 @@
 \name{get_data}
 \alias{get_data}
 \alias{get_allevarnum}
+\alias{get_arsrp}
 \alias{describe_db}
 \title{Get SoReg data}
 \usage{
 get_allevarnum(registry_name)
+
+get_arsrp(registry_name)
 
 describe_db(registry_name, tabs = c())
 }

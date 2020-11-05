@@ -35,13 +35,12 @@ ui <- tagList(
                            )
                            ))
              ),
-    tabPanel("KI og tabell"
-      ,
+    tabPanel("KI og tabell",
       sidebarLayout(
         sidebarPanel(width = 3,
-          selectInput(inputId = "var",
+          selectInput(inputId = "varavn",
                       label = "Variabel:",
-                      c("mpg", "disp", "hp", "drat", "wt", "qsec")),
+                      c("b_ant_vekt", "b_ant_hoyde", "b_ant_kmi")),
           sliderInput(inputId = "bins",
                       label = "Antall grupper:",
                       min = 1,

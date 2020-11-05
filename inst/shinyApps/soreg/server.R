@@ -9,7 +9,7 @@ server <- function(input, output, session) {
   registry_name <- "soreg"
 
   # Last inn data
-  regData <- soreg::getFakeRegData()
+  regData <- soreg::get_allevarnum("soreg")
 
   # Gjenbrukbar funksjon for å bearbeide Rmd til html
   htmlRenderRmd <- function(srcFile, params = list()) {
@@ -48,12 +48,12 @@ server <- function(input, output, session) {
   # Figur og tabell
   ## Figur
   output$distPlot <- renderPlot({
-   soreg::makeHist(df = regData, var = input$var, bins = input$bins)
+   soreg::makeHist(df = regData, var = input$varavn, bins = input$bins)
   })
 
   ## Tabell
   output$distTable <- renderTable({
-   soreg::makeHist(df = regData, var = input$var, bins = input$bins, makeTable = TRUE)
+   soreg::makeHist(df = regData, var = input$varavn, bins = input$bins, makeTable = TRUE)
   })
 
 
