@@ -30,8 +30,8 @@ ui <- tagList(
                                         c("Helse Bergen","Helse Stavanger"))
                                         ),
                            mainPanel(          tabsetPanel(
-                             tabPanel("Figur", plotOutput("distPlot")),
-                             tabPanel("Tabell", tableOutput("distTable"))
+                             tabPanel("Figur", plotOutput("distPlot2")),
+                             tabPanel("Tabell", tableOutput("distTable2"))
                            )
                            ))
              ),
