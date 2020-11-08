@@ -18,8 +18,7 @@ server <- function(input, output, session) {
   #                    op_primar=(TidlFedmeOp==0))
   d_full <- regData
   # Legg til info om operasjonsår
-  d_full %<>% mutate(op_aar = year(Operasjonsdato),
-                     op_primar = (TidlFedmeOp==0))
+  d_full %<>% mutate(op_aar = year(Operasjonsdato), op_primar = (TidlFedmeOp==0))
   # Rekn ut BMI for alle tidspunkta
   # Merk: Ein registrerer kroppshøgd på alle tidspunkta *utanom*
   #       for operasjonstidspunktet! Me har altså kroppsvekt ved
@@ -36,7 +35,6 @@ server <- function(input, output, session) {
                              bmi_6v = `6U_Vekt`/(`6U_Hoyde`/100)^2,
                              bmi_1a = `1Aar_Vekt`/(`1Aar_Hoyde`/100)^2,
                              bmi_2a = `ToAar_Vekt`/(`ToAar_Hoyde`/100)^2)
-
   # Data for alle år opptil (og inkludert) rapporteringsår,
   # men ikkje for seinare år
   #
@@ -149,8 +147,8 @@ server <- function(input, output, session) {
 
   ##---------------
 
-  min_dato <-min(dt$Operasjonsdato)
-  max_dato <-max(dt$Operasjonsdato)
+  min_dato <-min(d_full$Operasjonsdato)
+  max_dato <-max(d_full$Operasjonsdato)
   fyrstAar<-year(min_dato)
   sistAar<-year(max_dato)
 
@@ -189,16 +187,15 @@ server <- function(input, output, session) {
     htmlRenderRmd("veiledning.Rmd")
   })
 
-
   # Figur og tabell
   ## Figur
   output$PlotKI1 <- renderPlot({
-   soreg::makeHist(df = regData, var = input$varavn, bins = input$bins)
+   soreg::makeHist(df = d_full, var = input$vrb, bins = input$bins)
   })
 
   ## Tabell
-  output$TableKI <- renderTable({
-   soreg::makeHist(df = regData, var = input$varavn, bins = input$bins, makeTable = TRUE)
+  output$TableKI1 <- renderTable({
+   soreg::makeHist(df = d_full, var = input$vrb, bins = input$bins, makeTable = TRUE)
   })
 
  lgg <- reactive({kortligg(input$sh, input$aar)})
