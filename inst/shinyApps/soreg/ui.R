@@ -25,11 +25,11 @@ ui <- tagList(
     ),
     tabPanel("KI1: Liggedøgn",
              sidebarLayout(
-               sidebarPanel(width=2,
+               sidebarPanel(width=3,
                             pickerInput(
                               inputId = "sh",
                               label = "velg sjukehus",
-                              choices = c("1","2") ,#unique(dt$OperererendeSykehus),
+                              choices = c("1","2") , #unique(dt$OperererendeSykehus),
                               multiple = TRUE,
                               options = pickerOptions(
                                 actionsBox = TRUE,

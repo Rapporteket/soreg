@@ -192,12 +192,12 @@ server <- function(input, output, session) {
 
   # Figur og tabell
   ## Figur
-  output$distPlot <- renderPlot({
+  output$PlotKI1 <- renderPlot({
    soreg::makeHist(df = regData, var = input$varavn, bins = input$bins)
   })
 
   ## Tabell
-  output$distTable <- renderTable({
+  output$TableKI <- renderTable({
    soreg::makeHist(df = regData, var = input$varavn, bins = input$bins, makeTable = TRUE)
   })
 

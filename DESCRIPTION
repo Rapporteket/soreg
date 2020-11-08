@@ -3,9 +3,9 @@ Title: soreg at Rapporteket
 Version: 0.1.0.9000
 Authors@R: c(
     person(given = "Hannu",
-           family = "add this one too",
+           family = "Lyyjynen",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
+           email = "hapu66@gmail.com",
            comment = c(ORCID = "YOUR-ORCID-ID")),
     person(given = "Are",
            family = "Edvardsen",
