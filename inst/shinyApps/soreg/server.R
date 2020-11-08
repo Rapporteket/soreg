@@ -191,12 +191,12 @@ server <- function(input, output, session) {
 
   ## Figur
   output$PlotKI1 <- renderPlot({
-   soreg::makeHist(df = d_full, var = input$vrb, bins = input$bins)
+   soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
   })
 
   ## Tabell
   output$TableKI1 <- renderTable({
-   soreg::makeHist(df = d_full, var = input$vrb, bins = input$bins, makeTable = TRUE)
+   soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn, makeTable = TRUE)
   })
 
  lgg <- reactive({kortligg(input$sh, input$aar)})
