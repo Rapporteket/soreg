@@ -188,6 +188,7 @@ server <- function(input, output, session) {
   })
 
   # Figur og tabell
+
   ## Figur
   output$PlotKI1 <- renderPlot({
    soreg::makeHist(df = d_full, var = input$vrb, bins = input$bins)

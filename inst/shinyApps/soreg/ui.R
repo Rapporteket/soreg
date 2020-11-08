@@ -39,7 +39,7 @@ ui <- tagList(
                                 header = "This is a list of hospitals"
                               )),
                             checkboxGroupInput(inputId = "lggar", label ="år", choices=c(2015,2016,2017,2018,2019)),  # multiple?
-                           selectInput(inputId= "vrb", label = "Variabel:", c("b_ant_vekt", "b_ant_hoyde", "b_ant_kmi")),
+                           selectInput(inputId= "vrb", label = "Variabel:", c("b_ant_vekt", "b_ant_hoyde", "b_ant_kmi","bmi_baseline")),
                             sliderInput("bn",  label = "Antall grupper:",
                                         min = 1,
                                         max = 10,
