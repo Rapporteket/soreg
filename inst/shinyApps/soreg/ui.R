@@ -29,14 +29,14 @@ ui <- tagList(
                             pickerInput(
                               inputId = "sh",
                               label = "velg sjukehus",
-                              choices = unique(dt$OperererendeSykehus),
+                              choices = c("1","2") ,#unique(dt$OperererendeSykehus),
                               multiple = TRUE,
                               options = pickerOptions(
                                 actionsBox = TRUE,
                                 title = "Please select a hospital",
                                 header = "This is a list of hospitals"
                               )),
-                            checkboxGroupInput(inputId = "aar", label ="år", choices=fyrstAar:sistAar)  # multiple?
+                            checkboxGroupInput(inputId = "lggar", label ="år", choices=c(2016,2017,2018))  # multiple?
 
                             ),
                            mainPanel(          tabsetPanel(
@@ -45,20 +45,8 @@ ui <- tagList(
                            )
                            ))
              ),
-    ##---------------------
-    pickerInput(
-      inputId = "sh",
-      label = "velg sjukehus",
-      choices = unique(dt$OperererendeSykehus),
-      multiple = TRUE,
-      options = pickerOptions(
-        actionsBox = TRUE,
-        title = "Please select a hospital",
-        header = "This is a list of hospitals"
-      )
-    ),
     # sliderInput("ixs", label ="år", min=fyrstAar, max=sistAar, value=c(2017,2018), step=1)
-    checkboxGroupInput(inputId = "aar", label ="år", choices=fyrstAar:sistAar) , # multiple?
+    checkboxGroupInput(inputId = "aar", label ="år", choices=c(2017,2018)) , # multiple?
 
 
     # radioButtons("år",label ="years", fyrstAar:sistAar)  # multiple?
@@ -67,37 +55,9 @@ ui <- tagList(
     #            choices = c(10, 20, 35, 50), selected = 20)
     dateRangeInput('dateRange',
                    label = 'Datointerval: yyyy-mm-dd',
-                   start = min_dato, end = max_dato
+                   start = "2016-01-01", end = "2018-12-31"
     ),
-
-    ##--------------------
-    tabPanel("KI2",
-             sidebarLayout(
-               sidebarPanel(width=2,
-                            selectInput(inputId = "sh",
-                                        label = "sjukehus: ",
-                                        c("Helse Bergen","Helse Stavanger"))
-               ),
-               mainPanel(          tabsetPanel(
-                 tabPanel("Figur", plotOutput("PlotKI2")),
-                 tabPanel("Tabell", tableOutput("TableKI2"))
-               )
-               ))
-    ),
-    tabPanel("KI3",
-             sidebarLayout(
-               sidebarPanel(width=2,
-                            selectInput(inputId = "sh",
-                                        label = "sjukehus: ",
-                                        c("Helse Bergen","Helse Stavanger"))
-               ),
-               mainPanel(          tabsetPanel(
-                 tabPanel("Figur", plotOutput("distPlot2")),
-                 tabPanel("Tabell", tableOutput("distTable2"))
-               )
-               ))
-    ),
-    tabPanel("KI og tabell",
+   tabPanel("KI og tabell",
       sidebarLayout(
         sidebarPanel(width = 3,
           selectInput(inputId = "varavn",
