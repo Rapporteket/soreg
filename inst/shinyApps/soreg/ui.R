@@ -38,8 +38,8 @@ ui <- tagList(
                                 title = "Please select a hospital",
                                 header = "This is a list of hospitals"
                               )),
-                            checkboxGroupInput(inputId = "lggar", label ="år", choices=c(2015,2016,2017,2018,2019)),  # multiple?
-                           selectInput(inputId= "vrb", label = "Variabel:", c("b_ant_vekt", "b_ant_hoyde", "b_ant_kmi","bmi_baseline")),
+                            checkboxGroupInput(inputId = "lggar", label ="år", choices=c(2017,2018)),  # multiple?
+                           selectInput(inputId= "vrb", label = "Variabel:", c("bmi_baseline")),
                             sliderInput("bn",  label = "Antall grupper:",
                                         min = 1,
                                         max = 10,
@@ -47,7 +47,8 @@ ui <- tagList(
                             ),
                            mainPanel(          tabsetPanel(
                              tabPanel("Plot en variabel",      plotOutput("PlotKI1")),
-                             tabPanel("Data table", tableOutput("TableKI1"))
+                             tabPanel("Data table", tableOutput("TableKI1")),
+                             tabPanel("own table", dataTableOutput('ligge'))
                            )
                            ))
              ),
@@ -57,10 +58,10 @@ ui <- tagList(
     # selectInput("sykeh", label="sykehus", unique(dt$OperererendeSykehus),multiple=TRUE)
     # selectInput("n_breaks", label = "Number of bins:",
     #            choices = c(10, 20, 35, 50), selected = 20)
-    dateRangeInput('dateRange',
-                   label = 'Datointerval: yyyy-mm-dd',
-                   start = min_dato, end = max_dato
-    ),
+     dateRangeInput('dateRange',
+                    label = 'Datointerval: yyyy-mm-dd',
+                    start = min_dato, end = max_dato
+     ),
    tabPanel("KI og tabell",
       sidebarLayout(
         sidebarPanel(width = 3,

@@ -199,7 +199,7 @@ server <- function(input, output, session) {
    soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn, makeTable = TRUE)
   })
 
- lgg <- reactive({kortligg(input$sh, input$aar)})
+ lgg <- reactive({kortligg(input$sh, input$lggar)})
  output$ligge <- renderDataTable({ lgg() })
  ## DT::dataTableOutput('ligge')
 
