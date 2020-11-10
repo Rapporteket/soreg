@@ -461,7 +461,7 @@ ui <- tagList(
   ) # navbarPage
 ) # tagList
 
-###-------------
+###-------------  Årsrapport
 
 % Årsrapport for Norsk kvalitetsregister for fedmekirurgi (SOReg-N) 
 
@@ -1347,6 +1347,16 @@ ggplot(filter(d_prim_6v, !is.na(LiggeDogn)), aes(x=liggedogn_trunk, fill=liggedo
   xlab("Liggedøgn") + ylab("Talet på\npasienter") + 
   fjern_x
 @
+
+# rp5.Rmd
+### Liggedøgn
+```{r}
+lgg <- reactive({kortligg(input$sh, input$aar)})
+
+output$ligge <- renderDataTable({ lgg() }) 
+ 
+DT::dataTableOutput('ligge')
+```
 
 \subsection{Del pasientar som har blitt reinnlagde på sjukehus innan 30 dagar etter operasjonen}
 
