@@ -1,0 +1,4149 @@
+
+
+###  server
+
+library(shiny)
+library(shinyalert)
+library(shinyWidgets)
+library(magrittr)
+library(soreg)
+library(lubridate)
+library(tidyverse)
+
+server <- function(input, output, session) {
+
+  # Faste verdier for applikasjonen
+  registry_name <- "soreg"
+
+  # Last inn data
+  # regData <- soreg::get_allevarnum("soreg")
+  regData <- soreg::get_arsrp("soreg")
+  # regData %<>% mutate(op_aar = year(Operasjonsdato),
+  #                    op_primar=(TidlFedmeOp==0))
+  d_full <- regData
+  # Legg til info om operasjonsÃ¥r
+  d_full %<>% mutate(op_aar = year(Operasjonsdato), op_primar = (TidlFedmeOp==0))
+  # Rekn ut BMI for alle tidspunkta
+  # Merk: Ein registrerer kroppshÃ¸gd pÃ¥ alle tidspunkta *utanom*
+  #       for operasjonstidspunktet! Me har altsÃ¥ kroppsvekt ved
+  #       baseline, 6 veker etter operasjon, 1 Ã¥r etter operasjon,
+  #       2 Ã¥r etter operasjon osv., men ikkje *ved* operasjon.
+  #       Der har me berre vekt (men heller ikkje for alle, for
+  #       operasjonsvekt er ikkje obligatorisk!).
+  #
+  #       Derfor mÃ¥ me ta ein spansk ein og bruka
+  #       kroppshÃ¸gd ved *baseline* for utrekning
+  #       av BMI pÃ¥ operasjonstidspunktet. :(
+  d_full = d_full %>% mutate(bmi_baseline = BR_Vekt/(BR_Hoyde/100)^2,
+                             bmi_op = OperasjonVekt/(BR_Hoyde/100)^2,
+                             bmi_6v = `6U_Vekt`/(`6U_Hoyde`/100)^2,
+                             bmi_1a = `1Aar_Vekt`/(`1Aar_Hoyde`/100)^2,
+                             bmi_2a = `ToAar_Vekt`/(`ToAar_Hoyde`/100)^2)
+  # Data for alle Ã¥r opptil (og inkludert) rapporteringsÃ¥r,
+  # men ikkje for seinare Ã¥r
+  #
+  # (Brukar '< dato + 1' i staden for '<= dato' for Ã¥ handtera
+  # det rett dersom ein i framtida endrar operasjonsdato
+  # til Ã¥ vera operasjonstidspunkt i staden for operasjondato
+  # (ein dato tolka som tidspunkt er klokka 00:00 den aktuelle
+  # datoen, ikkje 24:00, og inkluderer derfor ikkje tidsperioden
+  # frÃ¥ 00:00 til 24:00, sÃ¥ me ville mista det siste dÃ¸gnet).)
+  rapporteringsaar = 2019
+  dato_opptilrapaar = as_date(paste0(rapporteringsaar, "-12-31")) # For ev. seinare bruk i teksten
+  d_opptilrapaar = d_full %>%
+    filter(Operasjonsdato < (dato_opptilrapaar + 1))
+
+  # Data for alle Ã¥r opptil (og inkludert) to Ã¥r fÃ¸r rapporteringsÃ¥ret,
+  # dvs. alle data me i teorien burde ha toÃ¥rs oppfÃ¸lgingsdata pÃ¥
+  dato_toaarsdata = as_date(paste0(rapporteringsaar - 2, "-12-31")) # For ev. seinare bruk i teksten
+  d_toaarsdata = d_full %>%
+    filter(Operasjonsdato < (dato_toaarsdata + 1))
+
+  # Og tilsvarande for eittÃ¥rsdata
+  dato_eittaarsdata = as_date(paste0(rapporteringsaar - 1, "-12-31")) # For ev. seinare bruk i teksten
+  d_eittaarsdata = d_full %>%
+    filter(Operasjonsdato < (dato_eittaarsdata + 1))
+
+  # Dei som vart operert det aktuelle Ã¥ret
+  d = d_full %>%  filter(op_aar == rapporteringsaar)
+
+  # Talet pÃ¥ operasjonsmÃ¥tar
+  n_op = nrow(d_full)
+  n_pas = n_distinct(d$PasientID)
+
+  # d_prim = d %>% filter(op_primar)
+  d_prim = d_full %>% filter(op_primar)
+
+
+  # I nokre analysar ser me berre pÃ¥ dei som har 6-vekesoppfÃ¸lging
+  # registrert. Hentar ut eiga datasett for desse
+  d_prim_6v = d_prim %>% filter(`6U_KontrollType` %in% 1:3)
+
+  d_toaarsdata_prim = d_toaarsdata %>% filter(op_primar)
+  d_eittaarsdata_prim = d_eittaarsdata %>% filter(op_primar)
+  maksdogn_vis = 14
+
+  # Talet pÃ¥ primÃ¦roperasjonar og reoperasjonar
+  n_prim = nrow(d_prim)
+  n_reop = n_op - n_prim
+  # Kva var den vanlegaste talet dÃ¸gn Ã¥ ligga etter operasjon
+  liggedogn_typetal = d_prim_6v %>%
+    count(LiggeDogn) %>%
+    arrange(desc(n)) %$%
+    LiggeDogn %>%
+    first
+
+  # funksjon for Ã¥ regne ut kvalitetsindikatoren
+  # definert for liggetid (andel pasienter med 3 dager eller fÃ¦rre)
+  ki_liggetid = function(df){
+
+    teljar = sum(df$LiggeDogn <= 3)
+    nemnar = nrow(df)
+
+    ind = teljar/nemnar
+
+    res = tibble(# forklaring="Del pasienter med 3 eller fÃ¦rre liggedÃ¸gn",
+      # ltx_tekst = "Tre/fÃ¦rre liggedÃ¸gn",
+      teljar, nemnar, ind = ind) # trenger ikke Ã¥ definere at
+    # variabler som er med i en group_by
+    # skal vÃ¦re med, de kommer uansett
+    res
+  }
+
+  # Kor mange lÃ¥g mindre enn fire dÃ¸gn
+  p_kortligg = ki_liggetid(d_prim_6v)$ind
+
+  # Kor mange lÃ¥g mindre enn fire dÃ¸gn per sjukehus
+  d_kortligg_sjuk = d_prim_6v %>%
+    group_by(OperererendeSykehus, op_aar) %>%
+    do(ki_liggetid(.)) %>%
+    arrange(desc(ind))
+
+  kortligg_sh <- function(sh) {d_kortligg_sjuk %>% filter(OperererendeSykehus %in% sh)}
+  kortligg_yr <- function(yr) {d_kortligg_sjuk %>% filter(op_aar %in% yr)}
+  kortligg    <- function(sh,yr){d_kortligg_sjuk %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+
+  # aarskontrollar
+  ####################################################
+  # +-90                                             #  slingringsmonn
+  nitti_m  <-  function(yr=1, dag= today(), l=90) { dag-ddays(l)+years(yr) }
+  nitti_p  <-  function(yr=1, dag= today(), l=90) { dag+ddays(l)+years(yr) }
+  nitti    <-  function(yr=1, dag= today(), l=90) { c(dag-ddays(l)+years(yr), dag+ddays(l)+years(yr)) }
+
+  dmx <- d_full   # alle operasjoner for kontrollene
+  dm  <- dmx   %>%  mutate( et_nor_m = nitti_m(dag= Operasjonsdato), et_nor_p = nitti_p(dag= Operasjonsdato),
+                            to_nor_m = nitti_m(yr=2, dag= Operasjonsdato), to_nor_p = nitti_p(yr=2, dag= Operasjonsdato),
+                            pTWL = 100*(BR_Vekt - `ToAar_Vekt`)/BR_Vekt )
+
+  dn <-  dm %>% mutate(et_nt= EttAar_Oppfolgingsdato %within% interval( et_nor_m, et_nor_p ),
+                       to_nt= ToAar_Oppfolgingsdato %within% interval( to_nor_m, to_nor_p ),
+                       et_b4= EttAar_Oppfolgingsdato %within% interval( Operasjonsdato+1, et_nor_m-1 ),
+                       et_lt= EttAar_Oppfolgingsdato > et_nor_p,
+                       to_b4= ToAar_Oppfolgingsdato %within% interval( Operasjonsdato+1, to_nor_m-1 ),
+                       to_lt= ToAar_Oppfolgingsdato > to_nor_p)
+  #                     fs1_gj_kt = `1Aar_OppfolgingsType` == 4 ,
+  #                     fs1_u_kt  = `1Aar_OppfolgingsType` == 5 ,
+  #                     fs2_gj_kt = `2Aar_OppfolgingsType` == 4 ,
+  #                     fs2_u_kt  =  `2Aar_OppfolgingsType` == 5  )
+
+  dt    <-  dn %>% select(  c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar", "Operasjonsmetode", "Opmetode_GBP",
+                              "et_b4", "et_nt", "et_lt", "to_b4",  "to_nt", "to_lt", "pTWL"))
+
+  ##---------------
+
+  min_dato <-min(d_full$Operasjonsdato)
+  max_dato <-max(d_full$Operasjonsdato)
+  fyrstAar<-year(min_dato)
+  sistAar<-year(max_dato)
+
+    #------------------------------------------------------------------------------
+
+  # Gjenbrukbar funksjon for Ã¥ bearbeide Rmd til html
+  htmlRenderRmd <- function(srcFile, params = list()) {
+    # set param needed for report meta processing
+    # params <- list(tableFormat="html")
+    system.file(srcFile, package="soreg") %>%
+      knitr::knit() %>%
+      markdown::markdownToHTML(.,
+                               options = c('fragment_only',
+                                           'base64_images',
+                                           'highlight_code')) %>%
+      shiny::HTML()
+  }
+
+  # widget
+  output$appUserName <- renderText(getUserFullName(session))
+  output$appOrgName <- renderText(getUserReshId(session))
+
+  # Brukerinformasjon
+  userInfo <- rapbase::howWeDealWithPersonalData(session)
+  observeEvent(input$userInfo, {
+    shinyalert("Dette vet Rapporteket om deg:", userInfo,
+               type = "", imageUrl = "rap/logo.svg",
+               closeOnEsc = TRUE, closeOnClickOutside = TRUE,
+               html = TRUE,
+               confirmButtonText = rapbase::noOptOutOk())
+  })
+
+
+  # Veiledning
+  output$veiledning <- renderUI({
+    htmlRenderRmd("veiledning.Rmd")
+  })
+
+  # Figur og tabell
+
+  ## Figur
+  output$PlotKI1 <- renderPlot({
+   soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
+  })
+
+  ## Tabell
+  output$TableKI1 <- renderTable({
+   soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn, makeTable = TRUE)
+  })
+
+ lgg <- reactive({kortligg(input$sh, input$aar)})
+ output$ligge <- renderDataTable({ lgg() })
+ ## DT::dataTableOutput('ligge')
+
+  # Samlerapport
+  ## vis
+  output$samlerapport <- renderUI({
+    htmlRenderRmd(srcFile = "samlerapport.Rmd",
+                  params = list(var = input$varS, bins = input$binsS))
+  })
+
+  ## last ned
+  output$downloadSamlerapport <- downloadHandler(
+    filename = function() {
+      "samlerapport.html"
+    },
+    content = function(file) {
+      srcFile <- normalizePath(system.file("samlerapport.Rmd",
+                                           package = "soreg"))
+      tmpFile <- "tmpSamlerapport.Rmd"
+      owd <- setwd(tempdir())
+      on.exit(setwd(owd))
+      file.copy(srcFile, tmpFile, overwrite = TRUE)
+      out <- rmarkdown::render(tmpFile,
+                               output_format =  rmarkdown::html_document(),
+                               params = list(var = input$varS,
+                                             bins = input$binsS),
+                               output_dir = tempdir())
+      file.rename(out, file)
+    }
+  )
+
+
+  # Abonnement
+  ## rekative verdier for Ã¥ holde rede pÃ¥ endringer som skjer mens
+  ## applikasjonen kjÃ¸rer
+  rv <- reactiveValues(
+    subscriptionTab = rapbase::makeUserSubscriptionTab(session))
+
+  ## lag tabell over gjeldende status for abonnement
+  output$activeSubscriptions <- DT::renderDataTable(
+    rv$subscriptionTab, server = FALSE, escape = FALSE, selection = 'none',
+    options = list(dom = 'tp', ordning = FALSE), rownames = FALSE
+  )
+
+  ## lag side som viser status for abonnement, ogsÃ¥ nÃ¥r det ikke finnes noen
+  output$subscriptionContent <- renderUI({
+    userFullName <- rapbase::getUserFullName(session)
+    userEmail <- rapbase::getUserEmail(session)
+    if (length(rv$subscriptionTab) == 0) {
+      p(paste("Ingen aktive abonnement for", userFullName))
+    } else {
+      tagList(
+        p(paste0("Aktive abonnement som sendes per epost til ", userFullName,
+                 "(",userEmail, "):")),
+        DT::dataTableOutput("activeSubscriptions")
+      )
+    }
+  })
+
+  ## nye abonnement
+  observeEvent (input$subscribe, {
+    package <- "soreg"
+    owner <- rapbase::getUserName(session)
+    interval <- strsplit(input$subscriptionFreq, "-")[[1]][2]
+    intervalName <- strsplit(input$subscriptionFreq, "-")[[1]][1]
+    runDayOfYear <- rapbase::makeRunDayOfYearSequence(
+      interval = interval)
+
+    email <- rapbase::getUserEmail(session)
+    organization <- rapbase::getUserReshId(session)
+
+    if (input$subscriptionRep == "Samlerapport1") {
+      synopsis <- "Automatisk samlerapport1"
+      fun <- "samlerapport1Fun"
+      paramNames <- c("p1", "p2")
+      paramValues <- c("Alder", 1)
+
+    }
+    if (input$subscriptionRep == "Samlerapport2") {
+      synopsis <- "Automatisk samlerapport2"
+      fun <- "samlerapport2Fun"
+      paramNames <- c("p1", "p2")
+      paramValues <- c("BMI", 2)
+    }
+    rapbase::createAutoReport(synopsis = synopsis, package = package,
+                              fun = fun, paramNames = paramNames,
+                              paramValues = paramValues, owner = owner,
+                              email = email, organization = organization,
+                              runDayOfYear = runDayOfYear,
+                              interval = interval, intervalName = intervalName)
+    rv$subscriptionTab <- rapbase::makeUserSubscriptionTab(session)
+  })
+
+  ## slett eksisterende abonnement
+  observeEvent(input$del_button, {
+    selectedRepId <- strsplit(input$del_button, "_")[[1]][2]
+    rapbase::deleteAutoReport(selectedRepId)
+    rv$subscriptionTab <- rapbase::makeUserSubscriptionTab(session)
+  })
+
+  # Metadata
+  meta <- reactive({
+    soreg::describe_db(registry_name)
+  })
+
+  output$meta_control <- renderUI({
+    tabs <- names(meta())
+    selectInput("meta_tab", "Velg tabell:", tabs)
+  })
+
+  output$meta_table <- DT::renderDataTable(
+    meta()[[input$meta_tab]], rownames = FALSE,
+    options = list(lengthMenu=c(25, 50, 100, 200, 400))
+  )
+
+  output$meta_data <- renderUI({
+    DT::dataTableOutput("meta_table")
+  })
+
+
+}
+###----------------------------------------------------------------------
+### ui.R
+
+library(shiny)
+library(shinyalert)
+library(shinyWidgets)
+library(rapbase)
+
+addResourcePath('rap', system.file('www', package='rapbase'))
+regTitle = "SoReg"
+
+ui <- tagList(
+  navbarPage(
+    title = div(a(includeHTML(system.file('www/logo.svg', package='rapbase'))),
+                regTitle),
+    windowTitle = regTitle,
+    theme = "rap/bootstrap.css",
+
+    tabPanel("Start",
+      mainPanel(width = 12,
+        htmlOutput("veiledning", inline = TRUE),
+        shinyalert::useShinyalert(),
+        appNavbarUserWidget(user = uiOutput("appUserName"),
+                            organization = uiOutput("appOrgName"),
+                            addUserInfo = TRUE),
+        tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico"))
+      )
+    ),
+    tabPanel("KI1: LiggedÃ¸gn",
+             sidebarLayout(
+               sidebarPanel(width=3,
+                            pickerInput(
+                              inputId = "sh",
+                              label = "velg sjukehus",
+                              choices =  c("Helse Bergen","Helse Stavanger",
+                                           "Testsjukhus Norge"),   # unique(d_full$OperererendeSykehus),  #
+                              selected = "Testsjukhus Norge",
+                              multiple = TRUE,
+                              options = pickerOptions(
+                                actionsBox = TRUE,
+                                title = "Please select a hospital",
+                                header = "This is a list of hospitals"
+                              )),
+                            checkboxGroupInput(inputId = "lggar", label ="Ã¥r", choices=c(2015,2016,2017,2018,2019)),  # multiple?
+                           selectInput(inputId= "vrb", label = "Variabel:", c("b_ant_vekt", "b_ant_hoyde", "b_ant_kmi","bmi_baseline")),
+                            sliderInput("bn",  label = "Antall grupper:",
+                                        min = 1,
+                                        max = 10,
+                                        value = 5)
+                            ),
+                           mainPanel(          tabsetPanel(
+                             tabPanel("Plot en variabel",      plotOutput("PlotKI1")),
+                             tabPanel("Data table", tableOutput("TableKI1"))
+                           )
+                           ))
+             ),
+    # sliderInput("ixs", label ="Ã¥r", min=fyrstAar, max=sistAar, value=c(2017,2018), step=1)
+    #   checkboxGroupInput(inputId = "aar", label ="Ã¥r", choices=c(2017,2018)) , # multiple?
+    # radioButtons("Ã¥r",label ="years", fyrstAar:sistAar)  # multiple?
+    # selectInput("sykeh", label="sykehus", unique(dt$OperererendeSykehus),multiple=TRUE)
+    # selectInput("n_breaks", label = "Number of bins:",
+    #            choices = c(10, 20, 35, 50), selected = 20)
+    dateRangeInput('dateRange',
+                   label = 'Datointerval: yyyy-mm-dd',
+                   start = min_dato, end = max_dato
+    ),
+   tabPanel("KI og tabell",
+      sidebarLayout(
+        sidebarPanel(width = 3,
+          selectInput(inputId = "varavn",
+                      label = "Variabel:",
+                      c("b_ant_vekt", "b_ant_hoyde", "b_ant_kmi")),
+          sliderInput(inputId = "bins",
+                      label = "Antall grupper:",
+                      min = 1,
+                      max = 10,
+                      value = 5)
+        ),
+        mainPanel(
+          tabsetPanel(
+            tabPanel("Figur", plotOutput("distPlot")),
+            tabPanel("Tabell", tableOutput("distTable"))
+          )
+        )
+      )
+    ),
+    tabPanel("Samlerapport"
+        ,
+        tabPanel("Fordeling av mpg",
+          sidebarLayout(
+            sidebarPanel(width = 3,
+              selectInput(inputId = "varS",
+                          label = "Variabel:",
+                          c("mpg", "disp", "hp", "drat", "wt", "qsec")),
+              sliderInput(inputId = "binsS",
+                          label = "Antall grupper:",
+                          min = 1,
+                          max = 10,
+                          value = 5),
+              downloadButton("downloadSamlerapport", "Last ned!")
+            ),
+            mainPanel(
+              uiOutput("samlerapport")
+            )
+          )
+        )
+      ),
+    tabPanel("Abonnement"
+      ,
+      sidebarLayout(
+        sidebarPanel(width = 3,
+          selectInput("subscriptionRep", "Rapport:", c("Samlerapport1", "Samlerapport2")),
+          selectInput("subscriptionFreq", "Frekvens:",
+                      list('\u00c5rlig'="Ã¥rlig-year",
+                           Kvartalsvis="kvartalsvis-quarter",
+                           'M\u00e5nedlig'="mÃ¥nedlig-month",
+                           Ukentlig="ukentlig-week",
+                           Daglig="daglig-DSTday"),
+                      selected = "mÃ¥nedlig-month"),
+          actionButton("subscribe", "Bestill!")
+        ),
+        mainPanel(
+          uiOutput("subscriptionContent")
+        )
+      )
+    ),
+
+    tabPanel("Metadata",
+             sidebarLayout(
+               sidebarPanel(uiOutput("meta_control")),
+               mainPanel(htmlOutput("meta_data"))
+             )
+    )
+  ) # navbarPage
+) # tagList
+
+###-------------
+
+% Årsrapport for Norsk kvalitetsregister for fedmekirurgi (SOReg-N) 
+
+% For å kompilera, køyr følgjande kommandoar
+% setwd("h:/kvalreg/soreg/")
+% library(knitr)
+% knit2pdf("arsrapport-soreg.Rnw", compiler="lualatex", encoding="UTF-8")
+%
+% eller
+% Sys.setenv('RSTUDIO_PDFLATEX'='lualatex')
+% etterfølgt av «Ctrl + Shift + K»
+
+% Globale innstillingar for knitr
+<<globaleval, include=FALSE>>=
+utkast = TRUE                  # Er rapporten berre eit utkast?
+opts_chunk$set(error = utkast) # Stopp på feil (viss *FALSE*, merkeleg nok)  FALSE= setwdstoppa opp på *første* feil, i staden for å prøva å kverna gjennom alt.
+opts_chunk$set(tidy=FALSE)     # Ikkje reformater kjeldekoden
+opts_chunk$set(message=FALSE)  # Ikkje vis message()-meldingar
+kjeldekode=FALSE               # kastgså kjeldekoden (viss TRUE)
+
+# Bruk Cairo til å laga PDF-filer (betre kvalitet og unngår
+# nokre dumme feil med pdf(), og bruk standard figurbreidd
+# ~lik tekstbreidda)
+tekstbreidd = 4.3   # Tommar, skal vera lik tekstbreidda definert i .cls-fila, ev. litt mindre
+breitekst = 6.69 # fixme: cirka, sjekk
+skriftstorleik = 9 # Punkt, bør vera litt mindre enn den definert i .cls-fila
+opts_chunk$set(dev = "cairo_pdf")
+opts_chunk$set(fig.width = tekstbreidd,
+               fig.height = tekstbreidd,
+               out.width = paste0(tekstbreidd, "in"),
+               dev.args = list(pointsize = skriftstorleik)) # Standard figurbreidd/-høgd
+opts_chunk$set(fig.pos = "htbp")    # Standard figurplassering
+
+# fixme: *Mellombels* test på markering av autogenerert tekst; sjå https://trello.com/c/wbCRADUu/208-marker-autogenerert-tekst-i-latex-rapportar-spesielt for den *endelege* løysinga
+if(utkast) {
+  inline_hook = function(x) {
+      paste0("\\textcolor{SkarpGronCol}{", x, "}")
+  }
+  knit_hooks$set(inline = inline_hook)
+}
+@
+
+% Globale variablar som vert endra år for år
+<<variablar, include=FALSE>>=
+# Endra desse variablane for å velja utgjevings- og rapporteringsaar
+rapporteringsaar = 2019   # Året rapporten gjeld for (typisk året før han vert utgjeven)
+@
+ 
+\documentclass[nynorsk\Sexpr{if(!utkast)",final"}]{kvalreg-rapport}
+ 
+\registernamn{\texorpdfstring{Norsk kvalitetsregister for fedmekirurgi (\soregn)}{Norsk kvalitetsregister for fedmekirurgi (SOReg-N)}}
+\rapportaar{\Sexpr{rapporteringsaar}}
+\forfattarar{Villy Våge,Hannu Lyyjynen}
+% fixme: Endra forfattarekkjefølgja etter diskusjon med registerleiar?
+\undertittel{med plan for forbetringstiltak}
+
+\usepackage{qrcode}
+\usepackage{todonotes}
+\usepackage{rotating}
+\setlength{\marginparwidth}{6.5cm}
+\reversemarginpar
+
+\begin{document}
+ 
+\hyphenation{kvalitets-register fedme-kirurgi deknings-grads-analyse pasientregister} % Må stå etter \begin{document}
+  
+ 
+ \DeclareRobustCommand{\soreg}{\kort{SOR}eg\xspace}
+\DeclareRobustCommand{\soregn}{\kort{SOR}eg\nobreakdash-\kort{N}\xspace}
+\DeclareRobustCommand{\soregs}{\kort{SOR}eg\nobreakdash-\kort{S}\xspace}
+\includegraphics{logoN.png}
+% [height=9cm]
+\lagforside
+
+\part{Årsrapport}\label{par:rap}
+
+<<innstillingar, echo=kjeldekode, results='hide', warning=FALSE, message=FALSE>>=
+# Ikkje gjer om tekst til faktorar automatisk
+options(stringsAsFactors=FALSE)
+
+# Nødvendige pakkar
+library(tidyverse) # For mykje nyttig # inkluderar no forcats & stringr
+library(lubridate) # For handtering av dato og tal
+library(magrittr)  # For bruk med røyroperatoren
+library(testthat)  # For testing av føresetnadar og slikt
+library(scales)    # Ymse skalafunksjonar (for ggplot2)
+library(Hmisc)     # For tabellar
+library(haven)     # For å hente inn SPSS-filer med valideringsdata
+library(qicharts2) # For SPC-analsyar
+
+# Henter inn Fagsenterets R-pakke med div. nyttige funksjoner for alle registre
+library(rapwhale)
+
+# Lag tabell som også viser NA-verdiar om dei finst
+tab=function(...) table(..., useNA="ifany")
+
+# Les inn felles ggplot2-tema, og uferdige funksjoner som ikke er lagt til rapwhale enda
+source("h:/kvalreg/felles/r-kode/felles_funksjoner.R", encoding="UTF-8")
+
+# Funksjonar for inndeling av datoar i periodar, for plotting i QIC-diagram
+source("h:/kvalreg/felles/r-kode/del_aar.R", encoding="UTF-8")
+
+# Les inn funksjonar for handtering av RESH-registeret
+# source("h:/kvalreg/felles/r-kode/last-ned-resh.R", encoding="UTF-8")
+@
+
+<<nyttefunksjonar, echo=kjeldekode, results='hide'>>=
+# Vising av tekst som berre er gyldig for visse årstal («rapporteringsaar»).
+# Viss «rapporteringsaar» inngår som eit av årstala «arstal_gyldig»-vektoren,
+# vert det vist ein åtvaringstekst etter teksten.
+berre_gyldig_i = function(tekst, arstal_gyldig) {
+  if(!(rapporteringsaar %in% arstal_gyldig)) {
+    tekst = paste0(tekst,
+                   " {\\color{errorcolor}(Teksten «", tekst, "»\n",
+                   "er ikkje gyldig for rapporteringsåret ",
+                   rapporteringsaar, " og må derfor oppdaterast.\n",
+                   "Er berre gyldig for: ",
+                   paste0(arstal_gyldig, collapse=", "), ")}")
+  }
+  tekst
+}
+
+# Funksjon for formatering av datoar på norsk, langt format
+formater_dato = function(dato) {
+  format(dato, "%e.~%B %Y")
+}
+
+# Formater sjukehus-/institusjonsnamn for LaTeX
+# (gjer no berre om AS, RHF, HF til tilsvarande \\kort{}-variantar)
+formater_instnamn_ltx = function(x) {
+  str_replace(x, "\\b(AS|RHF|HF)\\b", "\\\\kort{\\1}")
+}
+
+# Gjer om ein vektor til ei LaTeX-punktliste
+lag_liste = function(x) {
+paste0("\\begin{itemize}\n",
+       paste0("  \\item ", x, collapse="\n"),
+       "\n\\end{itemize}\n") 
+}
+@
+
+<<grafinnstillingar, echo=kjeldekode>>=
+# Offisielle fargar (som eg ikkje likar så godt)
+colPrim=c("#000059", "#084594", "#2171b5", "#4292c6",
+          "#6baed6", "#c6dbef")                       # Primærfarge (mørk til lys)
+colNøyt=c("#4D4D4D", "#737373", "#A6A6A6", "#DADADA") # Nøytralfarge
+colKontr="#FF7260"                                    # Kontrastfarge
+
+# Av og til treng me litt mørkare/lysare variantar av primærfargane
+# (og *førre/neste* verdi i fargeskalaen er *heilt ueigna*!).
+# Legg til desse som alternativ fargeskala
+colPrim_mork = farge_morkare(colPrim, grad=5)
+colPrim_lys = farge_morkare(colPrim, grad=-5)
+
+# Offisielle årsrapportfargar for qicharts2-diagram
+options(qic.signalcol = colKontr, qic.linecol = colPrim[3])
+
+# ggplot2-tema for figurar
+tema = theme_light(base_size=skriftstorleik)
+
+# Finare, litt varme fargar på panelstriper
+tema$strip.background$fill="#f3f1ee"
+tema$strip.background$colour="#e4e0da"
+tema$strip.text.x = element_text(colour="black")
+
+# Større avstand mellom panel (nødvendig sidan me
+# ikkje brukar farga panelbakgrunn, og ting ser
+# litt rotete ut om det er lite luft mellom panela)
+tema$panel.spacing=unit("13" ,"pt")
+
+# Men nokre plott krev liten panelavstand
+liten_panel_avstand = theme(panel.spacing = unit(6, "pt"))
+
+# Bruk same fargar på rutenetta som på panelbakgrunnen
+# Merk: panel.background vert teikna *under* akselinjer
+#       og grafelement, mens panel.border vert teikna *oppå*.
+#       Det vil me ikkje, for det kan gjera at tynne søyler
+#       vert usynlege (dekka av panel.border).
+#
+#       Derfor teiknar me *aldri* panel.border, berre panel.background.
+#       (fixme: må kanskje endrast dersom me tar i bruk fleirpanelsgrafar?)
+tema$panel.border = element_blank()
+tema$panel.background$colour=tema$strip.background$colour
+tema$panel.grid.major$colour=tema$strip.background$colour
+tema$panel.grid.minor$colour=tema$strip.background$fill
+
+# La teksten på y-aksen vera vassrett
+tema$axis.title.y$angle=0
+
+# Fjern luft til venstre for y-akseteksten og legg
+# til ekstra luft til høgre for han, fjern luft under
+# x-akseteksten og legg til ekstra luft over han,
+# fjern nesten all luft rundt figurane (eventuell
+# nødvendig luft legg me til via LaTeX).
+#
+# (Merk: Me set den ytre margen til 3 punkt
+# opp og nede i staden for 0 punkt for å sikra at at
+# kantane på alle bokstavane alltid vert med.)
+tema$axis.title.y$margin=margin(r=tema$text$size/2)
+tema$axis.title.x$margin=margin(t=tema$text$size/2)
+tema$plot.margin=margin(3, 3, 3, 3)
+
+# Bruk temaet som standardtema
+theme_set(tema)
+
+# Fjern vannrette eller loddrette rutenett
+# ved førespurnad
+fjern_x = theme(panel.grid.major.x = element_blank(),
+                panel.grid.minor.x = element_blank())
+fjern_y = theme(panel.grid.major.y = element_blank(),
+                panel.grid.minor.y = element_blank())
+
+# Fjern strekmarkeringar for viste tal/kategoriar
+# (tilsvarer «major breaks» på aksen).
+# Dette er nyttig for søylediagram med kategoriske
+# verdiar, der strekmarkeringane er unødvendige/stygge.
+fjern_x_ticks = theme(axis.ticks.x = element_blank())
+fjern_y_ticks = theme(axis.ticks.y = element_blank())
+
+# Søyler skal i starta heilt inn til aksen, men ha litt luft
+# over seg, altså asymmetriske expand-verdiar. Her er ein
+# variabel som definerer dette, og som ein kan mata til
+# expand-argumentet til skaladefinisjonar.
+expand_soyle = expansion(mult = c(0.0, .05), add = 0)
+
+# Funksjon for å rekna ut rimeleg høgd på figurar
+# som har vassrette stolpediagram
+# (fixme: ikkje gjennomtesta, og bør nok få litt finpussing)
+fighogd_stolpe = function(n) {
+  0.54 + 0.24*n
+}
+@
+ 
+
+<<les_data, echo=FALSE, results='hide'>>=
+# Mappe på kvalitetstenaren
+grunnmappe = "\\\\ihelse.net\\kvalitetsregister\\HBE\\2013-1189\\"
+datamappe = paste0(grunnmappe, "datadumpar\\")
+
+# Hent datoen til siste tilgjengelege uttrekk
+ dato_uttrekk = list.dirs(datamappe, recursive = FALSE, full.names = FALSE) %>%
+  sort %>%
+  last %>% 
+  as.Date
+
+dato_uttrekk = as.Date("2020-06-15")  # , format="%Y-%m-%d")  # H: riktig datadump!!
+# .character fjerner problemet?
+
+# Dato for siste registrering er dagen før datoen for
+# siste uttrekk, sidan dataa vert oppdaterte kvar natt
+dato_sistreg = dato_uttrekk - 1
+
+# Adressa til den siste datafila
+mappe = paste0(datamappe, dato_uttrekk)
+# filnamn = "SoReg_09.1_Datadump_arsrapport.csv"
+filnamn =   paste0("SOReg_DatadumpArsrapport_datadump_",dato_uttrekk,".csv")  #H !!
+# filnamn = "SOReg_DatadumpArsrapport_datadump_2020-04-17.csv"  #H
+adresse = paste0(mappe, "\\", filnamn)
+
+# Les inn data
+# Manuell (æsj!) spesifikasjon av kolonnetypar
+# (fordi me manglar kodebok for denne datadumpen)
+kol_typar = cols(
+  PasientID = col_integer(),
+  Fodselsdato = col_date(),
+  PasientAlder = col_number(),
+  PasientKjonn = col_character(),
+  OpererendeRESH = col_character(),
+  OperererendeSykehus = col_character(),
+  BR_BesoksDato = col_date(),
+  BR_Vekt = col_integer(),
+  BR_Hoyde = col_integer(),
+  BR_BMI = col_double(),
+  BR_Systolisk = col_integer(),
+  BR_Diastolisk = col_integer(),
+  BR_PaagaaendeBeh = col_integer(),
+  BR_SovnApne = col_integer(),
+  BR_Hypertoni = col_integer(),
+  BR_Diabetes = col_integer(),
+  BR_DiabetesSidenAar = col_integer(),
+  BR_Typediabetesbeh = col_integer(),
+  BR_Dyslipidemi = col_integer(),
+  BR_Dyspepsi = col_integer(),
+  BR_Diare = col_integer(),
+  BR_Depresjon = col_integer(),
+  BR_MuskelSkjelettsmerter = col_integer(),
+  BR_AnnenSykdom = col_integer(),
+  BR_fsglukose = col_double(),
+  BR_B_HbA1c = col_double(),
+  BR_S_LDL = col_double(),
+  ForlopsID = col_integer(),
+  OperasjonsID = col_integer(),
+  Operasjonsdato = col_date(),
+  OperasjonVekt = col_integer(),
+  TidlFedmeOp = col_integer(),
+  Operasjonsmetode = col_integer(),
+  Opmetode_GBP = col_integer(),             #  virket ikke likevel etter fjernet 00:00
+  IdenHiatusernie = col_integer(),
+  OP_PeropKompl = col_integer(),
+  OP_AnnenSamtidigOp = col_integer(),
+  OP_GETeknikk = col_integer(),
+  OP_AvstTreitzGE = col_integer(),
+  OP_CommonChannel = col_integer(),
+  OP_CommonChannelCm = col_integer(),
+  OP_GSBougiediameter = col_integer(),
+  OP_GSAvstPylorus = col_integer(),
+  OP_GSForsterket = col_integer(),
+  OP_GSPexiAvCardia = col_integer(),
+  OP_BDPBougiediam = col_integer(),
+  OP_BDPCommonChannel = col_integer(),
+  OP_BDPAlimentaryLimb = col_integer(),
+  UtskrivelsesDato = col_date(),
+  LiggeDogn = col_integer(),
+  `6U_Vekt` = col_integer(),
+  `6U_Hoyde` = col_integer(),
+  `6U_RESH` = col_character(),
+  `6U_KontrollType` = col_integer(),
+  `1Aar_BehAnnetSykehus` = col_integer(),
+  `1Aar_Substitusjon` = col_integer(),
+  `1Aar_OpSidenSist` = col_integer(),
+  `1Aar_Komplikasjoner` = col_integer(),
+  `1Aar_Vekt` = col_integer(),
+  `1Aar_Hoyde` = col_integer(),
+  `1Aar_Systolisk` = col_integer(),
+  `1Aar_Diastolisk` = col_integer(),
+  `1Aar_fP_Glukose` = col_double(),
+  `1Aar_BHbA1c` = col_double(),
+  `1Aar_Dyslipidemi` = col_double(),
+  `1Aar_RESH` = col_character(),
+  `1Aar_OppfolgingsType` = col_integer(),
+  EttAarBMI = col_double(),
+  o_sg_gkl_sut = col_integer(),
+  o_rygbp_pet_luk = col_integer(),
+  o_samt_crurapl = col_integer(),
+  o_samt_adhl = col_integer(),
+  o_samt_adhl = col_integer(),
+  `6U_Substitusjon` = col_integer(),
+  `6U_KomplAlvorGrad` = col_integer(),
+  `6U_Behandling30Dager` = col_integer(),
+  BR_HenvisningsDato = col_date(),
+  BR_OpBestDato = col_date(),
+  EttAar_Oppfolgingsdato = col_date(),
+  ToAar_Oppfolgingsdato = col_date(),
+  ToAar_Vekt = col_integer(),
+  ToAar_Hoyde = col_integer(),
+  ToAarBMI = col_double(),
+  PasUtgatt = col_integer(),
+  `1Aar_RevisionsOp` = col_integer(),
+  `2Aar_OppfolgingsType` = col_integer(),
+  `2Aar_RevisionsOp` = col_integer()
+)
+d_full = read_delim(
+  adresse,
+  delim=";",
+  na = "null",
+  locale = locale(date_format = "%Y-%m-%d", decimal_mark = ","),
+  col_types = kol_typar
+)
+
+# Feilmelding viss datafila inneheld variablar som me
+# ikkje har kolonnespesifikasjon for
+manglar_spek = setdiff(names(d_full), names(kol_typar$cols))
+if(length(manglar_spek) > 0) {
+  stop("Manglar kolonnespesifikasjon for følgjande variablar (rediger kol_typar):\n",
+       paste0(manglar_spek, sep="\n"))
+}
+
+#H  read inn Opmetode_GBP
+fldr<- "\\\\Ihelse.net\\kvalitetsregister\\hbe\\2013-1189\\datadumpar\\"
+mappe = paste0(fldr, "2020-06-15\\")
+fail <- paste0(mappe,"GBP.csv")
+fail2 <- paste0(mappe,"GBPall.csv")
+
+## GBP = read_csv2(fail)
+## GBP_prim = read_csv2(fail2)
+mini <- d_full$Opmetode_GBP               # mini gastric bypass
+# \\Ihelse.net\kvalitetsregister\hbe\2013-1189\datadumpar\2020-04-01
+
+# Legg til info om operasjonsår
+d_full %<>% mutate(op_aar = year(Operasjonsdato),
+                   op_primar = (TidlFedmeOp==0))  #  %>% filter(op_aar>2014)  # fix for fig 3.3 3.5
+
+# Rekn ut BMI for alle tidspunkta
+# Merk: Ein registrerer kroppshøgd på alle tidspunkta *utanom*
+#       for operasjonstidspunktet! Me har altså kroppsvekt ved
+#       baseline, 6 veker etter operasjon, 1 år etter operasjon,
+#       2 år etter operasjon osv., men ikkje *ved* operasjon.
+#       Der har me berre vekt (men heller ikkje for alle, for
+#       operasjonsvekt er ikkje obligatorisk!).
+#
+#       Derfor må me ta ein spansk ein og bruka
+#       kroppshøgd ved *baseline* for utrekning
+#       av BMI på operasjonstidspunktet. :(
+d_full = d_full %>% mutate(bmi_baseline = BR_Vekt/(BR_Hoyde/100)^2,
+                           bmi_op = OperasjonVekt/(BR_Hoyde/100)^2,
+                           bmi_6v = `6U_Vekt`/(`6U_Hoyde`/100)^2,
+                           bmi_1a = `1Aar_Vekt`/(`1Aar_Hoyde`/100)^2,
+                           bmi_2a = `ToAar_Vekt`/(`ToAar_Hoyde`/100)^2)
+
+# Data for alle år opptil (og inkludert) rapporteringsår,
+# men ikkje for seinare år
+#
+# (Brukar '< dato + 1' i staden for '<= dato' for å handtera
+# det rett dersom ein i framtida endrar operasjonsdato
+# til å vera operasjonstidspunkt i staden for operasjondato
+# (ein dato tolka som tidspunkt er klokka 00:00 den aktuelle
+# datoen, ikkje 24:00, og inkluderer derfor ikkje tidsperioden
+# frå 00:00 til 24:00, så me ville mista det siste døgnet).)
+dato_opptilrapaar = as_date(paste0(rapporteringsaar, "-12-31")) # For ev. seinare bruk i teksten
+d_opptilrapaar = d_full %>% 
+  filter(Operasjonsdato < (dato_opptilrapaar + 1))
+
+# Data for alle år opptil (og inkludert) to år før rapporteringsåret,
+# dvs. alle data me i teorien burde ha toårs oppfølgingsdata på
+dato_toaarsdata = as_date(paste0(rapporteringsaar - 2, "-12-31")) # For ev. seinare bruk i teksten
+d_toaarsdata = d_full %>% 
+  filter(Operasjonsdato < (dato_toaarsdata + 1))
+
+# Og tilsvarande for eittårsdata
+dato_eittaarsdata = as_date(paste0(rapporteringsaar - 1, "-12-31")) # For ev. seinare bruk i teksten
+d_eittaarsdata = d_full %>% 
+  filter(Operasjonsdato < (dato_eittaarsdata + 1))
+
+
+# Dei som vart operert det aktuelle året
+d = d_full %>%
+  filter(op_aar == rapporteringsaar)
+
+# Hent inn oversikt over sentrale variablar
+d_sent_var = read_delim(
+  paste0(grunnmappe, "\\rapport-metadata\\sentrale-variablar.csv"),
+  delim = ";",
+  locale = locale(encoding = "windows-1252"),
+  col_types = cols(variabel_id = col_character(),
+                   tabelltekst = col_character())
+  )
+
+# Hent inn dekningsgradsanalysar frå NPR
+d_dekgrad_full = read_delim(paste0(grunnmappe, "\\rapport-metadata\\npr-dekningsgradsanalysar.csv"),
+  delim = ";", locale = locale(encoding = "windows-1252"),
+  col_types = cols(
+    aar_analyse = col_integer(),
+    inst_namn = col_character(),
+    resh = col_character(),
+    begge = col_integer(),
+    berre_npr = col_integer(),
+    berre_soreg = col_integer(),
+    totalt = col_integer())
+  ) %>% 
+  mutate(soreg = begge + berre_soreg,
+         npr = begge + berre_npr)
+
+# Sjekk at totalane er rekna rett ut
+test_that("Totalsummane i dekningsgradsanalysen stemmer", {
+  expect_true(all(with(d_dekgrad_full, begge + berre_soreg + berre_npr == totalt)))
+})
+
+# Sjekk at alle dekningsgradane er registrert med institusjonsnamn
+# (kan dessverre mangla RESH på nokre av dei, så me må bruka
+# institusjonsnamn i staden for RESH for å identifisera institusjonane)
+test_that("Alle føretaka i NPR-datafila har institusjonsnamn registrert", {
+  expect_false(any(is.na(d_dekgrad_full$inst_namn)))
+})
+
+# Sjå på årets dekningsgradsanalyse
+# fixme! Skal vi se på årets deknignsgradsanalyse, eller på
+# den nyest oppdaterte? Får SOReg dekninsggrader hvert år?
+#
+# fixme: Viss me skal bruka nyaste dekningsgradsanalyse (max(aar_analyse))
+# i staden for årets (rapporteringsaar), må mykje tekst oppdaterast til å
+# ta omsyn til dette. Det gjeld både brødtekst, figurtekstar, tabelltekstar
+# og alt som refererer til objektet d_dekgrad (eller d_dekgrad_full).
+d_dekgrad = d_dekgrad_full %>%
+  filter(aar_analyse == rapporteringsaar)
+@
+
+\chapter{Samandrag}
+
+% Teksten til samandragsavsnittet er definert
+% i *slutten* av fila (sidan han brukar utrekningar)
+% gjort undervegs i dokumentet.
+\IfFileExists{introtekst.tex}{\input{introtekst.tex}}{}
+
+
+\chapter{Registerbeskriving}\label{cha:reg}
+
+\section{Bakgrunn og formål}
+
+\subsection{Bakgrunn for registeret}\label{sec:bak}
+
+Sjukeleg overvekt er ein samansett sjukdom som kan ha 
+stor innverknad på livet til den enkelte, både fysisk, psykisk, 
+sosialt og økonomisk. Tilstanden fører
+ofte til nedsett helserelatert livskvalitet og redusert 
+levetid. Kirurgisk 
+behandling kan betre livskvaliteten og auke livslengda. 
+
+I Noreg vart det utført fedmekirurgi allereie på 1970- og 1980-talet, 
+men dei første kirurgiske metodane hadde mange biverknadar og komplikasjonar. 
+Dette gjorde at ein kring 1990 slutta å utføre fedmekirurgi i Noreg. 
+Etter eit opphald vart det så i 2001 starta opp igjen med fedmekirurgi,
+med forbetra metodar. 
+
+% Talet på sjukehus er her skrive manuelt, då det er talet
+% på sjukehus med operasjonar, ikkje talet på sjukehus
+% som faktisk rapporterer til SOReg-N.
+Dei siste åra har det blitt utført kring \num{2500} fedmeoperasjonar
+årleg i Noreg.
+Omtrent to tredjedelar av operasjonene
+har vore ved offentlege sjukehus, resten ved private betalt av pasientane sjølve.
+Kor mange som blir 
+opererte i utlandet, har 
+ein ikkje oversikt over. For å bli fedmeoperert i 
+Noreg må ein vanlegvis tilfredsstille internasjonalt aksepterte 
+kriterium for fedmekirurgi:
+
+\newcommand{\popdef}{%
+\begin{itemize}
+  \item kroppsmasseindeks ≥~40~kg/m² eller
+  \item kroppsmasseindeks ≥~35~kg/m² med 
+  følgjesjukdom som type 2-diabetes, søvnapné (nattlege pustestopp)
+  eller belastningsrelaterte smerter i vektberande ledd eller 
+  \item type 2-diabetes mellitus med \kort{KMI} 30\textendash 35~kg/m², etter særskild vurdering
+\end{itemize}
+For asiatar med type 2-diabetes er kravet til \kort{KMI} for dei to siste kriteria
+2,5~kg/m² lågare\footnote{\url{https://doi.org/10.2337/dc16-0236}}.
+}
+\popdef
+
+Dei to vanlegaste fedmeoperasjonane i Noreg er 
+gastrisk sleeve (òg kalla vertikal ventrikkelreseksjon) og gastrisk bypass:
+
+\begin{itemize}
+\item Ved \emph{gastrisk sleeve} blir ein stor del av 
+magesekken fjerna. Dette gjev ei fysisk avgrensing på kor 
+mykje pasienten kan ete, og pasienten blir fort mett. 
+
+\item Ved \emph{gastrisk bypass} koplar ein ut det meste av magesekken og øvre del 
+av tynntarmen. Dette fører til redusert matinntak og endring av 
+matpreferansar. Utkopling av tynntarm kan gje redusert 
+næringsopptak. 
+\end{itemize}
+
+Nokre av dei registrerte operasjonane er \emph{revisjonsoperasjonar}.
+Dette er operasjonar der ein korrigerer den førre fedmeoperasjonen, 
+eller gjer han om til ein annan type fedmeoperasjon. 
+Ein revisjons\-operasjon
+kan bli utført av ulike grunnar, til dømes fordi pasienten ikkje 
+går nok ned i vekt, opplever vesentleg vektauke, får tilbake type~2-diabetes,
+har for stor vektnedgang eller opplever plager etter 
+den første operasjonen. 
+
+Etter ei tid med fedmeoperasjonar i Noreg kom det ynskje frå fagmiljøet
+om å opprette eit nasjonalt kvalitetsregister for å kunne vurdere kvaliteten
+på kirurgien og for å kunne vise korleis det går med dei opererte pasientane.
+Dette var grunna i fleire forhold. 
+Sjølv om det internasjonalt er rimeleg semje om kriteria for operasjon, 
+er både ressursbruken, val av operasjonsmetode og detaljar for utføringa av 
+dei ulike metodane omdiskuterte.
+I ein rapport%
+\footnote{\url{https://www.fhi.no/publ/2014/langtidseffekter-etter-fedmekirurgi/}}
+frå 2014 konkluderte Kunnskapssenteret
+med at mykje av forskinga om korleis det går med dei 
+fedmeopererte er usikker, og dei etterlyser 
+langtidsdata. \textenglish{\emph{The International Federation 
+for the Surgery of Obesity and 
+Metabolic Disorders}}~(\kort{IFSO}) tilrår livslang 
+oppfølging etter fedmeoperasjon, 
+og i dei nordiske retningslinjene blir det 
+understreka at sjukehus som opererer pasientar 
+for fedme, bør ha hovudansvaret for oppfølginga dei 
+første ti åra etter operasjonen.   
+
+Ettersom ein i Sverige allereie var i gang med å bygge eit nasjonalt
+register vart det innleia eit samarbeid med det svenske fagmiljøet med tanke 
+på å få til eit felles skandinavisk register, 
+\textenglish{\emph{Scandinavian Obesity Surgery Registry}} (\soreg).
+
+I utarbeidinga av det norske registeret, \soregn, vart det lagt vekt
+på at variablane i det norske og det svenske
+registeret skulle vere like, for å gjere det mogeleg å 
+samanlikne data. Ei samrådsgruppe med representantar frå begge landa
+vart oppretta for å sikre at utvikling og oppdateringar
+i registeret blir samordna. 
+
+Det svenske registeret, \soregs, vart starta i 2007,
+og den norske utgåva, \soregn{}, vart teken i bruk i Helse Bergen i januar 2014.
+Frå juni 2015 har \soregn{} nasjonal status og dermed
+løyve til å ta imot data frå sjukehus over heile landet. 
+Med eit nasjonalt kvalitetsregister har deltakande sjukehus fått ein reiskap 
+til å kunne dokumentere resultat frå eigne sjukehus
+og til å samanlikne desse med resultat frå andre sjukehus.
+
+\subsection{Formålet med registeret}\label{sec:for}
+
+Formålet med registeret er å kartlegge omfanget av og kvaliteten
+på fedmekirurgi i Noreg, samt å studere endringar i vekt, 
+sjukdomstilstand og sjølvopplevd helse hjå opererte pasientar i inntil 
+ti år  etter fedmeoperasjon. Opplysingane frå registeret skal først og fremst 
+nyttast til kvalitetssikring og forbetring av pasientbehandlinga,
+men kan òg bli brukt til forsking. 
+
+\subsection{Analysar som belyser formålet med registeret}\label{sec:anafor}
+
+Vi viser tala på, og typen av, fedmeoperasjonar som er rapporterte til
+\soregn i \Sexpr{rapporteringsaar} i \vref{sec:taltypeoper,fig:opmetodar-graf}.
+
+Kvalitetsindikatorane for behandlinga er definerte av fagmiljøet og forklarte
+nærare i \vref{sec:regspe}. Resultat for  kvalitetsindikatorane er
+presenterte på sjukehusnivå i \vref{sec:indpp}.
+
+Helserelatert livskvalitet (\kort{HRLK}) hjå pasientar med sjukeleg
+overvekt er generelt svært dårleg, og eit hovudmål med fedmekirurgi er å betre \kort{HRLK}.
+For å kartlegge \kort{HRLK} før og etter operasjon har vi i samarbeid med det svenske fagmiljøet
+utarbeidd eit spørjeskjema for pasientane (eit såkalla \kort{PROM}-skjema).
+Dette har nokre spørsmål som er generelle og nokre som er spesifikke for fedme.
+Vi har også utarbeidd felles spørsmål om \emph{pasientopplevinga} knytt til behandlinga,
+såkalla \kort{PREM}-spørsmål.
+Ein kan lese meir om \kort{HRLK} i registeret i \vref{sec:pasutk}.
+ 
+
+\section{Juridisk heimelsgrunnlag}\label{sec:jur}
+Registeret er basert 
+på skriftleg samtykke frå pasienten. Det har konsesjon frå
+Datatilsynet og vart godkjent av Helsedirektoratet som 
+nasjonalt medisinsk kvalitetsregister i juni 2015.
+
+
+\section{Fagleg leiing og dataansvar}\label{cha:led}
+
+Helse Bergen er databehandlingsansvarleg institusjon,
+og Villy Våge er leiar for registeret. 
+
+Det administrative ansvaret for registeret ligg under Helse Bergen~\kort{HF}, 
+med dagleg leiing og sekretariat lokalisert til
+Armauer Hansens hus ved Haukeland universitetssjukehus. 
+Registeret hadde i \Sexpr{berre_gyldig_i("2019", 2019)} tilsett ein
+leiar og ein nasjonal koordinator, kvar i 50\prosent stilling.      %**
+I desember 2019 vart det tilsett statistikar i 40\prosent stilling. %**
+
+Eit nasjonalt fagråd har det faglege ansvaret. 
+Fagrådet består av sju medlemmer med representantar for dei fire regionale 
+helseføretaka, Norsk foreining for fedmekirurgi, Norsk forening for gastroenterologisk kirurgi
+og private aktørar. Det var ikkje  med representant frå dei private i 2019,
+desse er representert i 2020.
+Fagrådet har også ein brukar\-representant frå Landsforeininga for overvektige. 
+
+
+For å sikre at det norske og det svenske registeret blir utvikla
+vidare saman er det oppretta ei samrådsgruppe med representantar
+frå både \soregn og \soregs. 
+Her tek ein opp saker som har innverknad på begge registera.
+
+\subsection{Aktivitet i fagråd/referansegruppe}
+
+\subsubsection{Aktivitet i fagrådet}
+                                            %H  BM                                              møter møtene/møta
+Det norske fagrådet hadde to møte i 2019.   %H  NN 2012-rettskrivnga:  møte n1	eit møte	møtet	møte	møta
+Desse sakene vart diskuterte og behandla:\\
+
+\begin{itemize} 
+\item Vedtekter for  \soregn.   
+\item Diverse endringar av variablar.
+\item    Gastroskopimodul i registeret.
+\item    Diskusjon om skrifteleg samtykke.
+\item    Planlegging av registerdagen for 2020. %**
+\item    Val av medlemmer i fagrådet.
+\end{itemize}
+
+\clearpage
+Medlemmane i fagrådet er viste i \vref{tab:fagradet}.
+
+\begin{widetable}[htbp]
+\caption{Medlemmane i fagrådet i \Sexpr{rapporteringsaar}.}\label{tab:fagradet}
+{\centering%
+\begin{tabular}{ll} \toprule
+Person & Institusjon \\ \midrule
+Tom Mala (leiar) & Helse Sør-Aust \\
+Torunn Nestvold & Helse Nord \\
+Henrik Harald Hætta & Helse Vest \\
+Ronald Mårvik. Ny:  Gøran Troseth Andersen & Helse Midt \\
+Jorunn Sandvik & Norsk foreining for fedmekirurgi (\kort{NFFK}) \\
+Marius Svanevik. Ny: Ghous Ghulam Gondal & Norsk foreining for gastrokirurgi (\kort{NFGK}) \\
+Eva Aarskog & Brukarrepresentant \\ \bottomrule
+\end{tabular}}
+\end{widetable}
+
+\subsubsection{Aktivitet i samrådsgruppa}
+
+Den svensk-norske samrådsgruppa hadde to møte i 2019.
+Desse sakene vart diskuterte og behandla:\\
+ 
+\begin{itemize}
+\item Nye variablar i registeret:
+    \begin{itemize}
+          \item  Spørsmål om biverknader etter operasjon.
+          \item Spørsmål om medikamentell tilleggsbehandling for fedme.
+          \item Ekstra blodprøver: CRP, ferritin, albumin.
+          \item Prosent totalt vekttap (\prosent TWL).
+    \end{itemize}
+\item Ny basisregistrering ved revisjonsoperasjon.
+\item Funn ved gastroskopi.
+\item Felles årsrapport \soregs og \soregn for 2017 og 2018. 
+\end{itemize}
+
+\vspace{0.3cm}   %H
+
+Medlemmane i samrådsgruppa er viste i \vref{tab:samradsgruppa}.
+
+\begin{table}[htbp]
+\caption{Medlemmane i samrådsgruppa i \Sexpr{rapporteringsaar}.}\label{tab:samradsgruppa}
+{\centering%
+\begin{tabular}{ll} \toprule
+Person & Rolle \\ \midrule
+Tom Mala & Noreg, leiar for samrådsgruppa \\
+Villy Våge & Noreg, leiar for \soregn \\
+Jorunn Sandvik & Noreg \\
+Johan Ottoson & Sverige, leiar for \soregs \\
+Magnus Sundbom & Sverige \\ \bottomrule
+\end{tabular}}
+\end{table}
+
+
+\chapter{Resultat}\label{cha:res}
+
+<<opstat, echo=kjeldekode, results='hide'>>=
+# Talet på operasjonsmåtar
+n_op = nrow(d)
+n_pas = n_distinct(d$PasientID)
+
+# Primæroperasjonar
+test_that("Alle operasjonar har info om dei var primære eller reoperasjonar",
+          expect_true(all(d_full$TidlFedmeOp %in% 0:1))
+          )
+# d_prim = d %>% filter(op_primar)  
+d_prim = d %>% filter(op_primar)    # %>%  left_join( GBP, by=c("PasientID"="pasi"))
+d_GB = d_full %>% filter(op_primar) # %>%  left_join( GBP_prim, by=c("PasientID"="pasi"))
+
+d_toaarsdata_prim = d_toaarsdata %>% filter(op_primar)
+d_eittaarsdata_prim = d_eittaarsdata %>% filter(op_primar)
+
+# Talet på primæroperasjonar og reoperasjonar
+n_prim = nrow(d_prim)
+n_reop = n_op - n_prim
+@
+
+\section{Kvalitetsindikatorar og \texorpdfstring{\kort{PROM/PREM}}{PROM/PREM}}\label{sec:indpp}
+
+<<ki-tab-funksjon, results = "hide", echo = kjeldekode>>=
+# Tabell for kvalitetsindikatorer med andel/prosent
+# vi legger inn \prosent med prosent()-funksjonen i tabellen
+# fremfor i objektet
+# Der hvor ingen har en 1års oppfølging får en strek "-" i stedet for 
+# en NaN som ville kommet ellers
+ki_tabell = function(df, label, tabelltekst){
+cat(
+lag_tab_latex(dataframe = df %>% 
+              mutate(ind = prosent(ind, tabell = TRUE)),
+              caption=tabelltekst,
+              label=label, 
+              colheads=c("Sjukehus", "Teljar", "Nemnar", "Prosent"), 
+              wide = FALSE)
+)
+}
+@
+
+Kvalitetsindikatorane i dei neste avsnitta er definerte og forklarte i \vref{sec:regspe}.
+Dersom ikkje anna er nemnt, gjeld resultata berre primæroperasjonar, ikkje revisjonsoperasjonar.
+
+\subsection{Del pasientar med tre eller færre postoperative liggedøgn}\label{sec:liggetid-reinn}
+
+<<liggetid-rekn, echo=kjeldekode, results='hide'>>=
+# Alle har liggetid
+test_that("Alle med 6-vekes oppfølging har liggetid definert", {
+  expect_false(d_full %>% filter(`6U_KontrollType` %in% 1:3) %$% LiggeDogn %>% is.na %>% any)
+})
+
+# I nokre analysar ser me berre på dei som har 6-vekesoppfølging
+# registrert. Hentar ut eiga datasett for desse
+d_prim_6v = d_prim %>% filter(`6U_KontrollType` %in% 1:3)
+
+# Rimeleg liggetid
+# 0 liggedøgn kan være aktuelt ved Avbrutt operasjon (11), 
+# Annen operasjon (8) og Gastric band (3). Resten skal i utgangspunktet
+# ha minst 1 liggedøgn. Men så viser det seg at det *kan* (ein sjeldan)
+# gong forekomma (ikkje-feilregistrerte) 0 liggedøgn for vanlege
+# operasjonstypar òg, så me må godta det for alle. (Men i datavaliderings-
+# rapporten kan me vera strengare.)
+test_that("Ingen ligg mindre enn 0 døgn eller meir enn 100", {
+          expect_gte(min(d_full$LiggeDogn, na.rm=TRUE), 0)
+          expect_lte(max(d_full$LiggeDogn, na.rm=TRUE), 100)
+          })
+
+# Kva var den vanlegaste talet døgn å ligga etter operasjon
+liggedogn_typetal = d_prim_6v %>%
+  count(LiggeDogn) %>%
+  arrange(desc(n)) %$%
+  LiggeDogn %>%
+  first
+
+# funksjon for å regne ut kvalitetsindikatoren
+# definert for liggetid (andel pasienter med 3 dager eller færre)
+ki_liggetid = function(df){
+  
+  teljar = sum(df$LiggeDogn <= 3)
+  nemnar = nrow(df)
+  
+  ind = teljar/nemnar
+  
+  res = tibble(forklaring="Del pasienter med 3 eller færre liggedøgn",
+               ltx_tekst = "Tre/færre liggedøgn",
+               teljar, nemnar, ind = ind) # trenger ikke å definere at
+                          # variabler som er med i en group_by
+                          # skal være med, de kommer uansett
+  res            
+}
+
+# Kor mange låg mindre enn fire døgn
+p_kortligg = ki_liggetid(d_prim_6v)$ind
+
+# Kor mange låg mindre enn fire døgn per sjukehus
+d_kortligg_sjuk = d_prim_6v %>% 
+  group_by(OperererendeSykehus) %>% 
+  do(ki_liggetid(.)) %>% 
+  arrange(desc(ind))
+@
+
+<<reinnlegg, echo=kjeldekode, results='hide'>>=
+test_that("Alle med 6-vekesoppfølging har info om reinnleggingar definert (FOLLOWUP1_TREATOTHERHOSP)", {
+          expect_true(all(d_prim_6v$`6U_Behandling30Dager` %in% 0:2))
+}) # 0 = nei, 1 = ja, 2 = veit ikkje
+@
+
+Liggetid etter operasjon kan gje ein indikasjon på korleis pasientane
+har det etter operasjonen og om det har oppstått komplikasjonar som krev lengre 
+tid på sjukehuset. Tala for \Sexpr{rapporteringsaar} viser at 
+\label{par:liggetid-start}%
+\Sexpr{round(100*p_kortligg)}\prosent av pasientane hadde tre eller færre
+postoperative liggedøgn\footnote{\emph{Liggedøgn} blir her rekna ut basert på operasjons- og utskrivingsdato, 
+utan informasjon om klokkeslett. Eit liggedøgn kan altså vera både kortare eller
+lengre enn 24~timar, avhengig av når på dagen pasienten vart skriven ut.}.
+\label{par:liggetid-slutt}%
+\Vref{fig:liggedogngraf} gjev ei fullstendig oversikt. Liggedøgntala gjeld berre
+pasientar som har seksvekers oppfølging registrert
+(\Sexpr{num(sum(!is.na(d_prim_6v$LiggeDogn)))} av \Sexpr{num(nrow(d_prim))} pasientar).
+
+<<liggedognstat, echo=kjeldekode, results='hide'>>=
+# Viss nokon har *veldig* mange liggedøgn, vert
+# grafen uoversiktleg. Avgrensa derfor talet på
+# liggedøgn me viser grafisk.
+maksdogn_vis = 14
+d_prim_6v %<>% mutate(liggedogn_lenge = LiggeDogn > maksdogn_vis,
+                      liggedogn_trunk = pmin(LiggeDogn, maksdogn_vis + 1))
+n_liggedogn_lenge = sum(d_prim_6v$liggedogn_lenge, na.rm=TRUE)
+liggedogn_maks = max(d_prim_6v$LiggeDogn, na.rm=TRUE)
+
+# Lang figurforklaring viss ikkje pasientane
+# er med i grafen. :)
+liggedogngraf_forklaring = paste0(
+  "Talet på postoperative liggedøgn etter primæroperasjonar i~", rapporteringsaar, 
+  ifelse(n_liggedogn_lenge > 0, paste0(", der vi berre viser detaljar for dei med maks ",
+  maksdogn_vis," postoperative liggedøgn. I tillegg var det ",
+  n_liggedogn_lenge, " ", ifelse(n_liggedogn_lenge != 1, "pasientar", "pasient"), " med \\emph{meir} enn ",
+  maksdogn_vis, " postoperative liggedøgn. Pasienten som låg lengst, hadde ",
+  liggedogn_maks, " postoperative liggedøgn."), "."), " Basert på data frå til saman ",
+  num(sum(!is.na(d_prim_6v$LiggeDogn))), " operasjonar ",
+  "(berre pasientar med seksvekers oppfølging er med).")
+@
+
+<<liggedogngraf, echo=kjeldekode, results='hide', fig.cap=liggedogngraf_forklaring, fig.height=2.5>>=
+# Vis berre dei som låg maks så lenge på grafen
+# Ta med 0 dagar berre om det finst (elles 1)
+liggedogn_breaks = seq(pmin(1, min(d_prim_6v$LiggeDogn,na.rm=TRUE)),
+                       maksdogn_vis + 1)
+liggedogn_tekst = liggedogn_breaks
+liggedogn_tekst[length(liggedogn_tekst)] = paste0("\u2265", maksdogn_vis + 1)
+
+ggplot(filter(d_prim_6v, !is.na(LiggeDogn)), aes(x=liggedogn_trunk, fill=liggedogn_lenge))+
+  geom_bar(stat="count", show.legend = FALSE) +
+  scale_fill_manual(values = c("FALSE"=colPrim[3], "TRUE"=colKontr)) +
+  scale_x_continuous(breaks=liggedogn_breaks, labels = liggedogn_tekst, expand=c(0,.6)) +
+  scale_y_continuous(expand = expand_soyle) +
+  xlab("Liggedøgn") + ylab("Talet på\npasienter") + 
+  fjern_x
+@
+
+\subsection{Del pasientar som har blitt reinnlagde på sjukehus innan 30 dagar etter operasjonen}
+
+<<komplik, echo=kjeldekode, results='hide'>>=
+# Berre gyldige verdiar for komplikasjonane?
+test_that("Alle med info om komplikasjonar (COMPLSEVERITY) har rette verdiar", {
+          expect_true(all(is.na(d$`6U_KomplAlvorGrad`) | (d$`6U_KomplAlvorGrad` %in% 1:7)))
+})
+
+# I analysar for reinnlegging ser me berre på dei som har 6-vekesoppfølging
+# registrert eller som er registrert som reinnlagd til trass for at dei
+# ikkje har 6-vekesoppfølging (jf. forklaringstekst for reinnleggings-
+# indikatoren i årsrapporten). Hentar ut eiga datasett for desse. Men det
+# viser seg at det òg er mogleg å svara «Vet ikke» (verdi 2) på om pasienten
+# vart reinnlagd. Desse gjev ingen informasjon, og vert derfor òg fjerna.
+d_reinn = d_prim %>% filter(((`6U_KontrollType` %in% 1:3) |
+                             (`6U_Behandling30Dager` == 1)) &
+                            (`6U_Behandling30Dager` != 2))
+
+# Tilsvarande for alvorlege komplikasjonar
+d_kompl = d_prim %>% filter((`6U_KontrollType` %in% 1:3) | (!is.na(`6U_KomplAlvorGrad`)))
+
+# Alle som er aktuelle for reinnleggingsstatistikk har info om reinnleggingar registrert
+test_that("Alle me reknar ut reinnleggingsstatistikk på har info om reinnlegging registrert", {
+          expect_true(all(d_reinn$`6U_Behandling30Dager` %in% 0:1))
+})
+
+
+# funksjon for å regne ut
+# andel pasienter som får innleggelse innen 30 dager etter
+# operasjonen
+ki_30dager = function(df){
+
+  teljar = sum(df$`6U_Behandling30Dager` == 1)
+  nemnar = nrow(df)
+  
+  ind = teljar/nemnar
+  
+  res = tibble(forklaring = "Reinnlegging innan 30 dagar etter operasjonen", 
+               ltx_tekst = "Reinnlegging",
+               teljar, nemnar, ind = ind)
+  res   
+  
+}
+# andel pasienter som får innleggelse innen 30 dager etter operasjon
+p_30reinnlegg = ki_30dager(d_reinn)
+
+# andel pasienter som får innleggelse innen 30 dager etter operasjon per sjukehus
+d_30innlegg_sjuk = d_reinn %>% group_by(OperererendeSykehus) %>% do(ki_30dager(.)) %>% arrange(desc(ind))
+
+# funksjon for å regne ut
+# andel pasienter som får en alvorlig komplikasjon
+ki_kompl_alv =function(df){
+  
+  # Alvorlege komplikasjonar
+  teljar = sum(df$`6U_KomplAlvorGrad` >= 4, na.rm=TRUE)
+  nemnar = nrow(df)
+
+  ind = teljar/nemnar
+  
+  res = tibble(forklaring = "Alvorlege komplikasjonar 30 dagar etter operasjonen", 
+               ltx_tekst = "Alvorlege kompl.",
+                            teljar, nemnar, ind = ind) # trenger ikke å definere at
+                          # variabler som er med i en group_by
+                          # skal være med, de kommer uansett
+  res   
+  
+}
+# andel pasienter som får en alvorlig komplikasjon
+p_kompl_alv = ki_kompl_alv(d_kompl)
+
+# andel pasienter som får en alvorlig komplikasjon per sjukehus
+d_kompl_alv_sjukehus = d_kompl %>% group_by(OperererendeSykehus) %>% do(ki_kompl_alv(.)) %>% arrange(desc(ind))
+@
+
+\label{par:reinnlegg-start}%
+Ein annan peikepinn på omfanget av komplikasjonar etter
+kirurgi kan ein få ved å måle kor mange som har blitt reinnlagde dei første 30
+dagane etter operasjonen. 
+For dei \Sexpr{num(p_30reinnlegg$nemnar)} pasientane som vi har reinnleggingsdata på,
+finn vi \Sexpr{p_30reinnlegg$teljar} (\Sexpr{prosent(p_30reinnlegg$ind)})
+pasientar som vart reinnlagde på same eller anna sjukehus innan 30 dagar etter operasjonen.
+\label{par:reinnlegg-slutt}
+
+\subsection{Del pasientar som får alvorlege komplikasjonar dei første 30 dagane etter operasjonen}\label{sec:kompl}
+
+<<dodsfall-primop, echo=kjeldekode, results='hide'>>=
+# (Sjå òg tilsvarande blokk «dodsfall-alleop» tidlegare i rapporten,
+# som gjeld dødsfall etter *begge* type operasjonar. Dødsfalla her
+# gjeld berre primæroperajsonar.)
+n_dodsfall_primop_rapaar = sum(d_kompl$`6U_KomplAlvorGrad` == 5, na.rm = TRUE)
+
+# Tekst som vert brukt i neste avsnitt
+dodsfall_primop_tekst = ifelse(
+  n_dodsfall_primop_rapaar == 0,
+  "Det var ikkje registrert dødsfall dei første 30 dagane etter operasjon.",
+  paste0("Det vart registrert ",
+         n_dodsfall_primop_rapaar,
+         " dødsfall innan dei første 30 dagane etter operasjon."))
+@
+
+\label{par:kompl-start}%
+Det oppstod alvorlege komplikasjonar (alvorsgrad \kort{III}b eller høgare
+etter Clavien–Dindo-klassifikasjonen%
+\footnote{Alvorsgrad \kort{III}b eller høgare
+vil seie at pasienten har vore utgreidde eller behandla i narkose. 
+Merk at ein del av desse pasientane berre har vore utgreidde utan
+at ein nødvendigvis har gjort alvorlege funn.})
+etter \Sexpr{p_kompl_alv$teljar} (\Sexpr{prosent(p_kompl_alv$ind)}) av
+operasjonane.
+\label{par:kompl-slutt}%
+\Vref{fig:komplgraf} gjev ei oversikt
+over alle komplikasjonane.
+\Sexpr{dodsfall_primop_tekst} % Automatisk informasjon om eventuelle dødsfall etter primæroperasjon.
+
+
+<<komplgraf, echo=kjeldekode, results='hide', fig.cap=paste0("Oversikt over alvorsgrad for komplikasjonar etter primæroperasjonar i~", rapporteringsaar, ". Basert på data frå ",num(nrow(d_kompl)), " operasjonar."), fig.height=fighogd_stolpe(7)>>=
+d_kompl_graf = d_kompl %>%
+  filter(!is.na(`6U_KomplAlvorGrad`)) %>% 
+  count(`6U_KomplAlvorGrad`) %>% 
+  mutate(kompl_grad_tekst = factor(`6U_KomplAlvorGrad`,
+                                   levels=rev(c(1:4,6:7,5)),
+                                   labels=rev(c("Grad I: Ingen tiltak",
+                                            "Grad II: Farmakologiske tiltak",
+                                            "Grad IIIa: Intervensjon uten narkose",
+                                            "Grad IIIb: Intervensjon i narkose",
+                                            "Grad IVa: Intensivbehandling med eitt sviktande organ",
+                                            "Grad IVb: Intensivbehandling med meir enn eitt sviktande organ",
+                                            "Grad V: Død"))))
+
+ggplot(d_kompl_graf, aes(x=kompl_grad_tekst, y=n))+
+  geom_bar(stat="identity", fill=colPrim[3], width = 2/3) +
+  scale_y_continuous(breaks=sett_avkutningspunkt_bredde(5),
+                     expand = expansion(mult = c(0, .05))) +
+  scale_x_discrete(drop = FALSE) +
+  xlab(NULL) + ylab("Talet på pasienter") + 
+  coord_flip() + fjern_y + fjern_y_ticks +
+  theme(panel.grid.minor.x = element_blank())
+@
+
+
+\subsection{Del pasientar som blir følgde opp postoperativt innan normtid etter eitt år}\label{sec:oppf1a}
+
+<<oppfdata, echo=kjeldekode, results='hide'>>=
+# Rekn ut prosent som har fått eittårsoppfølging innan normtid
+# (dvs. eitt år etter operasjonen, med slingringsmonn på 90 dagar).
+#
+# I utgangspunktet skulle me bruka følgjande definisjon (men les
+# nedanfor for komplikasjonar). Merk at me tel operasjonar,
+# ikkje pasientar. Merk òg at indikatoren gjeld alle operasjonar,
+# ikkje berre primæroperasjonar.
+#
+# Nemnar:	(Operasjonsdato + 365 + 90 < dato_for_datauttrekk) &
+#   (‘Er pasienten utgått fra registeret? (1 år)’ = nei eller ikkje utfylt)
+#   (‘Er en revisjonsoperasjon utført eller planlagt? (1 år)’ = nei eller ikkje utfylt)
+#
+# Teljar:	(Kriteria i nemnar) &
+#   (EttAar_Oppfolgingsdato ≥ Operasjonsdato + 365 - 90) &
+#   (EttAar_Oppfolgingsdato ≤ Operasjonsdato + 365 + 90)
+#   (1Aar_OppfolgingsType er 1, 2 eller 3)
+#
+# Grunngjeving nemnar:
+#   Linje 1: Skal berre sjå på operasjonar der pasienten *skal* ha fått
+#     oppfølging, dvs. dei der operasjonen er langt nok tilbake i tid.
+#   Linje 2: I tillegg ekskluderer me dei som er døde eller utgått
+#     av registeret av annan grunn (trekt seg, men godtar at eksisterande
+#     data vert lagra) på oppfølgingstidspunktet. Det er ikkje feil at desse
+#     ikkje er følgde opp.
+#   Linje 3: I tillegg ekskluderer me dei som har fått eller skal få
+#     revisjonsoperasjon ved/før tidspunkt for oppfølging. (Her vert forløpet
+#     lukka og eit nytt oppretta for den nye operasjonen. Viss reoperasjonen
+#     skjer for eksempel 6 månader etter opphavleg operasjon, vert denne
+#     informasjonen registrert på eittårsskjemaet. Viss det skjer 18 månader
+#     etter opphavleg operasjon, vert det registrert på toårsskjemaet, osv.)
+#
+# Grunngjeving teljar:
+#   Linje 1 og 2: Normtid er 365 dagar ± 90 dagar. Og det er OK med oppfølging
+#     nøyaktig på grensedatoane.
+#   Linje 3: Oppfølginga må vera av typen 1 (frammøte), 2 (per telefon)
+#     eller 3 (per brev/e-post eller på annan måte), *ikkje* 4 (ingen kontakt
+#     med pasienten trass gjentekne forsøk) eller 5 (inkje forsøk på å
+#     følgja opp pasienten) (eller framtidige kodar).
+#
+# Komplikasjon 2019-06-05. Det viser seg at sjølv om ein registrerer informasjon
+# om om pasienten er utgått frå registeret på eit oppfølgingsskjema (1 år, 2 år,
+# 5 år, ...), vert det ikkje registrert i tilhøyrande oppfølgingstabell, men i
+# *pasientskjemaet*. Me veit altså ingenting om *når* pasienten utgjekk frå registeret.
+# Det umogleggjer rett utrekning av kvalitetsindikatoren.
+#
+# Ser derfor vekk frå variabelen som inneheld informasjon om pasienten
+# er utgått av registeret. Det gjeld få personar, og feilen vert mindre enn
+# om ein brukar han utan å (kunna) ta omsyn til *når* vedkommande gjekk ut
+# (sidan folk dør før eller seinare, ville det gått veldig ut over historiske
+# data for kvalitetsindikatoren). fixme: Rekn det ut skikkeleg når registeret
+# har fått inn variabel som seier *når* pasienten gjekk ut av registeret.
+#
+# (Merk at informasjon om *reoperasjonar* *vert* registrert i oppfølgingstabellen,
+# så tilhøyrande variabel er uproblematisk å bruka.)
+#
+# fixme: Når me får skikkeleg datastruktur, bør denne og tilhøyrande
+#   funksjonar for toårsoppfølging osv. gjerast om til éin funksjon,
+#   som tar inn eit argument for år, og sjølv reknar ut 365 gongar dette
+#   (± 90) som normtid. Altså éin funksjon i staden for éin for kvart
+#   aktuelle oppfølgingsår!
+#
+#
+# Utrekning av data til kvalitetsindikator for eitt- og toårsoppfølging, med 101-metodikken.
+# Returnerer dataramme med originalvariablane pluss variablane «krit_teljar» og
+# «krit_nemnar», som seier om rada (operasjonen) skal vera med i teljar og/eller nemnar
+# for indikatoren, pluss forklaringstekst og LaTeX-test for tabelloverskrift.
+#
+# Argument:
+#  df: Dataramme med operasjonar (éi per rad)
+#  dato_uthenting: Datoen til uthenting av datosettet (= seinast
+#                  moglege dato ei oppfølging kan vera registrert)
+ki_oppf_normtid_1a_101 = function(df, dato_uthenting) {
+  df %>%
+    mutate(
+      krit_nemnar = (Operasjonsdato + 365 + 90 < dato_uthenting) &
+        ((`1Aar_RevisionsOp` == 0) | is.na(`1Aar_RevisionsOp`)), # fixme: pluss 1 ekstra kriterium (når me får data for det)
+      krit_teljar = krit_nemnar &
+        (EttAar_Oppfolgingsdato >= Operasjonsdato + 365 - 90) &
+        (EttAar_Oppfolgingsdato <= Operasjonsdato + 365 + 90) &
+        (`1Aar_OppfolgingsType` %in% c(1, 2, 3)),
+      forklaring = "Del pasientar som har fått eittårsoppfølging innan normtid.",
+      ltx_tekst = "Eittårsoppfølging"
+    )
+}
+ki_oppf_normtid_2a_101 = function(df, dato_uthenting) {
+  df %>%
+    mutate(
+      krit_nemnar = (Operasjonsdato + 2 * 365 + 90 < dato_uthenting) &
+        ((`2Aar_RevisionsOp` == 0) | is.na(`2Aar_RevisionsOp`))
+      , # fixme: pluss 1 ekstra kriterium (når me får data for det)
+      krit_teljar = krit_nemnar &
+        (ToAar_Oppfolgingsdato >= Operasjonsdato + 2 * 365 - 90) &
+        (ToAar_Oppfolgingsdato <= Operasjonsdato + 2 * 365 + 90) &
+        (`2Aar_OppfolgingsType` %in% c(1, 2, 3)),
+      forklaring = "Del pasientar som har fått toårsoppfølging innan normtid.",
+      ltx_tekst = "Toårsoppfølging"
+    )
+}
+
+# Utrekning av kvalitetsindikatorar som har prosent som måltal.
+# Tar inn ei (gjerne gruppert) dataramme laga med 101-metodikken
+# og gjev ut dataramme med ferdig utrekna indikator + nødvendig metadata.
+ki_pros = function(df) {
+  df %>%
+    filter(krit_nemnar) %>% # I teorien ikkje nødvendig, men er med som sikkerheitsmekanisme
+    summarise(teljar = sum(krit_teljar),
+              nemnar = sum(krit_nemnar),
+              ind = teljar/nemnar,
+              forklaring = forklaring[1],
+              ltx_tekst = ltx_tekst[1],
+              )
+}
+
+# Del året inn i kvartal, for SPC-utrekningar
+d_eittaarsdata = d_eittaarsdata %>% 
+  mutate(opdato_tidslinje = periode_til_tidslinje(year(Operasjonsdato), quarter(Operasjonsdato), 4))
+d_toaarsdata = d_toaarsdata %>% 
+  mutate(opdato_tidslinje = periode_til_tidslinje(year(Operasjonsdato), quarter(Operasjonsdato), 4))
+
+# Fixme: Eit lite DRY-problem her, men det fiksar me når me uansett
+# skal omorganisera koden, når me har datadumpane på skikkeleg format ... :)
+
+# Eittårs oppfølgingsgrad fordelt på sjukehus og kvartal
+d_oppf_normtid_1a_tid = d_eittaarsdata %>%  filter(op_aar>2014) %>% # Obs: *ikkje* d_eittaarsdata_prim,    fix for årtal i fig 3.3
+  ki_oppf_normtid_1a_101(dato_uthenting = dato_uttrekk) %>% 
+  group_by(OperererendeSykehus, opdato_tidslinje) %>% 
+  ki_pros() %>% 
+  ungroup()
+
+# Eittårs oppfølgingsgrad berre fordelt på sjukehus
+d_oppf_normtid_1a_agg = d_eittaarsdata %>% # Obs: *ikkje* d_eittaarsdata_prim
+  ki_oppf_normtid_1a_101(dato_uthenting = dato_uttrekk) %>% 
+  group_by(OperererendeSykehus) %>% 
+  ki_pros() %>% 
+  ungroup() %>% 
+  mutate(OperererendeSykehus = fct_reorder(OperererendeSykehus, nemnar))
+
+# Toårs oppfølgingsgrad fordelt på sjukehus og kvartal
+d_oppf_normtid_2a_tid = d_toaarsdata %>% # Obs: *ikkje* d_toaarsdata_prim
+  ki_oppf_normtid_2a_101(dato_uthenting = dato_uttrekk) %>% 
+  group_by(OperererendeSykehus, opdato_tidslinje) %>% 
+  ki_pros() %>% 
+  ungroup()
+
+# Toårs oppfølgingsgrad berre fordelt på sjukehus
+d_oppf_normtid_2a_agg = d_toaarsdata %>% # Obs: *ikkje* d_toaarsdata_prim
+  ki_oppf_normtid_2a_101(dato_uthenting = dato_uttrekk) %>% 
+  group_by(OperererendeSykehus) %>% 
+  ki_pros() %>% 
+  ungroup() %>% 
+  mutate(OperererendeSykehus = fct_reorder(OperererendeSykehus, nemnar))
+@
+
+Sjå \vref{sec:def-oppf1a} for forklaring på denne kvalitetsindikatoren.
+Alle tala gjeld både primær- og revisjonsoperasjonar.
+
+Dersom eit sjukehus har hatt lik/stabil oppfølgingsgrad over tid,
+er det grunn til å tru at denne også i framtida vil halda seg på same nivå,
+med mindre sjukehuset gjer endringar i rutinane for oppfølging.
+Me kan då sjå alle åra under eitt når me skal samanlikne
+sjukehusa. \Vref{fig:oppf1a-tid-graf} viser oppfølgingsgraden for
+sjukehusa på kvartalsnivå.
+
+<<oppf-tid-figtekstar, echo=kjeldekode, results='hide'>>=
+figtekst_oppf1a_tid = paste0(
+"P-diagram over eittårs oppfølgingsgrad innan normtid, delt inn etter sjukehus og tid (kvartal).
+Dei grå felta indikerer styrings\\-grenser etter \\kort{SPC}-metodikken (3~sigma-grenser), altså området for normalvariasjon.
+Viss enkeltverdiar fell utanfor grensene (markert som oransje punkt) og/eller midtlinja
+er oransje, viser dette at oppfølgingsgraden ikkje har vore stabil over tid.
+Tidsaksen viser \\emph{operasjons}tidspunktet.
+Basert på data frå ", num(sum(d_oppf_normtid_1a_tid$nemnar)), " primær-/revisjonsoperasjonar. Volvat Oslo slutta med fedmeoperasjonar i 2017.")
+@
+
+<<oppf1a-tid-graf, echo=kjeldekode, results='hide', fig.cap=figtekst_oppf1a_tid, fig.height=5.5, fig.env="widefigure", out.width="\\breitekst", fig.width=breitekst>>=
+spc_oppf1a_tid = qic(
+  x = opdato_tidslinje, y = teljar, n = nemnar,
+  data = d_oppf_normtid_1a_tid, facets = ~OperererendeSykehus,
+  chart="p")
+
+# Kva sjukehus hadde signal på upredikerbar prosess
+d_oppf1a_tid_signal = spc_oppf1a_tid$data %>% 
+  group_by(facet1) %>% 
+  summarise(signal = any(sigma.signal) || any(runs.signal))
+
+# Er finast om årstala står *i midten* av perioden.
+# Skulle derfor helst hatt 'minor_breaks_label', me
+# dette finst ikkje, så fuskar det til med å forskyva
+# 'breaks' eit halvt år til høgre. Fjernar så 'ticks'
+# på x-aksen og brukar vassrett linjer for minor_breaks
+# til å markera nyttåra.
+# fixme: Sjølvsagt finna ei betre løysing, eller iallfall
+# putta alt inni ein funksjon ...
+brytpunkt_hovud_spc = function(lims) {
+  floor(lims[1]):ceiling(lims[2]) +.5
+}
+brytpunkt_under_spc = function(lims) {
+  brytpunkt_hovud_spc(lims) - .5
+}
+
+# Temainnstillingar som skal brukast på alle SPC-figurar
+tema_spc = theme_get() +
+  fjern_x + fjern_y + 
+  liten_panel_avstand +
+  theme(panel.grid.minor.x = element_line(
+    colour=theme_get()$strip.background$colour, size=rel(1)),
+    legend.position = "none")
+
+# fixme: Få «norsk» prosentakse (dvs. mellomrom mellom tal og prosentteikn)
+p = spc_oppf1a_tid +
+  ggtitle(NULL) + xlab(NULL) +
+  facet_wrap(~facet1, ncol=5, labeller = label_wrap_gen(width=25)) +
+  scale_x_continuous(breaks = brytpunkt_hovud_spc,
+                     minor_breaks = brytpunkt_under_spc,
+                     labels= floor) +
+  tema_spc + fjern_x_ticks
+plot(p)
+@
+
+Dei grå felta indikerer styrings\-grenser etter \kort{SPC}-metodikken
+(3~sigma-grenser), det vil seie området for normalvariasjon.
+Dei vil såleis vera breiare for sjukehus/periodar med få operasjonar og
+smalare for sjukehus/periodar med mange operasjonar. Sjå figurteksten for
+nærare forklaring.
+
+Desse sjukehusa har hatt varierande oppfølgingsgrad,
+og er derfor ikkje eigna for direkte samanlikning: %\newline
+
+<<oppf1-ikkje-aktuelle, echo=kjeldekode, results='asis'>>=
+oppf1_sjukehus_tid_signal = filter(d_oppf1a_tid_signal, signal)$facet1
+oppf1_sjukehus_tid_ikkjesignal = filter(d_oppf1a_tid_signal, !signal)$facet1
+cat(lag_liste(sort(oppf1_sjukehus_tid_signal)))
+
+# Sjukehusa som er aktuelle å analysera vidare (stabil oppfølgingsgrad)
+d_oppf_normtid_1a_agg_aktuelle =
+  filter(d_oppf_normtid_1a_agg, OperererendeSykehus %in% oppf1_sjukehus_tid_ikkjesignal)
+@
+
+%\clearpage
+Merk at dette ikkje nødvendigvis vil seia at dei har
+\emph{dårleg} oppfølgingsgrad. Det kan like gjerne vera at dei har
+gjort forbetringsarbeid som har gjort oppfølgings\-graden \emph{betre}
+over tid. Ein må studera utviklinga av oppfølgings\-graden i figuren
+i detalj for dei aktuelle sjukehusa for å kunna tolka resultata.
+
+
+Samanlikning av oppfølgingsgraden for dei \emph{resterande} sjukehusa
+er vist i \vref{fig:oppf1a-agg-graf}. Dei grå felta indikerer igjen området
+for forventa normalvariasjon, her normalvariasjonen dersom eit sjukehus ikkje
+hadde skilt seg ut (positivt eller negativt) frå \emph{alle sjukehusa samla}. Viss eit sjukehus
+fell utanfor grensene (markert som eit oransje punkt), viser dette
+at sjukehuset har betre/dårlegare oppfølgingsgrad enn sjukehusa samla\footnote{Dersom alle sjukehusa låg innanfor grensene, ville det seia at det
+ikkje var \emph{geografiske} variasjonar i oppfølgingsgrad. Oppfølgingsgraden
+kunne likevel vore dårleg eller god, men han hadde i så fall vore dårleg
+eller god for \emph{alle} sjukehusa.}.
+
+<<oppf-agg-figtekstar, echo=kjeldekode, results='hide', fig.env="widefigure", out.width="\\breitekst", fig.width=breitekst>>=
+figtekst_oppf1a_agg = paste0(
+"Traktdiagram over eittårs oppfølgingsgrad innan normtid, delt inn etter sjukehus,
+for dei sjukehusa som har vist stabil oppfølgingsgrad over tid.
+Dei grå felta indikerer styrings\\-grenser etter \\kort{SPC}-metodikken (3~sigma-grenser), altså området for normalvariasjon.
+Viss eit sjukehus fell utanfor grensene (markert som oransje punkt),
+viser dette at dei har betre/dårlegare oppfølgingsgrad enn sjukehusa samla
+(markert som loddrett midtstrek).
+Basert på data frå ", num(sum(d_oppf_normtid_1a_agg_aktuelle$nemnar)), " primær-/revisjonsoperasjonar.")
+@
+
+<<oppf1a-agg-graf, echo=kjeldekode, results='hide', fig.cap=figtekst_oppf1a_agg, fig.height=3.3>>=
+spc_oppf1a_agg = qic(
+  x = OperererendeSykehus, y = teljar, n = nemnar,
+  data = d_oppf_normtid_1a_agg_aktuelle,
+  chart="p", flip = TRUE, decimals = 0)
+
+p = spc_oppf1a_agg + 
+  ggtitle(NULL) + 
+  xlab(NULL) +
+  ylab("Oppfølgingsgrad") + # Er rotert, så ylab vert tekst på *x-aksen*
+  tema_spc + 
+  theme(plot.margin=margin(3, 18, 3, 3)) + # Få plass til 100%-teksten til høgre i figuren
+  fjern_x
+plot(p)
+@
+%  \clearpage  --> ødelegger 3 figurer-page 
+Me ser at desse sjukehusa skil seg positivt ut, med betre
+oppfølgingsgrad enn sjukehusa samla:
+
+<<oppf1-positive, echo=kjeldekode, results='asis'>>=
+# Kva sjukehus hadde signal på avvikande prosess
+d_oppf1a_agg_signal = spc_oppf1a_agg$data %>% 
+  group_by(x) %>% 
+  summarise(signal = any(sigma.signal) || any(runs.signal),
+            retning = sign(y-cl))
+
+# Namna på sjukehusa som skil seg positivt og negativt ut
+sjukehus_oppf1_positive = 
+  filter(d_oppf1a_agg_signal, signal & (retning == 1))$x
+sjukehus_oppf1_negative = 
+  filter(d_oppf1a_agg_signal, signal & (retning == -1))$x
+
+cat(lag_liste(formater_instnamn_ltx(sort(sjukehus_oppf1_positive))))
+@
+
+Og \Sexpr{ifelse(length(sjukehus_oppf1_negative)==1, "dette", "desse")} skil seg negativt ut,
+med dårlegare oppfølgingsgrad enn sjukehusa samla:
+
+<<oppf1-negative, echo=kjeldekode, results='asis'>>=
+cat(lag_liste(formater_instnamn_ltx(sort(sjukehus_oppf1_negative))))
+@
+
+
+\subsection{Del pasientar som blir følgde opp postoperativt innan normtid etter to år}\label{sec:oppf2a}
+
+Sjå \vref{sec:def-oppf2a} for forklaring på denne kvalitetsindikatoren og
+\vref{sec:oppf1a} for meir informasjon om metodikken.
+Alle tala gjeld både primær- og revisjonsoperasjonar.
+
+<<oppf2a-tid-figtekstar, echo=kjeldekode, results='hide'>>=
+figtekst_oppf2a_tid = paste0(
+"P-diagram over toårs oppfølgingsgrad innan normtid, delt inn etter sjukehus og tid (kvartal).
+Dei grå felta indikerer styrings\\-grenser etter \\kort{SPC}-metodikken (3~sigma-grenser), altså området for normalvariasjon.
+Viss enkeltverdiar fell utanfor grensene (markert som oransje punkt) og/eller midtlinja
+er oransje, viser dette at oppfølgingsgraden ikkje har vore stabil over tid.
+Tidsaksen viser \\emph{operasjons}tidspunktet.
+Basert på data frå ", num(sum(d_oppf_normtid_2a_tid$nemnar)), " primær-/revisjonsoperasjonar. Volvat Oslo slutta med fedmeoperasjonar i 2017.")
+@
+
+<<oppf2a-tid-graf, echo=kjeldekode, results='hide', fig.cap=figtekst_oppf2a_tid, fig.height=5.3, fig.env="widefigure", out.width="\\breitekst", fig.width=breitekst>>=
+spc_oppf2a_tid = qic(
+  x = opdato_tidslinje, y = teljar, n = nemnar,
+  data = d_oppf_normtid_2a_tid, facets = ~OperererendeSykehus,
+  chart="p")
+
+# Kva sjukehus hadde signal på upredikerbar prosess
+d_oppf2a_tid_signal = spc_oppf2a_tid$data %>% 
+  group_by(facet1) %>% 
+  summarise(signal = any(sigma.signal) || any(runs.signal))
+
+# fixme: Få «norsk» prosentakse (dvs. mellomrom mellom tal og prosentteikn)
+p = spc_oppf2a_tid +
+  ggtitle(NULL) + xlab(NULL) +
+  facet_wrap(~facet1, ncol=5, labeller = label_wrap_gen(width=25)) +
+  scale_x_continuous(breaks = brytpunkt_hovud_spc,
+                     minor_breaks = brytpunkt_under_spc,
+                     labels= floor) +
+  tema_spc + fjern_x_ticks
+plot(p)
+@
+
+\Vref{fig:oppf2a-tid-graf} viser oppfølgingsgraden for sjukehusa på kvartalsnivå.
+Følgjande sjukehus har hatt varierande oppfølgingsgrad,
+og er derfor ikkje eigna for direkte samanlikning:
+
+<<oppf2-ikkje-aktuelle, echo=kjeldekode, results='asis'>>=
+oppf2_sjukehus_tid_signal = filter(d_oppf2a_tid_signal, signal)$facet1
+oppf2_sjukehus_tid_ikkjesignal = filter(d_oppf2a_tid_signal, !signal)$facet1
+cat(lag_liste(sort(oppf2_sjukehus_tid_signal)))
+
+# Sjukehusa som er aktuelle å analysera vidare (stabil oppfølgingsgrad)
+d_oppf_normtid_2a_agg_aktuelle =
+  filter(d_oppf_normtid_2a_agg, OperererendeSykehus %in% oppf2_sjukehus_tid_ikkjesignal)
+@
+
+<<oppf2-agg-figtekstar, echo=kjeldekode, results='hide', fig.env="widefigure", out.width="\\breitekst", fig.width=breitekst>>=
+figtekst_oppf2a_agg = paste0(
+"Traktdiagram over toårs oppfølgingsgrad innan normtid, delt inn etter sjukehus,
+for dei sjukehusa som har vist stabil oppfølgingsgrad over tid.
+Dei grå felta indikerer styrings\\-grenser etter \\kort{SPC}-metodikken (3~sigma-grenser), altså området for normalvariasjon.
+Viss eit sjukehus fell utanfor grensene (markert som oransje punkt),
+viser dette at dei har betre/dårlegare oppfølgingsgrad enn sjukehusa samla
+(markert som loddrett midtstrek).
+Basert på data frå ", num(sum(d_oppf_normtid_2a_agg_aktuelle$nemnar)), " primær-/revisjonsoperasjonar.")
+@
+
+<<oppf2a-agg-graf, echo=kjeldekode, results='hide', fig.cap=figtekst_oppf2a_agg, fig.height=3.3>>=
+spc_oppf2a_agg = qic(
+  x = OperererendeSykehus, y = teljar, n = nemnar,
+  data = d_oppf_normtid_2a_agg_aktuelle,
+  chart="p", flip = TRUE, decimals = 0)
+
+p = spc_oppf2a_agg + 
+  ggtitle(NULL) + 
+  xlab(NULL) +
+  ylab("Oppfølgingsgrad") + # Er rotert, så ylab vert tekst på *x-aksen*
+  tema_spc + 
+  theme(plot.margin=margin(3, 18, 3, 3)) + # Få plass til 100%-teksten til høgre i figuren
+  fjern_x
+plot(p)
+@
+
+% Volvat Oslo slutta med fedmeoperasjonar i 2017.
+Samanlikning av oppfølgingsgraden for dei \emph{resterande} sjukehusa
+er vist i \vref{fig:oppf2a-agg-graf}.
+Me ser at desse sjukehusa skil seg positivt ut, med betre
+oppfølgingsgrad enn sjukehusa samla:
+
+<<oppf2-positive, echo=kjeldekode, results='asis'>>=
+# Kva sjukehus hadde signal på avvikande prosess
+d_oppf2a_agg_signal = spc_oppf2a_agg$data %>% 
+  group_by(x) %>% 
+  summarise(signal = any(sigma.signal) || any(runs.signal),
+            retning = sign(y-cl))
+
+# Namna på sjukehusa som skil seg positivt og negativt ut
+sjukehus_oppf2_positive = 
+  filter(d_oppf2a_agg_signal, signal & (retning == 1))$x
+sjukehus_oppf2_negative = 
+  filter(d_oppf2a_agg_signal, signal & (retning == -1))$x
+
+cat(lag_liste(formater_instnamn_ltx(sort(sjukehus_oppf2_positive))))
+@
+
+Og \Sexpr{ifelse(length(sjukehus_oppf2_negative)==1, "dette", "desse")} skil seg negativt ut,
+med dårlegare oppfølgingsgrad enn sjukehusa samla:
+
+<<oppf2-negative, echo=kjeldekode, results='asis'>>=
+cat(lag_liste(formater_instnamn_ltx(sort(sjukehus_oppf2_negative))))
+@
+
+
+
+
+\subsection{Vekttap to år etter operasjon}\label{sec:ebmil-2a}  
+
+
+<<ebmiutrekning, echo=kjeldekode, results='hide'>>=
+# Test om verdi er lik 25 (må ha tilnærma test, på grunn av flyttalsproblematikk ved BMI-utrekning)
+lik_25 = . %>% { isTRUE(all.equal(25, .)) }
+test_that("Ingen har baseline-KMI før primæroperasjon lik 25 (slik at EBMIL-formelen fungerer)", {
+          expect_true( !any(map_lgl(d_toaarsdata_prim$bmi_baseline, lik_25)) )
+          })
+
+# Rekn ut prosent EBMIL basert på toårsdata
+d_toaarsdata_prim %<>% mutate(ebmil_2a = 100*(bmi_baseline-bmi_2a)/(bmi_baseline-25))
+
+# funksjon for å regne ut kvalitetsindikatoren
+# definert for ebmil
+# krever datasett med ebmil_1a definert
+ki_ebmil = function(df){
+  
+    teljar = sum(df$ebmil_2a > 50)
+    nemnar = nrow(df)
+  
+    ind = teljar/nemnar
+  
+    res = tibble(forklaring = "Del pasientar som har gått ned 50 % av overvekta", 
+                 ltx_tekst = "\\kort{EBMIL} meir enn 50\\prosent",
+                               teljar, nemnar, ind = ind) # trenger ikke å definere at
+                                                          # variabler som er med i en group_by
+                                                          # skal være med, de kommer uansett
+    res            
+}
+
+# Datasett med berre EBMIL-data
+d_ebmil = d_toaarsdata_prim %>%
+  filter(!is.na(ebmil_2a))
+
+# Talet på pasientar med EBMIL-måling
+n_ebmil = nrow(d_ebmil)
+
+# Del pasientar med EBMIL ved to år > 50 %
+p_ebmil2_50 = ki_ebmil(d_ebmil)$ind
+
+# Del pasientar med EBMIL ved to år > 50 % per sjukehus
+d_ebmil2_50_sjuk = d_ebmil %>% 
+  group_by(OperererendeSykehus) %>% 
+  do(ki_ebmil(.)) %>% 
+  arrange(desc(ind))
+@
+
+a) \emph{ Del pasientar som har gått ned meir enn \texorpdfstring{50\prosent}{50 \%} av overvekta.} \newline
+Eit mykje brukt mål på vekttap etter fedmeoperasjon har vore prosent \kort{EBMIL}
+(\kort{EBMIL}~= \textenglish{\emph{excess \kort{BMI} loss}}),
+som viser kor mange prosent av \emph{overvekta} pasienten har gått ned etter 
+operasjonen%
+\footnote{Brethauer et al. (2015), «\textenglish{Standardized Outcomes Reporting in Metabolic and Bariatric Surgery}», \url{https://pubmed.ncbi.nlm.nih.gov/25802064/}.}.
+
+Dette er  definert som
+%
+\begin{equation*}
+ \prosent\text{\kort{EBMIL}} =
+\frac{\text{\kort{KMI} før operasjon − \kort{KMI} to år etter operasjon}}% 
+     {\text{\kort{KMI} før operasjon − 25~kg/m²}} \times \text{100\prosent.}
+\end{equation*}
+%
+(Øvre grense for kva som er normal \kort{KMI}, er 25~kg/m².)
+\Vref{fig:ebmilgraf} viser \%-\kort{EBMIL} for dei
+\Sexpr{num(n_ebmil)} pasientane med primæroperasjon fram
+til og med \Sexpr{formater_dato(dato_toaarsdata)}
+som vi har toårs \kort{KMI} på.  Prosent-\kort{EBMIL} på 50 eller meir blir gjerne definert som suksess. 
+\label{par:ebmilok-start}%
+To år etter operasjonen hadde \Sexpr{round(100*p_ebmil2_50)}\prosent
+ein \%-\kort{EBMIL} på 50\prosent eller meir.\\
+\label{par:ebmilok-slutt}
+
+ 
+
+
+<<ebmilgraf, echo=kjeldekode, results='hide', fig.cap=paste0("Fordeling av prosent \\kort{EBMIL} basert på \\kort{KMI} før operasjon og to år etter. Basert på data frå ", num(n_ebmil), " pasientar med primæroperasjon fram til og med ", formater_dato(dato_toaarsdata), "."), fig.height=2>>=
+ggplot(d_ebmil, aes(x=ebmil_2a/100)) +
+  geom_histogram(binwidth=.1, boundary=0, fill=colPrim[3], closed="left", colour=colPrim_mork[3]) +
+  scale_x_continuous(breaks = sett_avkutningspunkt_bredde(.2), labels=akse_prosent) +
+  scale_y_continuous(expand = expand_soyle) +
+  xlab("EBMIL") + ylab("Talet på\npasienter") +
+  fjern_x
+@
+
+
+b) \emph{ Del pasientar med tap av \texorpdfstring{20\prosent}{20 \%} kroppsvekt eller meir.} \newline
+ Dei seinare år har det blitt meir vanleg å presentere prosentuell tap av kroppsvekt   %H formel?
+ (\prosent\kort{TWL} = \prosent\textenglish{\emph{ total weight loss})}. 
+ % (\kort{EBMIL}~= \textenglish{\emph{excess \kort{BMI} loss}}),
+Formelen for utrekning   er
+\begin{equation*}
+\prosent\text{\kort{TWL}} =
+\frac{\text{vekt før operasjon −  vekt to år etter operasjon}}% 
+     {\text{vekt før operasjon}} \times \text{100\prosent.}
+\end{equation*}
+Prosent TWL på 20 eller meir  
+blir gjerne definert som suksess%
+\footnote{Grover et al. (2019), 
+«\textenglish{Defining Weight Loss After Bariatric Surgery: a Call for Standardization}«, 
+\url{https://link.springer.com/article/10.1007/s11695-019-04022-z}.}.
+
+Del pasientar med \%TWL $\ge$ 20 er vist på sjukehusnivå i tabell  \vref{tab:vekttap20}. 
+%H se lage label r1968:   \vref{tab:twlprshus}. 
+
+\subsection{Kvalitetsindikatorar på sjukehusnivå} 
+
+\Vref{tab:indtabell} gjev oversikt over  kvalitetsindikatorane liggedøgn, reinnleggingar og alvorlege komplikasjonar
+på sjukehusnivå. Tala må tolkast med varsemd. Preoperativ \kort{KMI} er vist,
+sidan denne kan ha innverknad på indikatorane. 
+% I tillegg kan pasientseleksjon påverke tala.
+
+<<tab-kvalind, echo = kjeldekode, results = "asis">>=
+# Tabell for andel pasienter som har oppfylt indikatoren
+# for alle indikatorer i 1 wombotabell
+# per sjukehus
+
+# kombinerer alle datasett laget tidligere
+d_alle_ind = bind_rows(d_kortligg_sjuk, d_30innlegg_sjuk,
+                       d_kompl_alv_sjukehus) %>% 
+                       ungroup
+
+d_alle_ind = d_alle_ind %>% mutate(OperererendeSykehus = factor(OperererendeSykehus))
+# vi vil ha inn alle sjukehus selv om de har ingen indikatorer hvor de er >= 20
+
+# tar bort sjukehus som har færre enn 20 operasjoner (eller tilfeller)
+d_alle_ind = d_alle_ind %>% filter(nemnar >= 20)
+
+# Hent ut variablane som skal inngå i tabellen
+d_alle_ind = d_alle_ind %>% select(OperererendeSykehus, ltx_tekst, ind)
+
+# Sprer ut datasettet slik det skal se ut i tabellen,
+# med kvalitetsindikatorene i valgt rekkefølge
+d_alle_ind = d_alle_ind %>% 
+  mutate(ltx_tekst = fct_inorder(as_factor(ltx_tekst)))
+d_alle_ind_tab = d_alle_ind %>% spread(ltx_tekst, ind) 
+
+# bruker complete på faktoren vår for å få inn de 
+# sykehusene som ikke har >= 20 på noen indikatorer
+
+d_alle_ind_tab = d_alle_ind_tab %>% complete(OperererendeSykehus) %>% 
+                 mutate(OperererendeSykehus = as.character(OperererendeSykehus))
+
+# vi skal ha med gjennomsnitts KMI før operasjon med i tabellen
+kmi_sjuk = d_prim %>% group_by(OperererendeSykehus) %>% summarise(KMI = mean(bmi_baseline))
+
+d_alle_ind_tab = d_alle_ind_tab %>% left_join(kmi_sjuk, by = "OperererendeSykehus")
+
+# Vis KMI med éin desimal
+d_alle_ind_tab = d_alle_ind_tab %>% mutate(KMI = num(KMI, 1, tabell = TRUE)) %>% 
+                 select(OperererendeSykehus, KMI, everything())
+
+# endra overskrifta til nynorsk
+names(d_alle_ind_tab)[1] = "Sjukehus"
+
+# Formaterer sjukehusnamna og prosentverdiane skikkeleg for LaTeX
+d_alle_ind_tab_form = d_alle_ind_tab %>% 
+  mutate(Sjukehus=formater_instnamn_ltx(Sjukehus)) %>% 
+  mutate_if(is.numeric, prosent, tabell = TRUE)
+
+# lager tabellen med hele sulamitten
+koljust_vek = c("l", rep("r", ncol(d_alle_ind_tab_form) -1 ))
+koljust_tekst = paste0(koljust_vek, collapse = "")
+tab_alle_ind = lag_tab_latex(d_alle_ind_tab_form,
+           label = "tab:indtabell",
+           caption = "Sjukehusvis oversikt over gjennomsnitts-\\kort{KMI} 
+før operasjon (basisregistrering)
+og  kvalitetsindikatorane tre/færre liggedøgn, reinnlegging og alvorlege komplikasjonar.
+«Tre/færre liggedøgn» er prosentdelen pasientar som var
+innlagde tre eller færre døgn etter primæroperasjonen.
+«Reinnlegging» er prosentdelen pasientar som vart reinnlagde
+dei første 30~dagane etter primæroperasjonen. 
+«Alvorlege kompl.» er prosentdelen pasientar som hadde
+hatt ein alvorleg komplikasjon dei første 30~dagane etter primæroperasjonen.
+Sjå \\vref{sec:regspe} for meir informasjon om definisjon og
+tolking av dei ulike kvalitetsindikatorane.
+Merk at dei utrekna verdiane ikkje nødvendigvis vil reflektere den faktiske
+kvaliteten på behandlinga, spesielt for sjukehus med få pasientar.
+Talet på pasientar som kvalitetsindikatorane er rekna ut frå,
+varierer frå sjukehus til sjukehus og frå indikator til indikator.
+Berre tal der kvalitetsindikatoren er basert på minst 20 operasjonar er viste.",
+                          wide = TRUE,
+           collabel.just=koljust_vek,
+           )
+
+# Legg til totalrad (på ein litt hackete måte, vurder fixme når me får
+# gjennomgått heile tabellgenereringssystemet vårt ein gong).
+tab_alle_ind = tab_alle_ind %>% str_replace("(\\\\begin\\{tabular\\}\\{).*(\\}\\n)", paste0("\\1", koljust_tekst,"\\2")) # Fiks høgrejustering av prosenttal (fixme: remove hack)
+cat(tab_alle_ind)
+ @
+
+
+\Vref{tab:vekttap20}  %H 3.2 ?? ref   \vref{tab:twlprshus}
+gjev oversikt over kvalitetsindikatorane kontroll innan normtid eit år,  kontroll innan normtid to år,
+og del pasientar med tap av 20 \% kroppsvekt eller meir to år etter operasjon for dei to vanlegaste operasjonsmetodane.
+
+
+\begin{widetable}[ht]
+\caption{Sjukehusvis oversikt over tal pasientar i registeret fram til aktuelle dato samt  prosentdelen pasientar som oppfyller måla til dei tre kvalitetsindikatorane kontroll innan normtid eit år, kontroll innan normtid to år og vekttap $\ge 20 \%$ etter to år.
+Sjå  \vref{sec:regspe} % på side ….\\vref{sec:regspe}
+for meir informasjon om definisjon og tolking av dei ulike kvalitetsindikatorane. Det er berre presentert vekttap for pasientar som er kontrollert innafor normtid. Prosentdel pasientar med vekttap $\ge 20 \%$ er vist separat for dei to vanlegaste metodane gastrisk sleeve og roux-en-y gastrisk bypass (\kort{RYGBP}). Det er berre presentert vekttap basert på minst 20 kontrollerte pasientar. }
+\centering
+\begin{tabular}{c|c|c|c|c|c|c}
+\toprule
+% \cline{1-7}
+ Helseføretak & \multicolumn{2}{c|} {Tal operert}  & \multicolumn{2}{ p{2.6cm}| }{Kontrollert innan normtid \%} & 
+% Helseføretak &  Tal operert & Tal operert & \multicolumn{2}{ p{2.6cm}| }{Kontrollert innan normtid \%} & 
+\multicolumn{2}{ c }{TWL $\ge$ 20 \%} \\ \midrule
+& -01.03.19 & -01.03.18                      & {Eit år} & {To år} & {Sleeve} & {RYGBP} \\ \midrule
+ Helse Bergen           & 967      & 764     & 72.4    & 47.4     & 93.6 & - \\ % \cline{1-7}
+Helse Fonna HF          & 341      & 256     & 83.6 & 75.4        & 87.2 & 93.9 \\  % % \cline{1-7}
+Helse Førde             & 126      & 87      & 70.6 & 57.5        & 84.9 &  - \\ % \cline{1-7}
+Helse Møre og Romsdal   & 157      & 103      & 89.2 & 78.6        & 90.7 &  95.0 \\ % \cline{1-7}
+Helse Nord-Trøndelag    & 381      & 292     & 72.2 & 61.3        & 89.2 & 98.8 \\ % \cline{1-7}
+Helse Stavanger         & 604      & 489     & 92.9 & 23.3        & 83.6 & 97.5 \\ % \cline{1-7}
+IbsenSykehuset AS       & 167      & 108      & 61.1 & 0   & - & - \\ % \cline{1-7}
+Nordlandssykehuset HF   & 259      & 156     & 91.1 & 79.5        & 81.0 & 93.5 \\ % \cline{1-7}
+Oslo universitetssykehus & 611     & 350      & 72.8 & 40.3        & 78.7 & 90.0 \\ % \cline{1-7}
+Privatsykehuset Haugesund & 74     & 59      & 79.7 & 71.2        & 82.6 &  - \\ % \cline{1-7}
+St. Olavs hospital       & 178     & 119     & 89.9 & 79.8        & 77.8 &  - \\ % \cline{1-7}
+Sykehuset i Vestfold     & 352     & 171     & 83.8 & 71.3        & 71.0 & 95.0 \\ % \cline{1-7}
+Sykehuset Innlandet     & 725      & 512     & 93.5 & 83.6        & 87.7 & 95.1 \\ % \cline{1-7}
+% Sykehuset Østfold HF   & -         & -       & NA & NA & NA & NA \\ % \cline{1-7}
+Sørlandet sykehus     & 316        & 204     & 59.8 & 38.2        & 88.0 & 91.4 \\ % \cline{1-7}
+Vestre Viken         & 433         & 281     & 86.1 & 66.2        & 88.9 & 94.7 \\ % \cline{1-7}
+Volvat Bergen        & 252         & 179     & 82.9 & 71.5        & 87.8 & 97.0 \\ % \cline{1-7}
+Volvat Oslo         & 44           &   44    & 65.9 & 9.1         & -  & - \\ \bottomrule
+\end{tabular}
+ \label{tab:vekttap20}
+\end{widetable}
+
+%%H
+%    tb <-  ds %>% group_by(OperererendeSykehus) %>% summarize("et år, ktrl i normtid"=mean(et_nt, na.rm = TRUE),
+%             "to år, ktrl i normtid"= mean(to_nt, na.rm = TRUE),"to år % TWL"= mean(pTWL,na.rm = TRUE)) 
+%
+
+
+\section{Andre analysar}\label{sec:andana}
+
+\subsection{Tal og type operasjonar}\label{sec:taltypeoper}
+
+<<opmetodar-stat, echo=kjeldekode, results='hide'>>=
+  # Legg til tekst til operasjonsmetoden
+  # (fixme: hent frå kodebok når me har det) 
+d_prim = d_prim %>% 
+  mutate(operasjon_utvidet = case_when(Opmetode_GBP == 1 ~ 14L,
+                                       Opmetode_GBP == 2 ~ 15L,
+                                TRUE ~ Operasjonsmetode))
+
+d_prim %<>% mutate(opmetode_tekst=factor(operasjon_utvidet, 
+                                         levels=c(1:8,11,12,13,9,10,14,15),
+labels=c(
+  "Gastrisk bypass",
+  "Vertikal avsnørt gastroplastikk",
+  "Gastrisk bandkirurgi",
+  "Biliopankreatisk avleiing med duodenal omkopling",
+  "Biliopankreatisk avleiing à la Scopinaro",
+  "Gastrisk sleeve",
+  "Duodenal omkopling (ventrikkelreseksjon allereie gjord)",
+  "Annan fedmeoperasjon",
+  "Avbroten operasjon",
+  "Gastrisk plikasjon",
+  "Endoluminal metode",
+  "Revisjon utan endring av grunnmetode",
+  "Tilbakekopling til normal anatomi",
+  "Roux-en-y gastrisk bypass", #  "Roux-Y-GB (RYBG)",
+  "Ein-anastomose gastrisk bypass"
+)) 
+)
+
+# Rekn ut prosent operasjonar for kvar operasjonstype
+# (òg dei som har 0 førekomstar)
+d_opmet = d_prim %>%
+  group_by(opmetode_tekst) %>% 
+  summarise(ant=n(), pros=ant/nrow(.)) %>% 
+  arrange(desc(pros), desc(opmetode_tekst)) %>% 
+  mutate(opmetode_tekst=opmetode_tekst %>% fct_drop %>% fct_inorder %>% fct_rev)
+
+# figurtekst til opmetodar-graf
+figtekst_opmetode = paste0("Fordeling av operasjonsmetodar for 
+                           primæroperasjonar i~", rapporteringsaar, ". 
+                           Basert på data frå ",num(nrow(d_prim)),  
+                           #H " operasjonar.   H  oppr. () må virke!
+                           # Gastrisk bypass inkluderer både Roux-en-Y (\\kort{RYGB})
+                           # og éin-anastomose gastrisk bypass (\\kort{MGB/OAGB}).
+                           # ",berre_gyldig_i("Kring 20\\prosent", 2018),
+                           # " av gastric bypass-\\allowbreak{}operasjonane
+                           # er \\kort{MGB/OAGB}.
+                           " operasjonar. Avbroten operasjon vil seie at pasienten har blitt lagt i narkose, men
+                           at det så har oppstått ein situasjon som gjorde 
+                           at operasjonen ikkje vart utført.")
+                    #     Her er \\kort{RYGB} $=$ Roux-en-Y gastrisk bypass og 
+                    #       \\kort{OAGB} $=$ Ein-anastomose gastrisk bypass.")
+# fixme: Fjern hardkoding av «utgjer kring 20 % av gastric bypass-operasjonane»
+@
+  
+ 
+<<opmetodar-graf, echo=kjeldekode, results='hide', fig.cap=figtekst_opmetode, fig.height=fighogd_stolpe(7), warning=FALSE>>=
+  # Liggande søylediagram over operasjonsmetodar
+  ggplot(d_opmet, aes(x=opmetode_tekst, y  = pros)) +
+  geom_bar(stat='identity', fill=colPrim[3], width=2/3) + 
+  xlab(NULL) + ylab("Del av operasjonane") +
+  scale_y_continuous(limits = c(0, NA), breaks=sett_avkutningspunkt_bredde(.1),
+                     labels = akse_prosent,
+                     expand = expand_soyle) +
+  coord_flip() +
+  fjern_y + fjern_y_ticks
+@
+
+<<OAGB-stat,  echo=kjeldekode, results='hide'>>=
+#dm_prim  <- dm_jrg %>% filter( TidlFedmeOp ==0)
+  OAGtab   <- d_GB[d_GB$Opmetode_GBP == 2,] %>% group_by(year(Operasjonsdato)) %>% summarise("antall"=n())
+OAGBfigtekst=paste0("Utviklinga i bruken av ein-anastomose gastrisk bypass (OAGB) som primæroperasjon.") 
+@
+
+<<OAGB-graf,  echo=kjeldekode, fig.cap=OAGBfigtekst, fig.height=fighogd_stolpe(7), warning=FALSE, results='asis'>>=
+#tema$axis.title.y$angle=90
+OAGBplot <-  ggplot(OAGtab[1:5,],aes(x=`year(Operasjonsdato)`,y=antall) ) +
+             geom_bar(stat="identity", fill=colPrim[3], width=2/3) +
+#        ggtitle("Ein-anastomose gastrisk bypass, OAGB") 
+             xlab("År") + ylab("Talet på\nOAGB") +   #
+            #  theme_light(base_size=skriftstorleik) +
+         theme(axis.title.y =  element_text( angle=0)) +
+          #   tema$axis.text$angle=15 +
+           fjern_x
+
+OAGBplot
+@
+ 
+% theme( axis.text.x = element_text(angle = 0),
+%        axis.text.y = element_text(angle = 45))+
+%        , axis.title.y = element_text(angle = 45)
+I \Sexpr{rapporteringsaar} vart det meldt inn \Sexpr{num(n_op)} operasjonar
+på i alt \Sexpr{num(n_pas)} pasientar til registeret. Sjå \vref{sec:reg}
+for fordeling på sjukehus/helseføretak.
+Av dei \Sexpr{num(n_op)} operasjonane var
+\Sexpr{num(n_prim)} (\Sexpr{round(100*n_prim/n_op)}\prosent)
+\emph{primæroperasjonar}, altså operasjonar der pasienten ikkje var tidlegare fedmeoperert,
+medan \Sexpr{num(n_op-n_prim)} (\Sexpr{round(100*n_reop/n_op)}\prosent) var revisjonsoperasjonar. 
+Der ikkje anna er nemnt, gjeld resultata i resten av årsrapporten berre primæroperasjonane.
+\Vref{fig:opmetodar-graf} viser kor ofte dei ulike operasjonsmetodane var brukte.
+Merk at sidan resultata berre er baserte på \Sexpr{num(n_prim)} av mellom \num{2500} og \num{3000}
+utførte primæroperasjonar i Noreg i \Sexpr{rapporteringsaar},
+er dei ikkje nødvendigvis representative for alle primærinngrep som vart utførte dette året.
+
+Ein-anastomose gastrisk bypass (engelsk: One Anastomosis Gastric Bypass (OAGB)) er ein relativt ny metode som vart registrert i \soregn første gang i 2015. Utviklinga for OAGB brukt som primæroperasjon er vist i figur 
+\vref{fig:OAGB-graf}.
+
+
+% \begin{figure}[htbp]
+% \includegraphics[height=9cm]{oprsjonane.png}
+% \caption{Fordeling av operasjonsmetodar for 
+%                            primæroperasjonar i~\Sexpr{rapporteringsaar}. 
+%                            Basert på data frå \Sexpr{num(nrow(d_prim))} operasjonar. 
+%                             Avbroten operasjon vil seie at pasienten har blitt lagt i narkose, men
+%                            at det så har oppstått ein situasjon som gjorde 
+%                            at operasjonen ikkje vart utført.}
+%                            \label{fig:opmetodar-graf}
+% \end{figure}
+
+%  d_opmet = d_prim %>%
+%    group_by(opmetode_tekst, Opmetode_GBP) %>% 
+%    summarise(ant=n(), pros=ant/nrow(.)) %>% 
+%    arrange(desc(pros), desc(opmetode_tekst))  # %>% 
+%    # mutate(opmetode_tekst=opmetode_tekst %>% fct_drop %>% fct_inorder %>% fct_rev)
+% 
+% 
+% p<- ggplot(d_opmet, aes(x=paste0(opmetode_tekst,ifelse(!is.na(Opmetode_GBP),Opmetode_GBP,"")), y  = pros)) +
+%    geom_bar(stat='identity', fill=colPrim[3], width=2/3) + 
+%    xlab(NULL) + ylab("Del av operasjonane") +
+%    scale_y_continuous(limits = c(0, NA), breaks=sett_avkutningspunkt_bredde(.1),
+%                       labels = akse_prosent,
+%                       expand = expand_soyle) +
+%    coord_flip() +
+%    fjern_y + fjern_y_ticks
+ 
+
+
+\subsection{Demografi}
+
+<<unike-pers, echo=kjeldekode, results='hide'>>=
+test_that("Ingen personar har fleire enn éin primæroperasjon",
+          expect_false(any(duplicated(d_prim$PasientID)))
+          )
+@
+
+<<alder-kjonn, echo=kjeldekode, results='hide'>>=
+test_that("Alle personar har fastsett kjønn",
+          expect_true(all(d_full$PasientKjonn %in% c("Mann", "Kvinne")))
+          )
+
+# Aldersgrenser for å få operasjon (verdiar utanfor desse tyder på feil operasjonsdato)
+alder_min = 14
+alder_maks = 80
+test_that(paste0("Alle har alder definert, og er ikkje yngre enn ", alder_min,
+                 " år eller eldre enn ", alder_maks," år"), {
+          expect_true(!any(is.na(d_full$PasientAlder)))
+          expect_gte(min(d_full$PasientAlder, na.rm=TRUE), alder_min)
+          expect_lte(max(d_full$PasientAlder, na.rm=TRUE), alder_maks)
+          })
+
+n_kvinne = sum(d_prim$PasientKjonn=="Kvinne")
+n_mann = sum(d_prim$PasientKjonn=="Mann")
+p_flest_kjonn = max(n_kvinne,n_mann)/n_prim
+@
+
+
+Gjennomsnittsalderen ved operasjon var \Sexpr{round(mean(d_prim$PasientAlder))}~år;
+sjå \vref{fig:aldersgraf} for detaljert aldersoversikt.
+Fleirtalet av dei opererte,
+\Sexpr{round(100*p_flest_kjonn)}\prosent,
+var \Sexpr{ifelse(n_kvinne > n_mann, "kvinner", "menn")}.
+% \emph{Tekst og  \vref{tab:fedmerelatert} om fedmerelatert sjukdom..}
+
+<<aldersgraf, echo=kjeldekode, results='hide', fig.cap=paste0("Aldersfordeling ved primæroperasjonar i~", rapporteringsaar, ". Basert på data frå ",num(nrow(d_prim)), " pasientar."), fig.height=1.95>>=
+ggplot(d_prim, aes(x=PasientAlder))+
+  geom_histogram(binwidth=2.5, boundary=0, fill=colPrim[3], closed="left", colour=colPrim_mork[3])+
+  scale_x_continuous(breaks=sett_avkutningspunkt_bredde(5), minor_breaks = sett_avkutningspunkt_bredde(5)) +
+  scale_y_continuous(expand = expand_soyle) +
+  xlab("Alder")+ylab("Talet på\npasienter") +
+  fjern_x
+@
+
+% \clearpage
+Blant dei  opererte var 69 \% under behandling for fedmerelatert sjukdom i forkant av fedmeoperasjonen. 
+Dei tre vanlegaste fedmerelaterte sjukdomane
+var muskel-/skjelettsmerter (35\%), hypertensjon (29\%) og søvnapnoe (17\%).
+\Vref{tab:fedmerelatert} gir ei oversikt over tal pasientar under behandling for fedmerelatert sjukdom for ulik grad av \kort{KMI}.
+
+\begin{widetable}[ht]
+\caption{Fedmerelatert sjukdom føre operasjon. Tabellen viser tal pasientar behandla for fedmerelatert sjukdom i forkant av operasjon. Som fedmerelatert sjukdom inngår her søvnapnoe, hypertensjon, diabetes, hyperlipidemi, gastro-øsofageal refluks, depresjon, muskel/skjelettsmerter. }
+\centering
+% \setlength{\unitlength}{0.75mm}
+% \begin{picture}(60,15)
+% % \put(30,20){\vector(1,0){90}}
+%   \put(18,0){   \text{\kort{KMI}} }
+%   \put(28,0){$35$}
+%  \put(43,0){$40$}
+% \end{picture}
+
+%   BR_PaagaaendeBeh `over 40` between `under 35` total   dd 8/5 2020
+%              <dbl>     <dbl>   <dbl>      <dbl> <dbl>
+% 1                0       392     111         33   536
+% 2                1       806     386         55  1247
+% 3                1      1198     497         88  1783     % rcrcrcr
+\begin{tabular}{lccccccc} 
+ \toprule % \hline
+ {}           & &  &  \text{\kort{KMI}}  {$< 35$} & &  $\lbrack 35,40) $  & &  $\lbrack 40, \infty) $  \\ 
+   \midrule
+Ikkje behandla & &  & 42  (40.8 \%)               & & 127  (24.4 \%)      & &  400  (33.0 \%) \\ 
+Behandla       & &  & 61  (59.2 \%)              &  & 394  (75.6 \%)      & &  811  (67.0 \%) \\ 
+   \hline
+            {Sum} & & & 103 (100 \%)               &         & 521  (100 \%)             &    &   1211 (100 \%)   \\ 
+ \bottomrule  
+  \end{tabular}
+  \label{tab:fedmerelatert}
+\end{widetable}
+
+%Ikkje behandla   & 33 & (6 \%)  & 111 & (21 \%)  &   392 & (73 \%) \\     rows=100%
+%Behandla         & 55 & (4 \%)  & 386 & (31 \%)  &   806 & (65 \%) \\ 
+ 
+  
+ % \begin{figure}[htbp]
+ % \includegraphics[height=8cm]{OAGBgraf.png}
+ % \caption{Utviklinga i bruken av ein-anastomose gastrisk bypass (OAGB) som primæroperasjon.}
+ %                            \label{fig:OAGB-graf}
+ % \end{figure}
+  
+% andel20
+% tb20b <-  dnt %>% mutate(del20= pTWL>=20.0 )  %>% group_by(OperererendeSykehus) %>%
+% summarize("antall"= n(),"andel %TWL>=20.0"= mean(del20,na.rm = TRUE))
+
+\subsection{Medgått tid før operasjon}\label{sec:tid-henv-op}
+
+\Vref{tab:tid-fra-henv-til-op} viser 
+gjennomsnitt og median dagar som gjekk med frå søknaden frå primærlege vart motteken
+i spesialisthelsetenesta (tilvisingsdato) til pasienten vart operert. Tabellen gjev oversikt over
+alle primæroperasjonar utførte i \Sexpr{rapporteringsaar} der tilvisingsdato er oppgitt. 
+
+<<data-tid-op, echo=kjeldekode, results='hide'>>=
+# Tid i dagar frå henvising til operasjon
+d_prim = d_prim %>%
+  mutate(tid_henv_op = as.numeric(Operasjonsdato - BR_HenvisningsDato))
+
+# har noen negative tider? Vi tar en test.
+test_that("Ingen pasienter har negative verdier for tid fra henvisning til operasjon", {
+  expect_false(any(d$tid_henv_op < 0, na.rm=TRUE))
+})
+
+# Finner gjennomsnitt og median per foretak
+d_tid_henv_op = d_prim %>% 
+  group_by(OperererendeSykehus) %>% 
+  summarise(n_pas = sum(!is.na(tid_henv_op)),
+            tid_snitt = mean(tid_henv_op, na.rm = TRUE),
+            tid_median = median(tid_henv_op, na.rm = TRUE)) %>% 
+  arrange(desc(tid_median))
+
+# Ikkje vis tal dersom det er gjort mindre enn 20 operasjonar
+d_tid_henv_op = d_tid_henv_op %>% 
+  mutate(tid_snitt = ifelse(n_pas <= 20, NA, tid_snitt),
+         tid_median = ifelse(n_pas <= 20, NA, tid_median))
+@
+
+<<tab-tid-fra-henv-til-operasjon, echo = kjeldekode, results = "asis">>=
+# Formater for tabellbruk (med 0 desimalar)   #H fjerne Østfold
+d_tid_henv_op_form = d_tid_henv_op %>% filter(OperererendeSykehus != "Sykehuset Østfold HF") %>%
+  mutate_if(is.numeric, num, desimalar = 0, tabell = TRUE) %>% 
+  mutate(OperererendeSykehus = formater_instnamn_ltx(OperererendeSykehus)) %>% 
+  setNames(c("Helseføretak", "Oper.", "Gj.snitt.", "Median"))
+
+# lager tabellen med riktige kolonnejusteringer
+koljust_tid_henv_op = c("l", rep("r", ncol(d_tid_henv_op_form) - 1))
+
+# tabelltekst
+tabtekst_tid_henv_op = 
+  paste0("Talet på operasjonar og dagar i gjennomsnitt og median frå søknaden vart motteken til operasjonen var utført. Sjukehusa er sorterte etter median tal på dagar. Gjennomsnitts- og mediantala vert berre viste for sjukehus med minst 20 operasjonar. Basert på data frå ", num(sum(d_tid_henv_op$n_pas))," pasientar med primæroperasjonar i ",rapporteringsaar ,".")
+
+# lager tabellen
+tab_tid_henv_op = lag_tab_latex(d_tid_henv_op_form,
+                          label = "tab:tid-fra-henv-til-op",
+                          caption = tabtekst_tid_henv_op,
+                          collabel.just = koljust_tid_henv_op
+                          )
+tab_tid_henv_op = tab_tid_henv_op %>% 
+  str_replace(fixed("\\begin{tabular}{llll}"),
+              paste0("\\begin{tabular}{", paste0(koljust_tid_henv_op, collapse=""), "}")) # Fiks høgrejustering av prosenttal (fixme: fjern hack)
+cat(tab_tid_henv_op)
+@
+
+\clearpage 
+Oversikta viser store forskjellar i tidsløp
+mellom offentlege og private sjukehus, samt mellom dei ulike
+offentlege sjukehusa. Ein medverkande årsak til dette er at
+dei offentlege sjukehusa i ulik grad krev at pasientane skal
+gjennomgå eit førebuande program.
+
+\subsection{Oppfølging ved seks veker}\label{sec:oppfolging}
+
+<<oppfolg, echo=kjeldekode, results='hide'>>=
+n_folgt_opp_6v = sum(d_prim$`6U_KontrollType` %in% c(1,2,3))
+@
+
+I \soregn er det lagt til rette for kontroll/oppfølging av pasientane seks veker og
+eitt, to, fem og ti år etter operasjonen.
+Det er eit mål å ha høg oppfølgingsgrad. På seksvekerskontrollen
+blir det blant anna lagt inn informasjon om talet på
+liggedøgn og eventuelle reinnleggingar og komplikasjonar.
+\label{par:oppf6v}%
+For \Sexpr{rapporteringsaar}
+vart \Sexpr{num(n_folgt_opp_6v)} av dei \Sexpr{num(n_prim)}
+opererte pasientane (\Sexpr{round(100*n_folgt_opp_6v/n_prim)}\prosent)
+følgde opp etter seks veker, enten ved frammøte,
+via telefonkontakt eller på annan måte.
+
+<<hogdtest, echo=kjeldekode, results='hide'>>=
+# Sjekk om nokon har svært varierande høgd
+d_full$hogd_forskjell = d_full %>%
+  select(ends_with("Hoyde")) %>% 
+  apply(1, . %>% { diff(range(., na.rm=TRUE)) } )
+
+# Finn dei som har høgd som varierer meir
+# med 6 centimeter eller meir i løpet av opphaldet
+d_veks = d_full %>% 
+  filter(hogd_forskjell >= 6) %>% 
+  arrange(desc(hogd_forskjell)) %>%
+  select(PasientID, PasientAlder, ends_with("Hoyde"), hogd_forskjell) %>% 
+  round
+
+# Feilmelding viss me finn store høgdeavvik
+#if(nrow(d_veks) > 0) {
+#  stop(paste0("Finst pasientar som veks eller krympar mykje (6 cm eller meir) i høgd i løpet av behandlinga:\n",
+#              "Pasient-ID: ", paste(d_veks$PasientID, collapse=", ")))
+#  print(d_veks, n=Inf)
+#}
+@
+
+
+\subsection{Vektutvikling over tid}
+
+<<oppfolging_bmi, echo=kjeldekode, results='hide'>>=
+# Primæroperasjonar med toårsdata
+d_toaarsdata_prim = d_toaarsdata %>% filter(op_primar)
+
+# Gjer om til langt format (som er det me burde fått frå børjan av)
+d_bmi_lang = d_toaarsdata_prim %>% 
+  gather(bmitid, bmi, bmi_baseline, bmi_op, bmi_6v, bmi_1a, bmi_2a, na.rm = TRUE) %>% 
+  mutate(tidspunkt = factor(bmitid,
+                            levels=c("bmi_baseline", "bmi_op", "bmi_6v", "bmi_1a", "bmi_2a"),
+                            labels=c("Før operasjon", "Ved operasjon",
+                                     "Seks veker etter\noperasjon", "Eitt år etter\noperasjon",
+                                     "To år etter\noperasjon")))
+
+# Snitt-BMI for kvart tidspunkt
+d_bmi_lang_snitt = d_bmi_lang %>% 
+  group_by(tidspunkt) %>% 
+  summarise(bmi=mean(bmi))
+
+# Talet på pasientar med minst éi BMI-måling
+n_bmi_pas = n_distinct(d_bmi_lang$PasientID)
+@
+
+\Vref{fig:bmigraf} viser endringa i kroppsmasseindeks (\kort{KMI}/\kort{BMI})
+for dei pasientane vi har tilstrekkelege oppfølgingsdata frå,
+altså dei som vart opererte fram til og med \Sexpr{formater_dato(dato_toaarsdata)}.
+Pasientane går vanlegvis ned i vekt i eitt til to år etter ein fedmeoperasjon.
+
+<<ant-bmi-tidspunkt, echo=kjeldekode, results='hide'>>=
+# Kor mange hadde BMI-målingar på dei ulike tidspunkta (toårsdata)
+n_op_bl = sum(!is.na(d_toaarsdata_prim$bmi_baseline)) 
+n_op_op = sum(!is.na(d_toaarsdata_prim$bmi_op)) 
+n_op_6v = sum(!is.na(d_toaarsdata_prim$bmi_6v)) 
+n_op_1a = sum(!is.na(d_toaarsdata_prim$bmi_1a))
+n_op_2a = sum(!is.na(d_toaarsdata_prim$bmi_2a))
+@
+
+<<bmigraf, echo=kjeldekode, results='hide', fig.cap=paste0("Kroppsmasseindeks (\\kort{KMI}) før operasjon, ved operasjon og etter seks veker og eitt og to år etter operasjon. Den oransje linja viser gjennomsnitts-\\kort{KMI}-en på kvart tidspunkt. Basert på data frå operasjonar fram til og med ", formater_dato(dato_toaarsdata)," (altså operasjonar ein no \\emph{burde} hatt toårsmålingar på), totalt ", num(n_bmi_pas), " pasientar (", num(n_op_bl), " med måling før operasjon, ", num(n_op_op), " med måling ved operasjon, ", num(n_op_6v), " med måling seks veker etter operasjon, ", num(n_op_1a), " med måling eitt år etter operasjon og ", num(n_op_2a), " med måling to år etter operasjon)."), fig.height=2.8, dev="png", dpi=200, dev.args=list(type="cairo")>>=
+# Lagrar figuren som PNG-bilde i (litt) høg oppløysing,
+# sidan skrivardrivarar ikkje er så glad i kompliserte
+# grafar med tusenvis av *halvgjennomsiktige* linjer.
+# (Burde jo hatt 300 DPI, men då vert PNG-fila 2,25 gongar
+# så stor, men berre med litt betre kvalitet.)
+#
+# fixme: Endra skalaen på x-aksen slik at han reflekterer
+#        faktiske tidsintervall, dvs. slik at avstanden
+#        frå operasjon til seks veker p.o. er mykje mindre enn
+#        avstanden frå seks veker til eitt år etter operasjon.
+#        (La éin av tidspunkta vera tid 0 og rekn ut
+#        faktisk gjennomsnittstid, ev. bruk faktisk tidspunkt
+#        for kvar målingar for eitt litt meir realistisk bilde.)
+gjennomsikt = .5 * 100/n_distinct(d_bmi_lang$PasientID)
+ggplot(d_bmi_lang, aes(x = tidspunkt, y = bmi, group = PasientID)) +
+  geom_line(colour = alpha(colPrim[3], gjennomsikt), size = .5) +
+  geom_point(size = .75, colour = alpha(colPrim[3], gjennomsikt)) +
+  geom_point(size = 2, data = d_bmi_lang_snitt, group=1, colour=colKontr) +
+  geom_line(size = 1, data = d_bmi_lang_snitt, group=1, colour=colKontr) +
+  xlab(NULL) + ylab("KMI\n(kg/m²)") +
+  scale_x_discrete(expand=c(0, 0.3)) +
+  fjern_x
+@
+
+
+\chapter{Metodar for fangst av data}\label{cha:metoder}
+
+Ved kvart sjukehus er det laga lokalt tilpassa 
+rutinar for registrering i \soregn. Dei fleste hentar 
+opplysingar frå pasientjournalen og legg
+data derifrå inn i den elektroniske \kort{O}pen\kort{QR}eg-plattforma forvalta 
+av Helse Nord~\kort{IKT}. Ein kan også føre 
+opplysingane inn i \soregn og få skjemaet automatisk konvertert
+til eit Word-dokument som kan leggjast inn i
+den elektroniske pasientjournalen.
+
+ 
+%**
+Registeret vil legge til rette for at pasientane skal kunne registrere data om sjølvopplevd helse (\kort{PROM})
+og pasienterfaringar rett inn i registeret gjennom ei nettbasert løysing. Ei felles norsk-svensk gruppe
+har utarbeidd spørsmål for dette. I 2019 har \soregn starta prosessen med å opprette elektroniske skjema, 
+og registeret har fått midlar frå \kort{PROM}-senteret for utarbeiding av teknisk løysing for registeret.
+Vi håpar at arbeidet med den tekniske løysinga vil ta til i 2020. %** 
+
+\chapter{Datakvalitet}\label{cha:kva}
+
+\section{Talet på registreringar}\label{sec:reg}
+
+% fixme: Legga til kart som viser plasseringa av alle sjukehusa?
+
+For \Sexpr{rapporteringsaar} vart det registrert \Sexpr{num(n_op)} operasjonar
+(\Sexpr{num(n_prim)}~primæroperasjonar og \Sexpr{num(n_reop)}~revisjonsoperasjonar)
+på til saman \Sexpr{num(n_pas)} pasientar. Sjå \vref{tab:optalsoregtab} for
+fordeling på helseføretak/institusjon og
+\vref{fig:utviklingsgraf} for oversikt over utviklinga over tid.
+
+<<optal-soreg, echo=kjeldekode, results='asis'>>=
+# Rekn ut talet på operasjonar og sånt per sjukehus
+d_optal_soreg = d %>% 
+  group_by(OperererendeSykehus) %>% 
+  summarise(n_op = n(), n_prim=sum(op_primar),
+            n_reop = sum(!op_primar), n_pas = n_distinct(PasientID)) %>% 
+  arrange(desc(n_op))
+
+# Formater for LaTeX-bruk
+d_optal_soreg_form = d_optal_soreg %>% 
+   mutate(OperererendeSykehus = formater_instnamn_ltx(OperererendeSykehus))
+
+# Formater som LaTeX-tabell
+optal_soreg_ltx = lag_tab_latex(d_optal_soreg_form,
+      colheads=c("Institusjon","Operasjonar", "Primær", "Revisjon", "Pasientar"),
+      collabel.just=c("l","r","r","r","r"),
+      caption=paste0("Oversikt over talet på registrerte operasjonar (primær- og revisjonsoperasjonar) i~", rapporteringsaar, ", fordelt på helseføretak/institusjon. 
+                     Merk at operasjonar på
+                     pasientar som tidlegere
+                     har hatt ein avbroten operasjon er registrerte
+                     som revisjonsoperasjonar."),
+      label="tab:optalsoregtab", wide = TRUE
+     )
+cat(optal_soreg_ltx) 
+# fixme: Legg til totalrad. Obs! Kan *ikkje* gjera dette ved å summera kolonnane, då nokon pasientar kan ha vore opererte på fleire sjukehus (berre problem for kolonnen n_pas).
+@
+
+<<utviklingsgraf, echo=kjeldekode, results='hide', fig.cap=paste0("Talet på registrerte operasjonar (primær- og revisjonsoperasjonar) kvart år, frå oppstarten av registeret fram til og med ", rapporteringsaar, ". Det er til saman registrert ", num(nrow(d_opptilrapaar)), " operasjonar i registeret."), fig.height=1.9>>=
+# Formater store tal med tusenskiljeteikn (fixme: Forbetra,
+# testa og flytt funksjonen til fellesfunksjonar/pakke)
+format_tusen = function(x) {
+  format(x, big.mark = " ")
+}
+
+# Rekn ut og plott talet på operasjonar
+# (primær- og andre) for kvart år
+#
+# fixme: Sjå på https://github.com/slowkow/ggrepel og finn ut
+#        om den løyser problemet med tekstplasseringa på ein
+#        betre / meir automatisk måte.
+d_utvikling = d_opptilrapaar %>% 
+  count(op_aar) %>% 
+  mutate(n_form = format_tusen(n))
+ggplot(d_utvikling, aes(x=op_aar, y=n, label=n_form)) +
+  lag_fig_linje(konfint=FALSE, angle=FALSE,
+             ylab="Operasjonar\n(både primær- og\nrevisjonsoperasjonar)") + # fixme: linja vert litt tjukk
+  geom_text(nudge_y = 100, nudge_x=-.05, hjust=1, colour=colNoyt[1], size=.3*skriftstorleik) +
+  scale_x_continuous(expand=c(.08,0), breaks=sett_avkutningspunkt_bredde(1)) + # For å få plass til tala på kvart punkt
+  scale_y_continuous(
+    limits = c(0, NA),
+    labels = format_tusen,
+    expand = expand_soyle) + # Strengt tatt ikkje søyle, men funkar bra likevel
+  theme(panel.grid.minor.x = element_blank())
+@
+
+\section{Dekningsgrad}\label{sec:met}
+%**  behold overskrifter
+%**  ny tekst om att deknignsgrad  dekkes annethvert år
+% Norsk pasientregister (\kort{NPR}) gjorde seinast i 2018  dekningsgradsanalyse   
+% for registeret  ved å kople alle ferdigstilte    
+% operasjonsskjema i \soregn med \kort{NPR} via fødselsnummer,
+% helseføretak og operasjonsdato. 
+
+Folkehelseinstituttet gjorde seinast i 2018 dekningsgradsanalyse for \soregn ved å kople alle ferdigstilte operasjonsskjema i registeret med Norsk pasientregister (\kort{NPR}) via fødselsnummer, helseføretak og operasjonsdato. Utrekna på denne måten hadde \soregn i 2018
+ein dekningsgrad
+på 77\%\footnote{\url{https://helse-bergen.no/seksjon/soreg/Documents/arsrapport-soreg-2018.pdf}}.
+
+% Forskjell i operasjonsdato mellom dei
+% to kjeldene kunne vere maks sju dagar for at to operasjonar
+% skulle reknast som kopla.
+% Aktuelle operasjonar i \kort{NPR} er dei som oppfylte minst eitt
+% av desse kriteria:
+% \medskip
+%av kriteria lista opp i \vref{tab:nprkrit}.
+
+% Gjort om til *ikkje-flytande* tabell, på grunn av
+% dårleg sideformatering når han var flytande.
+% Gjer eventuelt om til flytande tabell igjen
+% dersom teksten rundt endrar seg veldig (slik at
+% tabellen risikerer å bli delt over to sider).
+%\begin{table}[htbp]
+%\caption{Uttrekkskriterium for \kort{NPR}-data til dekningsgradsanalyse. Alle operasjonar
+%som oppfylte minst eitt av kriteria vart rekna som aktuelle for registrering i~\soregn.}%
+%\label{tab:nprkrit}%
+
+% {\setlength{\topsep}{0pt}% Mellombels hindra ekstra luft før tabbing-omgjevnadar
+% \noindent\textbf{Kriterium 1}
+% \begin{tabbing}
+% \emph{Éin av desse \kort{NCSP}-kodane:}\\
+% \kort{JDF} 00\textendash \kort{JDF} 98\quad \= Voluminnskrenkande inngrep på ventrikkelen\\
+% \kort{JFD} 00\textendash \kort{JFD} 96 \> Tarmshuntoperasjonar \\[1ex]
+% \emph{Saman med éin av desse \kort{ICD}-10-kodane:}\\
+% \kort{E66.0}\textendash \kort{E66.9} \> Fedme \\
+% \kort{Z98.0}, \kort{Z98.8} \> Andre tilstandar etter kirurgisk behandling \\
+% \end{tabbing}
+% 
+% \noindent\textbf{Kriterium 2}
+% \begin{tabbing}
+% \emph{Éin av desse \kort{NCSP}-kodane:}\\
+% \kort{JAH} 00\phantom{\textendash \kort{JDF} 98}\quad \= Laparotomi \\
+% \kort{JAH} 01 \> Laparoskopi \\[1ex]
+% \emph{Saman med \kort{ICD}-10-hovudkode:}\\
+% \kort{E66.0}\textendash \kort{E66.9} \> Fedme \\
+% \end{tabbing}%
+% }%
+
+%\end{table}
+
+% Dekningsgraden for \soregn blir rekna ut basert på talet på operasjonar
+% som er registrerte i enten eitt av eller begge dei to registera, slik:
+% %
+% \begin{equation*}
+% \frac{
+%        \text{i begge registera} +
+%        \text{berre i \soregn}
+%      }
+%      {
+%        \text{i begge registera} +
+%        \text{berre i \soregn} +
+%        \text{berre i \kort{NPR}}
+%      }
+% \end{equation*}
+% 
+% Tilsvarande blir dekningsgraden for \kort{NPR} rekna ut slik: 
+% %
+% \begin{equation*}
+% \frac{
+%        \text{i begge registera} +
+%        \text{berre i \kort{NPR}}
+%      }
+%      {
+%        \text{i begge registera} +
+%        \text{berre i \soregn} +
+%        \text{berre i \kort{NPR}}
+%      }
+% \end{equation*}
+Private sjukehus uten avtale med helseføretak er ikkje pliktige til å rapportere til \kort{NPR}, og difor manglar \kort{NPR} tal på kor mange pasientar som har blitt operert privat. Tidlegare oversikter samla inn gjennom Norsk foreining for fedmekirurgi har vist at kring 1/3 av fedmeoperasjonane i Noreg blir utførte i det private betalt av pasientane sjølve. Vi vil presentere dekningsgradsanalyse i neste årsrapport. 
+
+
+%% Private sjukehus utan avtale med helseføretak er ikkje pliktige
+%% til å rapportere til \kort{NPR}, og derfor har \kort{NPR}  mangla tal på
+%% kor mange pasientar som har blitt opererte privat.
+%% Tidlegare oversikter samla inn gjennom Norsk foreining for fedmekirurgi
+%% har vist at kring ⅓ av fedmeoperasjonane i Noreg blir utførte i det private 
+%% betalt av pasientane sjølve.
+% Den utrekna dekningsgraden føreset at
+% \emph{alle} dei aktuelle operasjonane er registrerte i \kort{NPR}
+% eller \soregn, og vil såleis vera misvisande for
+% privat\-finansierte operasjonar.
+%% Vi vil presentere ny dekningsgradsanalyse i neste årsrapport.
+
+\section{Tilslutnad}\label{sec:endek}
+
+<<optalutrekning, echo=kjeldekode, results='hide'>>=
+# Alle operajsonar har info om sjukehus
+test_that("Alle operasjonar har RESH definert og desse er gyldige", {
+          expect_true(!any(is.na(d_full$OpererendeRESH)))   #  expect_true(all(d_full$OpererendeRESH %in% resh_db$resh))    ##  Hannu: nytt sykehus? 12/3
+})
+
+# Oppstartsdato for kvart føretak (obs: basert på
+# *alle* åra, og alle typar operasjonar)
+d_oppstart = d_full %>% 
+  group_by(OpererendeRESH) %>% 
+  summarise(dato_start=min(Operasjonsdato, na.rm=TRUE))
+
+# Éin institusjon kan her har fleire RESH-ID-ar.
+# Aggreger derfor opp på institusjonsnivå.
+d_optal = d_dekgrad %>%
+  group_by(inst_namn) %>% 
+  summarise_at(.vars=c("begge", "berre_npr", "berre_soreg", "totalt", "soreg", "npr"), .funs=sum) %>% 
+  arrange(totalt, npr, soreg)
+
+# Langt format, for plotting i graf
+d_optal_lang = d_optal %>% 
+  select(inst_namn, soreg, npr, totalt) %>% 
+  gather(kjelde, n, soreg, npr, totalt) %>% 
+  mutate(kjelde=factor(kjelde, levels=c("soreg", "npr", "totalt"),
+                       labels=c("SOReg-N", "NPR", "Til saman")),
+         inst_namn=fct_inorder(addNA(inst_namn, ifany=TRUE))) # For å få fin rekkjefølgje
+
+# Talet på operasjonar i NPR
+n_dek_npr = sum(d_dekgrad$npr, na.rm=TRUE)
+n_dek_soreg = sum(d_dekgrad$soreg, na.rm=TRUE) # Obs: Kan vera litt forskjellig frå n_op,
+                                               # sidan dekningsgradsanalysen kan vera teken ut
+                                               # på eit anna tidspunkt.
+n_dek_totalt = sum(d_dekgrad$totalt, na.rm=TRUE)
+@
+
+<<nprstat, echo=kjeldekode, results='hide'>>=
+# Sjukehus som er registrert *med* operasjonar
+# i det aktuelle året i NPR, SOReg-N eller minst
+# éin av dei
+n_npr_einingar_niv2 = d_optal %>% filter(npr > 0) %>% nrow
+n_soregn_einingar_niv2 = d_optal %>% filter(soreg > 0) %>% nrow
+n_alle_einingar_niv2 = d_optal %>% filter(totalt > 0) %>% nrow # Filtreringa burde eig. vera unødvendig
+@
+
+I \soregn har det i 2019 blitt registrert innrapportering frå 18 sjukehus. Gjennom fagmiljøet kjenner vi til at det i tillegg har blitt
+utført fedmekirurgi på tre private sjukehus som ikkje rapporterer til \soregn.
+
+% I \kort{NPR} er det i \Sexpr{rapporteringsaar} registrert operasjonar frå \Sexpr{n_npr_einingar_niv2} einingar,
+% og i \soregn er det \Sexpr{ifelse(n_npr_einingar_niv2==n_soregn_einingar_niv2, "også", "")}
+% registrert operasjonar frå \Sexpr{n_soregn_einingar_niv2} einingar%
+% \footnote{Det er her snakk om nivå~2-einingar.
+% På detaljnivå (lågare nivå enn helseføretaksnivå) er det registrert operasjonar
+% frå fleire einingar.}.
+% Til saman i dei to registera finn vi \Sexpr{n_alle_einingar_niv2} einingar.
+
+Tilslutnaden for \soregn utrekna på denne måten blir altså   %H autom?
+$ 18/21 = 85.7 $\prosent.
+% \Sexpr{n_soregn_einingar_niv2}/\Sexpr{n_alle_einingar_niv2}~= \Sexpr{ifelse(n_alle_einingar_niv2>0, num(100*n_soregn_einingar_niv2/n_alle_einingar_niv2,0), "?")}\prosent.
+Registeret samla data frå helseføretak i alle dei fire helseregionane.
+% fixme! Behov for en liste/tabell over sykehus som leverer?
+
+\section{Dekningsgrad}\label{sec:obs}
+%**  behold overskrifter
+%**  ny tekst om att deknignsgrad  dekkes annethvert år
+%** Dekningsgrads-analyse vert utført annakvart år. Sidan SOReg-N fekk utført dekningsgradsanalyse for 2018 vil 
+Neste dekningsgradsanalyse blir utført for årsrapporten 2020.
+
+
+
+\section{Prosedyrar for intern sikring av datakvalitet}\label{sec:sik}
+
+Registeret har fleire system for intern sikring av datakvaliteten.
+Desse er skildra i dette avsnittet.
+
+
+\subsection{Automatiske feilrapportar}
+
+Fagsenter for medisinske kvalitetsregister i Helse Vest har laga eit data\-program
+(skript) som automatisk går gjennom alle registrerte data på jakt etter
+mogelege feil. Programmet køyrer mange ulike testar, både for data
+som \emph{må} vera feil \textendash{}~for eksempel ein pasient
+med meir enn éin primæroperasjon~\textendash{} og for ting
+som \emph{sannsynlegvis} er feil~\textendash{} for eksempel ein
+pasient som går \emph{opp} i vekt etter operasjon eller som
+hadde ein \emph{svært stor} vektnedgang på kort tid.
+
+Ein køyrer testane kvar tredje månad.
+Nasjonal koordinator for registeret sender så ut lister med mogelege avvik
+til dei aktuelle lokale koordinatorane, som går gjennom dei og
+rettar eventuelle feil\-registreringar.
+
+
+\subsection{Innebygde testar i årsrapporten}
+
+Fagsenter for medisinske kvalitetsregister i Helse Vest har òg utvikla automatiske
+testar for å oppdage potensielle
+feil i datagrunnlaget for \emph{årsrapporten}. Til dei fleste resultat
+(tabellar, grafar eller talresultat i teksten)
+finst det minst éin test for at data er internt konsistente
+og har rimelege verdiar. Eventuelle feil blir retta før
+ferdigstilling av årsrapporten.
+
+
+\subsection{Opplæring}
+
+Det vart også i 2019 gjort ein del arbeid for å ha gode system for opplæring 
+og informasjon til dei som legg inn
+opplysingar i registeret: 
+
+\begin{itemize}
+  \item Ei revidering av forklaringstekstane 
+        til variablane i registeret vart 
+        implementert i 2019.
+  \item På nettsida til \soregn har vi ei side for
+        vanlege spørsmål og svar ved registrering.
+        Denne blir jamleg oppdatert. 
+\end{itemize}
+
+
+\subsection{Årleg registerdag}
+
+Registeret arrangerer årleg \soreg-dagen, ein registerdag der sentrale tema
+om registeret og pasientbehandlinga blir tekne opp.
+Målet med denne dagen er å bidra til betre pasientbehandling og meir valide data, 
+ved å skape ei felles forståing for bruken av, og innhaldet i, registeret.
+Dagen har  ein registerfagleg del og ein fagleg del. Tema for \soreg-dagen
+i 2019 var blant anna svangerskap etter fedmeoperasjon og vitamin- og mineralbehov etter fedmeoperasjon. 
+ 
+%** Sett inn %**:
+Nokre av presentasjonane frå dagen:
+\footnote{\url{https://helse-bergen.no/avdelinger/laboratorieklinikken/medisinsk-biokjemi-og-farmakologi/hormonlaboratoriet/norsk-kvalitetsregister-for-fedmekirurgi-soreg-norge/registerdagen-2019}} %** %H: .?
+
+\section{Metodar for vurdering av datakvalitet}\label{sec:metval}
+
+\subsection{Metode for innhenting av data}
+
+For å validere dataa i registeret utfører registerleiinga systematiske
+valideringsstudiar ved dei enkelte sjukehusa. For å 
+sjekke kor valide dataa i registeret er 
+blir dei samanlikna med
+ein tenkt gullstandard, som i dette 
+tilfellet er elektronisk pasientjournal~(\kort{EPJ}).
+
+Fagsenter for medisinske kvalitetsregister i Helse Vest har laga eit data\-program
+(skript) som hentar ut eit tilfeldig 
+utval av innregistrerte variablar og pasientar. Desse blir
+ved besøk kontrollerte opp mot~\kort{EPJ}.
+Ved funn av feil i registreringane blir desse retta i registeret. 
+
+Nasjonal koordinator i registeradministrasjonen
+gjennomfører så validerings\-besøk. Kvart besøk krev at 
+det enkelte sjukehuset stiller ein person til disposisjon som
+saman med nasjonal koordinator kan gå gjennom rutinar og
+kontrollere pasientopplysingar mot \kort{EPJ}. 
+Ved kvart besøk går ein gjennom
+
+\begin{itemize}
+  \item lokale rutinar for registrering, samtykkeskjema og liknande. 
+  \item eit tilfeldig utval pasientar og variablar 
+        som blir samanlikna 
+        med \kort{EPJ}. Etter planen skal ein kontrollere 
+        mellom 250 og 300 registrerte 
+        verdiar ved kvart besøk. 
+\end{itemize}
+
+Desse besøka ved sjukehusa gjev i tillegg til kontrollen av data
+eit godt høve til å få 
+direkte kontakt mellom administrasjonen og dei som registrerer inn data. 
+Ved kvart besøk prøver ein å få til eit møte med alle dei involverte 
+i løpet av dagen. Dette gjer at brukarane både kan 
+få svar på spørsmål om registreringane og 
+komme med innspel om utfordringar ved 
+registrering og anna til registeradministrasjonen. 
+
+Etter kvart besøk blir det utarbeidd ein rapport med statistikk frå 
+valideringa og forslag til betring av rutinar og liknande. 
+Denne blir sendt til lokal koordinator for vidare lokal
+oppfølging/forbetringsarbeid.
+
+
+<<data-validitet, echo=kjeldekode, results='hide'>>=
+
+# Vi skal regne valdiditet basert på valideringsstudien som registeret har utført.
+# SPSS-filene med valideringsdataene blir automatisk generert med sykehusnavn fra registeret.
+# Her automatiseres datainnhenting slik at man henter inn nyeste validieringsdata for hvert sykehus.
+# Hvis registeret validerer samme sykehus flere ganger i fremtiden, vil denne koden sørge for at
+# nyeste valideringsstudie blir brukt
+
+# lager mappe for hvor man finner valideringsdata
+valideringsmappe = paste0(grunnmappe, "valideringsdata\\revidert\\")  
+
+# Hent datoen til siste tilgjengelege uttrekk
+filer = list.files(valideringsmappe, recursive = TRUE, full.names = TRUE)
+datoer = filer %>% str_extract("\\d{4}-\\d{2}-\\d{2}") # Fixme: Ekstremt urobust!!!
+filer = filer %>% setNames(datoer)
+
+# Les inn eitt valideringsdatasett og registrer
+# vald dato i kolonnen 'valideringsdato' for dette
+hent_data = function(filnamn, dato)
+{
+   d = read_sav(filnamn) %>% zap_labels
+   d$valideringsdato = as.Date(dato, format="%Y-%m-%d")
+   d
+}
+ 
+# Last inn alle datasetta 
+d_validering_full = filer %>% imap_dfr(hent_data)
+
+# Hent ut data for nyeste validering per sykehus
+nyeste_datoer = d_validering_full %>% 
+                group_by(OpererendeRESH) %>% 
+                arrange(desc(valideringsdato)) %>% 
+                distinct(valideringsdato) %>% ungroup()
+
+# Vis bare data validert i rapporteringsaar eller tidligere
+d_validering_akt = d_validering_full %>% 
+                   filter(year(valideringsdato) <= rapporteringsaar)
+                   
+# Det er valgt ut et sett med sentrale variabler som skal inngå i tabellene
+# disse er definert tidligere og brukes også i tabellen over variabelkompletthet
+# Henter ut dei sentrale variablane 
+d_validering_sent_var = d_validering_akt %>% 
+  filter(varnamn %in% d_sent_var$variabel_id) 
+
+# Funksjon som lager kolonner som brukes videre i valideringen
+#
+# Tar inn en dataramme der alle verdiene har *samme* vartype.
+#
+# Gir ut dataramme med følgende kolonner:
+# en kolonne som viser om en verdi eksisterer i registeret TRUE/FALSE
+# en kolonne som viser om en verdi eksisterer i fagsystem TRUE/FALSE
+# en kolonne som viser om en verdi finnes både i fagsystem og i registeret TRUE/FALSE
+# en kolonne som viser om en verdi finnes fagsystem, men ikke i registeret TRUE/FALSE
+# en kolonne som viser om en verdi finnes registeret, men ikke i fagsystem TRUE/FALSE
+# en kolonne som viser om verdien i registeret og verdien i epj er identisk TRUE/FALSE
+lag_kol_grunnlag = function(d) {
+  
+  # Hent ut aktuelle data fra aktuelle kolonner
+  # og registrer om dataene mangler (er NA) eller ikke
+  kol_reg = paste0("reg_", d$vartype)[1]
+  kol_epj = paste0("epj_", d$vartype)[1]
+  x_reg = d[[kol_reg]]
+  x_epj = d[[kol_epj]]
+  finst_reg = !is.na(x_reg)
+  finst_epj = !is.na(x_epj)
+  
+  # Lag de ulike kolonnne
+  d$finst_reg = finst_reg
+  d$finst_epj = finst_epj
+  d$finst_begge = finst_reg & finst_epj
+  d$finst_epj_ikkje_reg = finst_epj & !finst_reg
+  d$finst_reg_ikkje_epj = finst_reg & !finst_epj
+  samanlikn = Vectorize(identical)
+  d$er_lik = samanlikn(x_reg, x_epj) # Er verdiene helt like mellom register og fagsystem?
+  d
+}
+
+# kjører funksjonen for å få kolonnene våre som brukes til utregningene i valideringstabellene
+d_validering_sent_var = d_validering_sent_var %>% 
+  group_by(vartype) %>%
+  do(lag_kol_grunnlag(.)) %>% 
+  ungroup()
+
+# utregninger som brukes i teksten
+
+# antall validerte sykehus
+# (eit sjukehus(namn) kan *i teorien* ha ulike RESH-ar (post A og post B)
+# sjølv om det skal reknast som eitt sjukehus, så me brukar
+# sjukehusnamnet, ikkje RESH-en)
+n_sykehus_validert = n_distinct(d_validering_akt$OperererendeSykehus)
+
+# henter ut tidsrom for validering
+validering_start = min(d_validering_akt$valideringsdato)
+validering_sist = max(d_validering_akt$valideringsdato)
+@
+
+
+\subsection{Sjukehus og validerte variablar}
+
+I perioden 
+\Sexpr{formater_dato(validering_start)} til \Sexpr{formater_dato(validering_sist)}
+har ein kontrollert \Sexpr{num(nrow(d_validering_akt))}
+verdiar frå til saman \Sexpr{n_sykehus_validert} ulike sjukehus:
+
+<<liste-sjukehus, echo=kjeldekode, results='asis'>>=
+akt_sjukehus = formater_instnamn_ltx(sort(unique(d_validering_akt$OperererendeSykehus)))
+cat(lag_liste(akt_sjukehus))
+
+# Sjekk at sjukehusnamna er unike innanfor RESH:
+d_validering_resh_sjukehus_dup = d_validering_akt %>% 
+  group_by(OpererendeRESH) %>% 
+  summarise(n_namn = n_distinct(OperererendeSykehus),
+            namn = paste(unique(OperererendeSykehus), collapse=" | ")) %>% 
+  filter(n_namn > 1)
+if(nrow(d_validering_resh_sjukehus_dup) > 0) {
+  stop("Finst RESH-ar som har meir enn eitt sjukehusnamn:\n",
+       paste0(format(d_validering_resh_sjukehus_dup), collapse="\n"))
+}
+@
+
+Dei besøkte sjukehusa vart plukka ut i tilfeldig rekkefølgje, og planen er at alle skal
+få besøk annakvart år. 
+
+I denne årsrapporten viser vi resultata frå \Sexpr{nrow(d_sent_var)}
+av dei mest sentrale variablane i registeret:
+
+<<sentvar-liste, echo=kjeldekode, results='asis'>>=
+cat(lag_liste(d_sent_var$tabelltekst))
+@
+
+For desse sentrale variablane har vi \Sexpr{num(nrow(d_validering_sent_var))}
+kontrollerte verdiar.
+
+
+\subsection{Komplettheit i register}\label{sec:prosskildring-komplettheit}
+
+Først presenterer vi datakomplettheit for sjølve registeret,
+det vil seie i kor stor grad dei ulike opplysingane som
+\emph{kan} registrerast i \soregn faktisk \emph{er} registrerte.
+For dei mest sentrale variablane og for operasjonsåret \Sexpr{rapporteringsaar} er dette 
+vist i \vref{sec:komplettheit-reg}.
+
+
+\subsection{Komplettheit i register og journal}\label{sec:komplettheit-reg-epj}
+
+Vi presenterer så i \vref{tab:registreringsgrad} datakomplettheit
+basert på \emph{valideringsbesøka} som var gjorde,
+med oversikt over kor mange av dei undersøkte verdiane som var registrerte
+
+\begin{itemize}
+  \item i registeret
+  \item i journalen
+  \item både i registeret og i journalen
+  \item i journalen men ikkje i registeret
+  \item i registeret men ikkje i journalen
+\end{itemize}
+
+
+\subsection{Samsvar mellom register og journal}\label{sec:likskap-reg-epj}
+
+For å samanlikne resultata med pasientjournalen 
+ser vi på dei tilfella der dataa var registrerte både
+i registeret og i pasientjournalen.
+Vi reknar ut i kor mange av desse tilfella dei
+kontrollerte verdiane var \emph{like} i dei to datakjeldene.
+Resultata for dette er presentert i
+\vref{tab:registreringskvalitet}.
+
+Merk at tilfella der det \emph{mangla} data i
+registeret og/eller i pasient\-journalen ikkje er med
+i utrekningsgrunnlaget. Desse vil bli 
+fanga opp av analysane av \emph{komplettheit} i
+dei to datakjeldene.
+
+
+
+
+\section{Vurdering av datakvalitet}\label{sec:valdat}
+
+\subsection{Komplettheit for sentrale variablar}\label{sec:komplettheit-reg}
+
+Sjå \vref{tab:komptab} for oversikt over kor komplett dei
+mest sentrale variablane var for alle \Sexpr{num(nrow(d))} operasjonane
+registrerte i \Sexpr{rapporteringsaar}.
+
+<<komplettheit, echo=kjeldekode, results='asis'>>=
+# Hent ut dei sentrale variablane
+d_aktvar = d %>% select(!!d_sent_var$variabel_id)
+n_aktvar = nrow(d_aktvar)
+
+# Rekn ut kor mange registreringar av kvar variabel
+# som faktisk er fylte ut i registeret
+d_komp = d_aktvar %>% 
+  imap_dfr(~tibble(variabel_id = .y,
+                   reg = sum(!is.na(.x)),
+                   prop = reg/n_aktvar)) %>% 
+  left_join(d_sent_var, by="variabel_id") %>% # Legg til variabelforklaring
+  select(variabel=tabelltekst, reg, prop)     # Aktuelle kolonnar for tabell
+
+# Formater og vis tabellen
+d_komp_form = d_komp %>%
+  mutate(reg = num(reg, tabell = TRUE), prop = prosent(prop, tabell = TRUE))
+lag_tab_latex(
+  d_komp_form,
+  colheads = c("Variabel", "Registrert", "Prosent"),
+  collabel.just = c("l", "r", "r"),
+  caption = paste0("Oversikt over komplettheit for sentrale variablar
+                   (både primær- og revisjonsoperasjonar) i~",
+                   rapporteringsaar, ". Tala viser kor mange av dei ", num(n_aktvar),
+                   " operasjonane som faktisk hadde registrerte verdiar
+                   for dei ulike variablane."
+  ),
+  label = "tab:komptab",
+  wide = TRUE
+  ) %>% 
+  str_replace("\\\\begin\\{tabular\\}\\{lll\\}", "\\\\begin{tabular}{lrr}") %>% # Kolonnejusteringshack, fixme :(
+  cat
+@
+
+
+<<tab-validitet-registreringsgrad, echo = kjeldekode, results = "asis">>=
+# regner ut antall registreringer i hver kombinasjon av register og epj, per variabel
+antall_reg = d_validering_sent_var %>% 
+             group_by(varnamn) %>% 
+             summarise_at(vars(starts_with("finst_")), list(sum)) %>%
+             ungroup()
+
+# finner totalt antall kontrollerte verdier per variabel
+antall_kontrollerte = d_validering_sent_var %>% count(varnamn)
+
+# kombinerer med antall_kontrollerte for å finne prosentandelene de ulike antallene utgjør
+# dette objektet skal inneholde alt man trenger for registreringsgrad-tabellen
+antall_reg_prosent = antall_reg %>% left_join(antall_kontrollerte, by = "varnamn") %>% 
+                     rename(tot_kontrollerte = n)
+tab_registreringsgrad = antall_reg_prosent %>% 
+                        mutate(reg_prop = finst_reg/tot_kontrollerte, 
+                               epj_prop = finst_epj/tot_kontrollerte,
+                               begge_prop = finst_begge/tot_kontrollerte,
+                               epj_ikkje_reg_prop = finst_epj_ikkje_reg/tot_kontrollerte, 
+                               reg_ikkje_epj_prop = finst_reg_ikkje_epj/tot_kontrollerte)
+
+# legger til navn på variabler (tabelltekst) + ordning av sortering
+# gjør dette her fordi summarise_at endrer sorteringa
+tab_registreringsgrad = d_sent_var %>% 
+  left_join(tab_registreringsgrad, by = c("variabel_id" = "varnamn")) %>% 
+  mutate_at(vars("tot_kontrollerte", starts_with("finst_")), replace_na, 0)
+
+# Tar en select for å få variablene i ønsket rekkefølge
+tab_registreringsgrad = tab_registreringsgrad %>% 
+                         select(tabelltekst, 
+                                tot_kontrollerte,
+                                finst_reg, reg_prop, 
+                                finst_epj, epj_prop, 
+                                finst_begge, begge_prop, 
+                                finst_epj_ikkje_reg, epj_ikkje_reg_prop,
+                                finst_reg_ikkje_epj, reg_ikkje_epj_prop)
+
+# Formater tall og prosenter
+tab_registreringsgrad_form = tab_registreringsgrad %>%
+  mutate_at(vars(ends_with("_prop")), prosent, tabell = TRUE) %>% 
+  mutate_if(is.numeric, num, tabell = TRUE) 
+
+# legger inn & og \\ som trengs for tabellen
+# og gjør klar kolonneoverskrifter
+n_kol = ncol(tab_registreringsgrad)-1 # antall kolonner som ikke er variabel-kolonnen
+innh_tab_registreringsgrad_form = tab_registreringsgrad_form %>% 
+  apply(1, paste, collapse=" & ") %>% 
+  paste(collapse=" \\\\\n") 
+
+# lager tabelltekst
+tabell_tekst_registreringsgrad = 
+paste0("Komplettheit i \\soregn samanlikna med elektronisk pasientjournal \\kort{(EPJ)}
+for sentrale variablar (både primær- og revisjonsoperasjonar), basert på valideringsbesøk. Tabellen viser kor ofte verdiar er registrerte i registeret, i \\kort{EPJ}, i både registeret og \\kort{EPJ}, i \\kort{EPJ} men ikkje i registeret og i registeret men ikkje i \\kort{EPJ}. Basert på ",nrow(d_validering_sent_var)," kontrollerte verdiar henta frå valideringsbesøk ved ", n_sykehus_validert, " ulike sjukehus.")
+
+# antall høyrestilte er avhengig av antall kolonner
+hoyrestilte = str_dup("r ", n_kol) 
+
+# Lager tabellen
+paste0("
+\\begin{sidewaystable}
+\\caption{", tabell_tekst_registreringsgrad,"\\label{tab:registreringsgrad}}
+\\begin{tabular}{l ", hoyrestilte,"} \\toprule
+\\multicolumn{1}{l}{Variabel} & \\multicolumn{1}{r}{Kontrollerte} & \\multicolumn{2}{c}{\\soreg} & \\multicolumn{2}{c}{\\kort{EPJ}} & 
+\\multicolumn{2}{c}{Begge} & \\multicolumn{2}{c}{Berre \\kort{EPJ}} & \\multicolumn{2}{c}{Berre \\soreg}\\\\
+\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\\cmidrule(lr){3-4}\\cmidrule(lr){5-6}\\cmidrule(lr){7-8}\\cmidrule(lr){9-10}\\cmidrule(lr){11-12}
+",innh_tab_registreringsgrad_form," \\\\ \\bottomrule
+\\end{tabular}
+\\end{sidewaystable}") %>% cat
+@
+
+\Vref{tab:registreringsgrad} viser dei tilsvarande tala frå
+\emph{validerings\-besøka}, med informasjon om komplettheit for
+pasientjournal også, jf.~\vref{sec:komplettheit-reg-epj}.
+
+For dei utvalde  \Sexpr{berre_gyldig_i("seks", 2019)}
+variablane ser vi at det stort sett er samsvar 
+i komplettheit mellom registeret og journal. For dei to variablane
+«utskrivingsdato» og «behandling på sjukehus dei første 30 dagane etter operasjon» 
+var det noko lågare verdi for komplettheit, både ved statistisk gjennomgang og
+ved valideringsbesøka. Merk at desse to 
+variablane berre er fylte ut dersom pasienten har vore til seks\-vekers\-kontroll. 
+Til dømes finn ein i \vref{tab:registreringsgrad} at tre
+av dei avvikande verdiane for
+«utskrivingsdato» berre er funne i \kort{EPJ}. Dette kan skuldast at
+pasienten enno ikkje hadde vore til kontroll.
+%**  1. til 2. ronde besøk har skjett?
+
+\subsection{Samsvar mellom register og journal}
+
+\Vref{tab:registreringskvalitet} viser kor ofte
+verdiane registrerte i registeret og journalen var like.
+Sjå \vref{sec:likskap-reg-epj} for forklaring på
+korleis dette er rekna ut.
+
+<<tab-validitet-registreringskvalitet, echo = kjeldekode, results = "asis">>=
+
+# Ser bare på samsvar mellom de verdiene som eksisterer både i soreg og i EPJ.
+# Her filtrerer vi altså ut de som mangler i SOReg og/eller EPJ. 
+likhet = d_validering_sent_var %>%
+  filter(finst_begge) %>%
+  group_by(varnamn) %>%
+  summarise(nevner_uten_missing = n(),
+            antall_lik_uten_missing = sum(er_lik)) %>%
+            mutate(prop_uten_missing = antall_lik_uten_missing / nevner_uten_missing) %>% 
+  ungroup()
+  
+# legger til navn på variabler (tabelltekst) + ordning av sortering
+# gjør dette her fordi summarise_at endrer sorteringa
+likhet_samla = d_sent_var %>% 
+  left_join(likhet, by = c("variabel_id" = "varnamn")) %>%
+  select(-variabel_id)
+
+# Formater tall og prosenter
+# fjerner varnamn-variabel
+# kjører num og prosent-funksjon
+# har teller og nevner i samme kolonne
+tab_likhet = likhet_samla %>% 
+  replace_na(list(nevner_uten_missing=0, antall_lik_uten_missing=0)) %>% 
+  unite(like_uten_missing, antall_lik_uten_missing, nevner_uten_missing, sep = "/") 
+
+# Formater prosentverdier
+tab_likhet_form = tab_likhet %>%
+  mutate(prop_uten_missing=prosent(prop_uten_missing, tabell = TRUE))
+
+# Lager kolonneoverskrifter
+# legger inn & og \\ som trengs for tabellen
+nkols_likhet = ncol(tab_likhet_form) - 1
+innh_tab_registreringskvalitet = apply(tab_likhet_form, 1, paste, collapse=" & ") %>% paste(collapse=" \\\\\n") 
+
+# antall høyrestilte kolonner er avhengig av antall kolonner
+hoyrestilte_likhet = str_dup("r ", nkols_likhet)
+
+# lager tabelltekst
+tabell_tekst_registreringskvalitet = 
+paste0("Grad av samsvar mellom \\soregn og elektronisk pasientjournal \\kort{(EPJ)}
+for sentrale variablar (både primær- og revisjonsoperasjonar). Tabellen viser kor ofte verdiane registrerte i registeret er lik verdiane registrerte i \\kort{EPJ}.  Basert på ", sum(likhet$nevner_uten_missing),
+" kontrollerte verdiar henta frå valideringsbesøk ved ", n_sykehus_validert, " ulike sjukehus.")
+
+# Lager tabellen over registreringsgrad
+paste0("
+\\begin{widetable} 
+\\caption{",tabell_tekst_registreringskvalitet,"\\label{tab:registreringskvalitet}}
+\\begin{tabular}{l ",hoyrestilte_likhet,"} \\toprule
+\\multicolumn{1}{l}{Variabel} & \\multicolumn{2}{c}{Samsvar}\\\\
+\\cmidrule(lr){1-1}\\cmidrule(lr){2-3}
+",innh_tab_registreringskvalitet," \\\\ \\bottomrule
+\\end{tabular}
+\\end{widetable}")[1] %>% cat
+@
+
+Det vart funne ein del feil i registreringane.
+Nokre av desse var tydeleg tilfeldige feil ved registrering,
+som at det var ført feil dato for operasjon eller at ein hadde oversett
+ei opplysing om høgt blodtrykk i pasientjournalen. 
+Andre gongar vart det oppdaga systematiske eller rutinemessige faktorar 
+som gjorde det vanskeleg å få med 
+alle opplysingane i registeret. Døme på dette var manglar ved innsamling 
+av data til journalen, som det at ein ikkje målte blodtrykk ved basisregistrering
+eller årskontrollar, eller at ein ikkje målte høgd ved årskontrollar. 
+
+For nokre variablar vart det oppdaga ein del feil
+ved valideringsbesøk grunna registreringspraksis. 
+Dette gjaldt særleg variablane «dato for basisregistrering»
+og «vekt før operasjon». Dei fleste avvika her kom frå ulike tolkingar
+av kva tidspunkt opplysingane for basis\-registreringa skulle hentast frå.
+
+Variabelen «dato for basisregistrering» er viktig for å vise forløpet
+fram mot operasjon ved dei ulike sjukehusa. Denne har vore mykje
+diskutert i fagmiljøet, både på \soreg-dagen og ved validerings\-besøka, 
+då det fagleg sett ikkje bør gå for lang
+tid frå basisregistrering til operasjon. Dersom til dømes forløpet fram mot operasjon 
+tek eit heilt år for ein pasient, kan det skje store endringar i
+helsetilstanden og blodverdiane til pasienten i denne tida. Basisregistreringa bør ikkje vere gjort 
+meir enn seks månadar før operasjon, og fastande blodprøvar skal takast 
+i tilknyting til basisregistreringa. 
+
+
+
+
+\chapter{Fagutvikling og pasientretta kvalitetsforbetring}\label{cha:fag}
+
+%  lenk til fjorårets rapport på SOReg-N ?
+%
+
+\section{Pasientgruppa omfatta av registeret}
+
+Alle pasientar som blir opererte for fedme 
+eller får utført revisjon av tidlegare fedmeoperasjon, 
+det vil seie med prosedyrekode \kort{NCSP}-kode 
+\kort{JDF}~00\textendash 98 eller \kort{JFD}~00\textendash 96
+og samstundes \kort{ICD}-10-koden \kort{E66*}, \kort{Z98.0} eller {Z98.8},
+kan inkluderast i registeret.
+For å få tilbod om fedmeoperasjon i Noreg må pasienten vanlegvis ha
+
+\popdef % Sjå definisjon tidlegare i dokumentet
+
+Deltaking i \soregn er basert på skriftleg samtykke frå pasienten,
+og det vil derfor vere vanskeleg å oppnå full dekning. Erfaringa 
+så langt er likevel at dei aller fleste fedmeopererte
+ynskjer å bli inkluderte i registeret.
+
+\section{Variablar og kvalitetsindikatorar i registeret}\label{sec:regspe}
+
+Dei viktigaste kvalitetsindikatorane som er skisserte frå fagmiljøet og som vil bli  
+framstilte i \soregn, er her definerte og skildra.
+
+\subsection{Del pasientar med tre eller færre postoperative liggedøgn}\label{sec:defliggedogn}
+
+Kvalitetsindikatoren viser prosentdelen pasientar med tre eller færre liggedøgn etter
+operasjon. Fire liggedøgn eller meir treng ikkje bety at det har oppstått ein 
+komplikasjon, men ein tidleg komplikasjon fører ofte til forlengt opphald.
+
+Her tek vi utgangspunkt i alle pasientar med \emph{primæroperasjonar}
+i \Sexpr{rapporteringsaar} og som har seksvekersoppfølging
+(det er då utskrivingsdatoen blir registrert) av typen:
+
+\begin{itemize}
+  \item frammøte
+  \item per telefon
+  \item per brev/e-post eller på annan måte
+\end{itemize}
+
+Pasientar med seksvekers oppfølging registrert som følgjande, blir ikkje tekne med i utrekningane:
+
+\begin{itemize}
+  \item ingen kontakt med pasienten trass gjentekne forsøk
+  \item ingen forsøk har blitt gjort på å følgja opp pasienten
+  \item ingen informasjon om type seksvekers oppfølging er registrert
+\end{itemize}
+
+For dei aktuelle pasientane
+tel vi opp kor stor prosentdel som
+har tre eller færre liggedøgn. Merk at talet på liggedøgn
+blir rekna ut basert på operasjons- og utskrivingsdato,
+utan informasjon om klokkeslett. Eit liggedøgn kan altså
+vera både kortare eller lengre enn 24~timar, avhengig av
+når på dagen pasienten vart skriven ut.
+Resultata for kvalitetsindikatoren er viste i
+\vref{sec:liggetid-reinn} og \vref{tab:indtabell}.
+%\vpagerefrange{par:liggetid-start}{par:liggetid-slutt}.
+
+
+\subsection{Del pasientar som har blitt reinnlagde 
+på sjukehus dei første 30 dagane etter operasjonen} 
+
+Kvalitetsindikatoren viser prosentdelen pasientar som 
+har blitt reinnlagde på sjukehus innan 30 dagar 
+etter operasjon.
+Indikatoren skal fange opp pasientar med komplikasjonar. Dette kan vere mindre 
+alvorlege biverknader eller lettare komplikasjonar, som til dømes magesmerter eller kvalme, 
+men det kan også vere meir alvorlege komplikasjonar som først viser seg etter at 
+pasienten har reist heim frå sjukehuset.
+
+Her òg tek vi utgangspunkt i alle pasientar med \emph{primæroperasjonar}
+i \Sexpr{rapporteringsaar} som har seksvekers oppfølging som definert
+i \vref{sec:defliggedogn}. Men i tillegg kan det vere pasientar
+som er registrerte som reinnlagde på same eller anna sjukehus innan 30 dagar
+\emph{utan} at det er registrert seksvekers oppfølging%
+\footnote{I slike tilfeller ber vi avdelingane hente opplysingar om reinnlegginga
+frå journal og ferdigstille seksvekers-skjemaet.}.
+I utrekninga er slike pasientar også tekne med. 
+% Dette kan føre til eit 
+% lite overestimat på komplikasjonar fordi eventuelle pasientar utan 
+% komplikasjonar og utan seksvekers oppfølging ikkje kjem med.
+
+Dei aktuelle pasientane blir altså dei som har seksvekers oppfølging som
+definert i \vref{sec:defliggedogn}, pluss eventuelle andre pasientar
+som er registrerte som reinnlagde innan 30 dagar.
+
+For dei aktuelle pasientane
+tel vi opp kor stor prosentdel som
+er registrert med reinnleggingar innan 30 dagar
+frå primæroperasjonen.
+Resultata for kvalitetsindikatoren er viste i
+\vref{sec:liggetid-reinn} og \vref{tab:indtabell}.
+%\vpagerefrange{par:reinnlegg-start}{par:reinnlegg-slutt}.
+
+
+\subsection{Del pasientar som får alvorlege komplikasjonar dei første 30 dagane etter operasjonen}
+
+Ein alvorleg komplikasjon er rekna som alvorsgrad
+\kort{III}b eller høgare etter 
+Clavien–Dindo-klassifikasjonen. 
+Dette tilseier ein komplikasjon eller mistanke om komplikasjon som krev 
+tiltak der pasienten som eit minimum har blitt lagt i narkose.
+Merk at diagnostisk laparoskopi/laparotomi, der ein legg pasienten i narkose
+og undersøker bukhola på mistanke om komplikasjon, utan å påvise dette, er
+teken med her.
+
+Her òg tek vi utgangspunkt i alle pasientar med \emph{primæroperasjonar}
+i \Sexpr{rapporteringsaar} og som har seksvekers oppfølging som definert
+i \vref{sec:defliggedogn}. Men i tillegg kan det vere pasientar
+som er registrerte med komplikasjonar (alvorlege eller mindre alvorlege) 
+innan 30 dagar men som likevel \emph{ikkje} er registrerte med seksvekers oppfølging.
+I utrekninga er slike pasientar også tekne med. Dette kan føre til eit 
+lite overestimat på komplikasjonar fordi eventuelle pasientar utan 
+komplikasjonar og utan seksvekers oppfølging ikkje kjem med.
+
+Dei aktuelle pasientane blir altså dei som har seksvekers oppfølging som
+definert i \vref{sec:defliggedogn}, pluss eventuelle andre pasientar
+som er registrerte med alvorlege komplikasjonar innan 30~dagar.
+
+Kvalitetsindikatoren blir rekna ut som prosentdelen av
+dei aktuelle pasientane som hadde ein alvorleg komplikasjon innan 30~dagar
+frå primæroperasjonen. Resultata for kvalitetsindikatoren er viste i
+\vref{sec:kompl} og \vref{tab:indtabell}.
+  
+
+\subsection{Del pasientar som blir følgde opp postoperativt innan normtid etter eitt år}\label{sec:def-oppf1a}
+
+Denne indikatoren fortel om det er utført eittårskontroll etter operasjon
+og om kontrollen vart utført innan normtid. Normtid er her definert som 
+365~±~90~dagar etter operasjon. Pasientar som møter til regelmessig oppfølging
+vil kunne få betre grunnlag for å forstå endringane i livsstil som 
+fedmekirurgi både krev og leiar til. Samstundes kan god 
+oppfølging gje betre justering og behandling av følgjesjukdom 
+og føre til tidleg avdekking av mogelege komplikasjonar.
+
+Her tek vi utgangspunkt i alle operasjonar (både \emph{primæroperasjonar}
+og revisjonsoperasjonar) fram til og med \Sexpr{rapporteringsaar} der
+følgjande er oppfylt:
+
+\begin{itemize}
+  \item Operasjonsdatoen er meir enn 365~+ 90 dagar \emph{før}
+        datoen til datagrunnlaget (datoen ein henta ut
+        data for analyse frå registeret).
+  \item Det er ikkje registrert at ein revisjonsoperasjon
+        er utført eller planlagd.
+\end{itemize}
+
+Kvalitetsindikatoren er rekna ut som prosentdelen av desse operasjonane der:
+
+\begin{itemize}
+  \item Pasienten har eittårsoppfølging registrert, der pasienten vart følgd opp
+        ved frammøte, telefon, brev, e-post eller på annan måte.
+  \item Datoen for eittårsoppfølginga er i (det lukka) intervallet
+        [operasjonsdato~+ 365~dagar~± 90~dagar].
+\end{itemize}
+
+Nokre pasientar er registrerte som utgått av registeret, anten fordi dei
+har trekt seg men har gjeve løyve til at historiske data
+kan bli verande, eller at dei er døde. Dersom datoen dei gjekk ut av
+registeret er \emph{før} normert tid for eittårsoppfølging, burde operasjonane ikkje
+reknast med ved utrekning av kvalitetsindikatoren. Men dessverre registrerer
+ikkje \soregn dato for når pasienten gjekk ut av registeret, berre
+\emph{om} vedkommande er utgått. Det er førebels derfor ikkje mogleg å ta
+omsyn til dette. Vi håper å gjere det mogleg å registrera denne datoen
+i ei framtidig utgåve av registeret.
+
+Resultata for kvalitetsindikatoren er viste i \vref{sec:oppf1a}.
+
+\subsection{Del pasientar som blir følgde opp postoperativt innan normtid etter to år}\label{sec:def-oppf2a}
+
+Denne indikatoren fortel om det er utført toårskontroll etter operasjon
+og om kontrollen vart utført innan normtid. Normtid er her definert som 
+730~±~90~dagar etter operasjon. 
+
+Definisjonen er ganske lik definisjonen for eittårsoppfølging innan
+normtid (\vref{sec:def-oppf1a}). Vi tek utgangspunkt i alle operasjonar
+(både \emph{primæroperasjonar} og revisjonsoperasjonar) fram til og med
+\Sexpr{rapporteringsaar} der følgjande er oppfylt:
+
+\begin{itemize}
+  \item Operasjonsdatoen er meir enn
+        2~× 365~dagar + 90~dagar
+        \emph{før}
+        datoen til datagrunnlaget (datoen ein henta ut
+        data for analyse frå registeret).
+  \item Det er ikkje registrert at ein revisjonsoperasjon
+        er utført eller planlagd.
+\end{itemize}
+
+Kvalitetsindikatoren er rekna ut som prosentdelen av desse operasjonane der:
+
+\begin{itemize}
+  \item Pasienten har toårsoppfølging registrert, der hen vart følgd opp
+        ved frammøte, telefon, brev, e-post eller på annan måte.
+  \item Datoen for toårsoppfølginga er i (det lukka) intervallet
+        [\text{operasjonsdato} + 2~× 365~dagar~± 90~dagar].
+\end{itemize}
+
+Resultata for kvalitetsindikatoren er viste i \vref{sec:oppf2a}.
+
+
+\subsection{Vekttap to år etter operasjon}
+% Del pasientar som har gått ned meir enn 
+% \texorpdfstring{50\prosent}{50 \%} av overvekta to år etter operasjonen}  
+
+Hovudmåla med fedmekirurgi er å redusere vekt, betre livskvalitet og å redusere 
+eller eliminere følgjesjukdom. Innverknaden på fleire av 
+følgjesjukdomane har samanheng
+med kor stor vektnedgangen er: Dess større vektnedgang, desto 
+betre effekt på følgjesjukdom som høgt blodtrykk og diabetes. 
+Val av operasjonsmetode og operasjonstekniske detaljar 
+kan ha noko å seie for vekttapet. Kor nøye pasienten følgjer 
+opp instruksjonar om kosthald og mosjon kan også spele inn.
+
+Dei aktuelle pasientane er alle pasientar 
+med \emph{primæroperasjonar}
+som har ei måling for høgd og vekt før operasjonen (basisregistrering)
+og ei måling for høgd og vekt to år etter operasjonen. 
+\\
+%H   avsnitt
+% \vspace{1cm}
+
+Kvalitetsindikatoren vekttap har tradisjonelt blitt rekna ut som prosentdelen av dei aktuelle 
+pasientane som har gått ned meir enn 50\prosent av overvekta to år etter operasjon.
+% altså som har hatt ein \%-\kort{EBMIL} på minst 50\prosent, der 
+Prosent \kort{EBMIL} er definert som
+%
+\begin{equation*}
+\prosent\text{\kort{EBMIL}} =
+\frac{\text{\kort{KMI} før operasjon − \kort{KMI} to år etter operasjon}}% 
+     {\text{\kort{KMI} før operasjon − 25~kg/m²}} \times \text{100\prosent.}
+\end{equation*}
+%
+(Øvre grense for kva som er normal \kort{KMI} er 25~kg/m².)
+Resultata for kvalitetsindikatoren er viste i \vref{sec:ebmil-2a}.  \\ %H mellomrom?
+
+Dei seinare år har det blitt meir vanleg a presentere prosent tap av kroppsvekt   %H formel?
+ (\prosent\kort{TWL} = \prosent total weight loss). 
+%  $ (\prosent TWL = \prosent total weight loss). $ 
+Formelen for utrekning er
+\begin{equation*}
+\prosent\text{\kort{TWL}} =
+\frac{\text{vekt før operasjon −  vekt to år etter operasjon}}% 
+     {\text{vekt før operasjon}} \times \text{100\prosent.}
+\end{equation*}
+ 
+Prosent TWL på 20  eller meir %H  not <
+blir gjerne definert som suksess.
+ 
+
+
+\section{Pasientrapporterte resultat- og erfaringsmål (\texorpdfstring{\kort{PROM}}{PROM} og \texorpdfstring{\kort{PREM}}{PREM})}\label{sec:pasutk}
+
+Ei arbeidsgruppe nedsett av det norske og svenske fagrådet har arbeidd med å finne kva
+\kort{PROM}- og \kort{PREM}-spørsmål som skal vere med i \soreg. 
+Dette arbeidet vart ferdigstilt i 2018.
+
+I \kort{PROM}-bolken finn vi 13 spørsmål.
+Desse blir innleidde med eit generelt spørsmål om eiga helse,
+og deretter kjem åtte fedmespesifikke spørsmål.
+Desse åtte spørsmåla har blitt utvikla og validerte på norske pasientar,
+og valideringsartikkelen er publisert 
+i Tidsskrift for den norske legeforening%
+\footnote{Aasprang et al. (2019), «Pasientrapportert livskvalitet ved fedme~\textendash{} utvikling av nytt måleinstrument», \url{https://doi.org/10.4045/tidsskr.18.0493}.}.
+
+I tillegg er her tre spørsmål om 
+gastrointestinalt besvær før og etter fedmeoperasjon,
+samt eit spørsmål om kor nøgd pasienten er med resultatet 
+av fedmeoperasjonen samla sett. 
+
+I \kort{PREM}-bolken finn vi fem spørsmål, som alle har fokus på korleis pasienten
+kjenner seg ivareteken i primær- og spesialisthelsetenesta.
+Vi arbeider med å få lagt  spørsmåla
+inn på den elektroniske plattforma som er laga for dette i Noreg.
+
+
+\section{Sosiale og demografiske skilnadar i helse}\label{sec:sosdem}
+
+Eit \Sexpr{ifelse(p_flest_kjonn > .7, "stort", "")} 
+fleirtal av dei opererte i dette materialet, \Sexpr{round(100*p_flest_kjonn)}\prosent,
+er \Sexpr{ifelse(n_kvinne > n_mann, "kvinner", "menn")}.
+Sjølv om fedme er rimeleg likt fordelt mellom menn og kvinner
+i dei fleste land, er det eit kjent trekk internasjonalt
+at fleire kvinner enn menn blir opererte for fedme. 
+
+Rapporten viser store geografiske forskjellar i tidsløp ved fedmekirurgi. 
+Det er store forskjellar både mellom dei regionale føretaka og 
+mellom lokale føretak innanfor same regionale føretak.  
+
+
+\section{Bidrag til utvikling av nasjonale retningslinjer, nasjonale kvalitetsindikatorar o.l.}\label{sec:retut}
+
+Fedmekirurgien i Noreg er i stor grad basert på internasjonalt
+aksepterte kriterium. Registeret har ikkje bidrege til 
+utforming av nasjonale eller internasjonale retningslinjer, men fagrådet har vore 
+involvert i utviklinga
+av nordiske retningslinjer for oppfølging etter fedmekirurgi. 
+Kvalitetsindikatorane for behandlinga er
+utarbeidde saman med representantar frå det svenske fagmiljøet.
+
+
+\section{Etterleving av faglege retningslinjer}\label{sec:retbru}
+
+Vurdert ut i frå gjennomsnittleg \kort{KMI} før operasjon
+(\vref{tab:indtabell}) synest dei fleste sjukehusa 
+å følgje internasjonale kriterium for fedmeoperasjon.
+Ein ser likevel at pasientar ved dei private sjukehusa i gjennomsnitt har
+noko lågare \kort{KMI} enn pasientar ved dei offentlege sjukehusa.
+% fixme: Dette påstanden er ikkje basert på dei internasjonale kriteria.
+%        Dei seier ingenting om *gjennomsnitts-KMI-en*. Rett dette til
+%        (om mogleg) faktisk å sjekka om kritera vart følgde (per sjukehus).
+
+
+\section{Identifisering av pasientretta forbetringsområde}\label{sec:ide}
+
+Det ser ut til å vere til dels store skilnadar mellom dei 
+ulike sjukehusa på programma ein har \emph{før} operasjon.
+Medan det ved nokre sjukehus er lange program der pasienten skal gjere
+livsstilsendringar og forsøke å gå ned i vekt før det blir teke 
+stilling til fedmeoperasjon, er det ved andre sjukehus 
+kortare løp. Registeret har påpeika dette for fagmiljøet,
+og på sikt ynskjer vi å sjå nærare på verdien av dei ulike preoperative programma. 
+Data frå \soregn vil med gode oppfølgingsdata kunne brukast til å evaluere 
+om ulike preoperative program har noko å seie for utfallet av kirurgi.
+
+Registeret har identifisert stor variasjon i kor mange fedmeopererte som har registrert
+oppfølging innan normtid eitt og to år etter operasjon ved dei ulike sjukehusa.
+I 2018 fekk registeret tildelt midlar frå \kort{SKDE} til eit kvalitetsforbetringsprosjekt 
+for å auke talet på årskontrollar. Sjå \vref{sec:brures}.
+
+Eit emne som heng saman med dette, er kor mange pasientar som 
+ved årskontrollar tek vitamin-/mineraltilskot. Særleg etter to år ser det 
+ut til at det er færre som følgjer retningslinjene for dette. 
+
+Det ser ut til å vere ein viss variasjon mellom sjukehusa 
+i kor mange som går adekvat ned i vekt etter operasjon. Dette kan vere 
+grunnlag for vidare undersøkingar. 
+
+
+\section{Tiltak for pasientretta kvalitetsforbetring}\label{sec:brures}
+
+Registeret og registermiljøet har påpeikt behov for kontrollar etter fedmekirurgi. 
+Ved hjelp av rapporterings\-systemet
+Rapporteket (sjå \vref{sec:resfag}) har registeradministrasjonen synleggjort at det er 
+ein for låg del av pasientane som er registrerte med årskontrollar, %  i \soregn,
+og at det er stor variasjon mellom sjukehusa i kor stor del av pasientane som blir kontrollert.
+
+%**
+% { Nasjonalt prosjekt for å auke talet på årskontrollar innan normtid }     %H: skal være titel?
+%   %H: Innskot? 
+I 2019 har registeradministrasjonen gjennomført eit kvalitetsforbetringsprosjekt for å auke talet på årskontrollar innan normtid. Prosjektet var basert på gjennombrotsmetoden, og det var fem sjukehus som deltok. To representantar frå kvar avdeling deltok på tre samlingar der dei fekk kurs i metode for kvalitetsforbetring. Mellom samlingane skulle deltakarane utarbeide og gjennomføre lokale prosjekt for å auke talet på pasientar som fekk årskontrollar innan normtid. 
+
+% Årsaker til manglande kontrollar
+
+Ved den første samlinga vart det avdekka ulike årsaker til at pasientar ikkje vart kontrollert. Desse kan delast inn i nokre hovudkategoriar: 
+\begin{itemize}
+\item	Forhold ved pasienten (timen passa ikkje, gløymt time, ser ikkje meininga med kontroll)
+\item	Rutinar for innkalling til kontroll/endring av time
+\item	Rutinar for registrering av kontroll
+\end{itemize}
+Nokre tiltak som vart prøvd ut i prosjektet: 
+\begin{itemize}
+\item	Betring av rutinar for å kalle inn pasientar til kontrollar (kalle inn pasientar i god tid, gje time til ny kontroll ved kontroll, ringje pasientar ei veke før og minne om timen).
+\item	Betre informasjon til pasientane om kontrollar (endre informasjonsmateriell, informere om kvifor kontrollar er viktige på forkurs før operasjon).
+\item	Betre rutinar for registreringer, (kontrollere at alle skjema er ferdigstilte, ferdigstille skjema om pasienten ikkje møter etter to innkallingar). %**
+\end{itemize}
+
+\section{Evaluering av tiltak for pasientretta kvalitetsforbetring (endra praksis)}\label{sec:evakva}
+
+ 
+%**
+% { Resultat frå prosjekt for å auke talet på årskontrollar}     %H: skal være titel? 
+Resultata frå kvalitetsforbetringsprosjektet fram til januar 2020 viser ingen stor auke i tal pasientar med 1-årskontroll. Eitt av sjukehusa i prosjektet har hatt ein auke frå 84,8\prosent
+til 89,7\prosent, for andre har tala vore svingande, for enkelte sjukehus har tala faktisk gått noko ned. Men tala har vorte meir stabile med mindre svingingar frå månad til månad utover hausten og vinteren 2019. 
+
+Tala for 2-årskontrollar har hatt ei betre utvikling. Alle sjukehusa har hatt ein god auke i 2-årskontrollar innan normtid, og det eine sjukehuset som ikkje registrerte 2-årskontrollar har kome i gang med desse.  Sjukehuset med størst auke gjekk frå 35,3\prosent ved nullmåling til 69\prosent i januar 2020. Del pasientar med 2-årskontroll innan normtid nasjonalt har auka frå 43,9\prosent til 54,7\prosent fram til januar 2020. Også her kan ein sjå at tala er mykje meir stabile frå hausten 2019. %**
+
+
+\section{Pasienttryggleik}\label{sec:kom}
+
+Registeret har oppfølgingsskjema for kontroll
+etter 6 veker og 1, 2, 5 og 10~år. På skjema for 
+seksvekers kontroll blir det registrert kor lenge pasienten var 
+innlagd på sjukehus etter operasjonen, om pasienten vart reinnlagd dei 
+første 30 dagane postoperativt og om eventuelle komplikasjonar og 
+reoperasjonar. Dersom pasienten får 
+seinkomplikasjonar etter operasjonen (seinare enn 6~veker),
+blir dette ført på skjema for årskontroll.
+
+Dersom pasienten har fått komplikasjonar,
+skal desse spesifiserast, både 
+type komplikasjon, alvorsgrad og kva type
+behandling som har blitt utført. 
+
+
+\chapter{Formidling av resultat}\label{cha:dat}
+
+
+\section{Resultat tilbake til deltakande fagmiljø}\label{sec:resfag}
+
+Årsrapporten frå registeret blir send til alle lokale koordinatorar ved 
+deltakande sjukehus og til alle representantane i fagrådet.
+Eit nettbasert rapporteringssystem (Rapporteket) utvikla av HNIKT for \soregn 
+var i bruk i 2019. Her kunne brukarane raskt få oppdaterte visuelle 
+oversikter over eigne resultat samanlikna med landsgjennomsnittet, 
+og dei kunne laste ned data frå eige sjukehus. Denne tenesta vart lagt ned i januar 2020. 
+Den vil bli erstatta av ei tilsvarande teneste  (Resultatportalen)  for å framstille resultat interaktivt. 
+Den nye tenesta vil bli utarbeidd ved Fagsenteret i Bergen. 
+
+Hovudfunna frå årsrapporten blir også publiserte på nettet;
+sjå \vref{sec:respas}.
+
+
+\section{Resultat til administrasjon og leiing}\label{sec:resled}
+
+Registeret sender årlege rapportar til Senter for klinisk dokumentasjon og evaluering (\kort{SKDE}),
+Folkehelseinstituttet og Fagsenter for medisinske register i Helse Vest. 
+Rapporten blir også sendt til fagdirektørane i dei regionale helseføretaka og til 
+klinikkdirektørar ved sjukehus der det blir utført fedmekirurgi. 
+
+
+\section{Resultat til pasientar}\label{sec:respas}
+
+Årsrapporten blir offentleggjord på heimesida til \soregn%
+\footnote{\url{https://helse-bergen.no/soreg}}
+og på nettsidene til \kort{SKDE}%
+\footnote{\url{https://www.kvalitetsregistre.no/registers/norsk-kvalitetsregister-fedmekirurgi}}.
+Brukarrepresentanten
+i fagrådet for \soregn får også eit eksemplar av rapporten.
+
+
+\section{Publisering av resultat på kvalitetsregistre.no}\label{sec:off} 
+
+Registeret publiserer hovudfunna for dei ulike kvalitetsindikatorane på 
+nettsida \href{https://www.kvalitetsregistre.no/registers/575/resultater}{kvalitetsregistre.no}; sjå \vref{cha:res}. Resultata blir førebels oppdaterte éin gong i året. 
+%** Hugs å oppdatere linken %**
+
+ 
+
+\chapter{Samarbeid og forsking}\label{cha:for}
+
+\section{Samarbeid med andre helse- og kvalitetsregister}\label{sec:samfag}
+
+Registeret samarbeider tett med det svenske søsterregisteret, \soregs. 
+Ei samrådsgruppe med representantar frå begge registera 
+møtest to ganger i året for å diskutere oppdatering og utvikling 
+av registera. I 2019 vart den andre fellesrapporten publisert\footnote{\url{https://helse-bergen.no/seksjon/soreg/Documents/Felles a5rsrapport med Sverige 2017 og 2018.pdf}}  %H  lenk ikke korrekt enn, har %-tegn
+%** NB endre link:
+% årsrapport
+med tal frå både Sverige og Noreg. Rapporten har hovudvekt på pasientdata 
+frå basisregistreringa før kirurgi og seksvekers oppfølging. Den har i tillegg ei oversikt 
+over talet på operasjonar som vart utførte ved offentlege og private sjukehus. 
+
+Det er innleidd eit samarbeid med det nasjonale registeret for fedmekirurgi 
+i Nederland. Sjå \vref{sec:vitarb} for informasjon om felles publikasjonar.
+
+Fagrådet sa i 2017 ja til at \soregn kan levere data til 
+det internasjonale registeret for 
+fedmekirurgi (\kort{IFSO}-registeret).
+Det har difor blitt levert data til \kort{IFSO}-registeret for operasjonar utført i 2018 og 2019. 
+Leiar for \soregs (Johan Ottoson) og leiar for \soregn (Villy Våge) begge med i styret for  \kort{IFSO}-registeret.
+
+\section{Vitskaplege arbeid}\label{sec:vitarb}
+
+Det svenske fedmekirurgiregisteret, \soregs, har gjeve mykje og
+høgt skatta forsking, der artiklar er publiserte i høgt anerkjende 
+tidsskrift. Relevante og valide data samla i \soregn vil også etter kvart 
+kunne gje grunnlag for viktig forsking. 
+Det vart i 2017 utarbeidd felles norsk-svenske retningslinjer
+for utlevering av data frå registera til forsking.  
+
+I 2017 innleidde \soregn og \soregs eit samarbeid med det nederlandske
+% fixme: Lag til BibLaTeX-løysing for dette
+fedmekirurgiregisteret. Samarbeidet har fungert godt, og den første artikkelen%
+\footnote{Poelemeijer et al. (2018), «\textenglish{Perioperative Outcomes of Primary Bariatric Surgery in North-Western Europe: a Pooled Multinational Registry Analysis}», \url{https://doi.org/10.1007/s11695-018-3408-4}.} frå samarbeidet vart publisert i tidsskriftet \textenglish{Obesity Surgery} i 2018.
+I denne artikkelen vurderer vi mellom anna om
+variablane i registera er samanliknbare, og vi samanliknar 
+fedmekirurgi i dei tre landa, med fokus på komplikasjonar. 
+% fixme: Lag til BibLaTeX-løysing for dette
+Artikkel nummer to%
+\footnote{Poelemeijer et al. (2019), «\textenglish{Gastric Bypass Versus Sleeve Gastrectomy: Patient Selection and Short-term Outcome of 47,101 Primary Operations from the Swedish, Norwegian, and Dutch National Quality Registries}», \url{https://doi.org/10.1097/SLA.0000000000003279}.}
+vart publisert  i \textenglish{Annals of Surgery} i 2019. 
+I denne artikkelen brukar vi data frå \num{47101} opererte pasientar til å
+samanlikne korttidsutfall av operasjonsmetodane gastrisk bypass og gastrisk 
+sleeve på institusjonsnivå i dei tre landa. 
+Artikkelen viser mellom anna forskjellar i vekttap etter operasjonsmetoden gastrisk sleeve avhengig av kor pasienten har blitt operert.
+Dette reiser viktige spørsmål for framtidig forsking.
+
+\part{Plan for forbetringstiltak}\label{par:for}
+
+\chapter{Vidare utvikling av registeret}\label{cha:vid}
+
+\section{Datakvalitet}
+
+\subsection{Nye registrerande einingar}
+%**  teksten revideres
+%    fjernet R-kode- bit 
+<<nyesjukehus, echo=kjeldekode, results="hide">>=
+d_startaar = d_full %>% 
+  group_by(OperererendeSykehus) %>% 
+  summarise(startaar = min(op_aar))
+n_nye_i_aar = sum(d_startaar == rapporteringsaar)
+namn_nye_i_aar = filter(d_startaar, startaar==rapporteringsaar)$OperererendeSykehus
+tekst_nye_i_aar = ifelse(n_nye_i_aar > 0,
+                         paste0(" (", paste0(formater_instnamn_ltx(namn_nye_i_aar), collapse=", "), ")"), "")  
+@
+%%%    # fixme: Gjer smartare, for eksempel slik at det vert «og» mellom elementa dersom det berre er to (legg i rapwhale)
+%%%
+
+I \Sexpr{rapporteringsaar} starta 1 nytt sjukehus (Moss)
+% \Sexpr{paste0(n_nye_i_aar, " ", ifelse(n_nye_i_aar == 1, "nytt sjukehus", "nye sjukehus"))}   %H skal være: eit nytt sjukehus
+% \Sexpr{tekst_nye_i_aar} %  %H  skal vera Moss ??
+å levere data til \soregn.
+Ved utgangen av \Sexpr{rapporteringsaar} hadde 18 av totalt 21 offentlege og private sjukehus som utførte fedmeoperasjonar i Noreg i \Sexpr{rapporteringsaar},
+begynt å legge inn data i registeret. Tre private sjukehus (Aleris, \kort{LHL}-sykehuset Gardermoen og Volvat Stokkan) leverte ikkje data.
+
+ 
+
+ 
+\subsection{Forbetring av dekningsgrad i registeret}
+
+Representant frå registeret besøkte både Aleris og Moss sjukehus i 2018 for å 
+hjelpe dei i gang med innrapportering av data til \soregn.
+Moss starta å registrere i september~2019,
+medan Aleris enno ikkje har blitt med.
+Registeret vil halde fram med å prøve å auke dekningsgraden i~2020. 
+
+
+\subsection{Forbetring av rutinar for intern kvalitetssikring av data}
+
+Når det gjeld rutinar for informasjon og opplæring av brukarar i registeret, har ein i
+2019: 
+
+\begin{itemize}
+  \item Halde fram arbeidet med heimesida til registeret, inkludert ei 
+        oppdatering av papirversjonar av alle skjemaa og vidareutvikling av
+        «spørsmål og svar»-sida med brukarrettleiing for ofte stilte spørsmål. 
+  \item Revidert og forbetra faste spørjingar til systematisk validering~/ 
+        kvartalsmessige kontrollar av innregistrerte data.  
+\end{itemize}
+
+
+\subsection{Oppfølging av resultat frå validering mot eksterne kjelder}
+
+Nasjonal koordinator besøker jamleg dei deltakande sjukehusa for å rettleie brukarane
+og for å validere data i registeret mot pasientjournalen. 
+Etter kvart valideringsbesøk blir det sendt rapport til lokal koordinator
+ved det besøkte sjukehuset med resultat av valideringa og forslag til forbetringstiltak.
+I 2019 har vi starta på runde nummer~2 med besøk, og vi vil etter kvart kunne presentere 
+resultat med samanlikning av funn frå første og andre besøk. 
+
+
+\section{Fagutvikling og kvalitetsforbetring av tenesta}
+
+\subsection{Nye pasientrapporterte data som skal inn i registeret}
+
+Ei svensk-norsk arbeidsgruppe har arbeidd fram kva 
+pasientrapporterte data som skal vere med i \soreg. %** Ta bort n i SOReg-n %** ok.
+Ei felles nasjonal teknisk løysing for nettrapporterte \kort{PROM}/\kort{PREM}-data 
+er klar, men denne må tilpassast \soregn sin versjon av Open Qreg. 
+Vi arbeider for å få oppretta  nettversjon av \kort{PROM}/\kort{PREM} i 2020.
+
+
+\subsection{Auka bruk av resultat til klinisk kvalitetsforbetring ved kvar enkelt institusjon}
+
+Registeret fekk hausten 2018 midlar til eit kvalitetsforbetringsprosjekt
+med mål om å auka talet på årskontrollar utført innan normtid etter fedmeoperasjon.
+I samband med prosjektet vart rapportar for registrering av
+årskontrollar utbetra. Dessverre vart denne rapporteringstenesta (Rapporteket) lagt ned i januar 2020.
+Registeradministrasjonen vil difor sende ut rapportar til sjukehusa som var med i prosjektet ein gang per månad %H: (?)
+fram til sommaren 2020.
+
+\section{Formidling av resultat}
+
+\subsection{Forbetring av resultatformidling til deltakande fagmiljø}
+
+Den første versjonen av 
+Rapporteket for \soregn vart ferdigstilt i 
+august 2017. I Rapporteket  
+kunne lokale brukarar hente ut data 
+dei sjølve hadde lagt inn, dels som ferdiglaga rapportar og
+oversikter, men også heile datasett frå eige sjukehus. 
+Rapporteket vil bli erstatta av anna interaktivt rapporteringssystem  (Resultatportalen)
+på nettsida til \kort{SKDE} i 2020.
+
+På \soreg-dagen har vi kvart år eit innlegg med resultat frå siste årsrapport for 
+registeret, samstundes som
+vi gjev påminning og informasjon om Rapporteket og om andre stadar ein kan 
+finne resultat frå registeret. 
+
+%Det er planlagt
+Vi arbeider med ei ny teknisk løysing for uttrekk av data
+frå registeret. Den eksisterande løysinga, som denne årsrapporten
+er bygd på, gjev berre ut eit fåtal av dei
+opplysingane som faktisk er registrerte i \soregn,
+og på eit dårleg strukturert format. Dei er derfor mindre eigna til dataanalyse,
+kvalitetsforbetringsarbeid og forsking.
+
+Ny løysing for uttrekk av data frå \soregn reknast ferdigstilt våren 2020. Når dette er ferdigstilt vil vi
+starte oppbygging av Resultatportalen på nettsida til 
+\kort{SKDE}%
+\footnote{\url{https://www.kvalitetsregistre.no/registers/norsk-kvalitetsregister-fedmekirurgi}}.
+Her skal både fagpersonell og andre kunne finne oppdaterte
+nøkkeltal frå registeret.   
+
+\subsection{Forbetring av resultatformidling til administrasjon og leiing}
+
+% Til no har
+\soregn sender  årsrapporten til lokale koordinatorar og personell 
+ved sjukehusa,  samt til sjukehusleiinga ved dei ulike sjukehusa og til Folkehelseinstituttet.
+
+
+
+\part{Stadievurdering}
+
+\chapter{Referanser til vurdering av stadium}
+
+{\raggedright\begin{longtable}{r>{\raggedright}p{5cm}lcc}
+  \caption
+  {Vurderingspunkter for stadium og registerets egen evaluering.} \\
+  \toprule
+  Nr. & Beskrivelse & Kapittel & \multicolumn{2}{c}{Egen vurdering \Sexpr{rapporteringsaar}}\\
+  &&& Ja & Nei\\
+  \midrule
+  \endfirsthead
+  \caption[]{\textit{… fortsettelse fra forrige side}}\\
+  \toprule
+  Nr. & Beskrivelse & Kapittel & Ja & Nei \\
+  \midrule
+  \endhead
+  \\
+  \multicolumn{5}{r}{\textit{Tabellen fortsetter på neste side~…}} \\
+  \endfoot 	 
+  \bottomrule
+  \endlastfoot 	 	 
+   & \textbf{Stadium 2} & & \\
+  1 & Samler data fra alle aktuelle helseregioner
+    & \ref{cha:res}, \ref{sec:endek} & \sjekkXO \\
+  2 & Presenterer kvalitetsindikatorene på nasjonalt nivå
+    & \ref{cha:res} & \sjekkXO \\
+  3 & Har en konkret plan for gjennomføring av dekningsgradsanalyser
+    & \ref{sec:met} & \sjekkXO \\
+  4 & Har en konkret plan for gjennomføring av analyser og jevnlig
+      rapportering av resultater på enhetsnivå tilbake til deltakende
+      enheter
+    & \ref{sec:resfag}, \ref{sec:resled} & \sjekkXO \\
+  5 & Har en oppdatert plan for videre utvikling
+    & Del \ref{par:for}, \ref{cha:vid} & \sjekkXO \\  % H 
+    & & & \\
+   
+    & \textbf{Stadium 3} & & \\
+  6 & Kan dokumentere kompletthet av kvalitetsindikatorer
+    & \ref{sec:valdat} & \sjekkXO \\
+  7 & Kan dokumentere deknings-\newline grad % Er ikkje automatisk orddeling i tabellar
+      på minst 60\prosent i løpet av siste to år
+    & \ref{sec:met}, \ref{sec:obs} & \sjekkXO \\
+  8 & Registeret skal minimum årlig presentere
+      kvalitetsindikator-\newline resultater % Er ikkje automatisk orddeling i tabellar
+      interaktivt på nettsiden
+      \href{https://kvalitetsregistre.no/}{kvalitetsregistre.no}
+    & \ref{sec:off} & \sjekkXO \\
+  9 & Registrerende enheter kan få utlevert eller tilgjengeliggjort
+      egne aggregerte og nasjonale resultater
+    & \ref{sec:resfag}, \ref{sec:resled} & \sjekkXO \\
+  10 & Presenterer deltakende enheters etterlevelse av de viktigste
+      faglige retningslinjer
+     & \ref{cha:res}, \ref{sec:retbru} & \sjekkXO \\
+  11 & Har en oppdatert plan for videre utvikling av registeret
+     & Del  \ref{par:for}, \ref{cha:vid}  & \sjekkXO \\  % H  i konflikt med 5?
+  & & & \\ % For å få sideskift før neste stadieblokk
+
+   & \textbf{Stadium 4} & & \\
+  12 & Har i løpet av de siste 5~år dokumentert at
+       innsamlede data er korrekte og reliable
+     & \ref{sec:metval}, \ref{sec:valdat} & \sjekkXO \\
+  13 & Kan dokumentere deknings-\newline grad % Er ikkje automatisk orddeling i tabellar
+       på minst 80\prosent i løpet av siste to år
+     & \ref{sec:met}, \ref{sec:obs} & \sjekkOX \\
+  14 & Registrerende enheter har tilgang til oppdaterte egne
+       personentydige resultater og aggregerte nasjonale
+       resultater & \ref{sec:resfag} & \sjekkXO \\
+  15 & Registerets data anvendes vitenskapelig
+     & \ref{sec:vitarb} & \sjekkXO \\
+  16 & Presenterer resultater for \kort{PROM}/\kort{PREM}
+       (der dette er mulig)
+     & \ref{sec:indpp} & \sjekkOX \\
+     & & & \\
+
+     & \textbf{Nivå A} & & \\ % \kort{A} ser ikkje så bra ut her, så brukar vanleg stor bokstav
+  17 & Registeret kan dokumentere resultater fra
+       kvalitets-\newline forbedrende % Er ikkje automatisk orddeling i tabellar
+       tiltak som har vært igangsatt i løpet av
+       de siste tre år. Tiltakene skal være basert
+       på kunnskap fra registeret.
+     & \ref{sec:evakva} & \sjekkXO \\ 
+     & & & \\
+
+     & \textbf{Nivå B} & & \\
+  18 & Registeret kan dokumentere at det i rapporteringsåret
+       har identifisert forbedrings-\newline % Er ikkje automatisk orddeling i tabellar
+       områder, og at det er igangsatt eller kontinuert/videreført
+       pasientrettet kvalitets-\newline % Er ikkje automatisk orddeling i tabellar
+       forbedringsarbeid
+     & \ref{sec:ide}, \ref{sec:brures} & \sjekkXO \\   %  må sjekkast
+     & & & \\
+
+     & \textbf{Nivå C} & & \\
+  19 & Oppfyller ikke krav til nivå B & & \sjekkOX \\  %  må sjekkast
+  \label{tab:sta}
+\end{longtable}}
+
+\cleartoverso
+\thispagestyle{empty}
+
+\subsection*{Kontakt og informasjon}
+
+\sffamily
+\textbf{Postadresse}\\
+Norsk kvalitetsregister for fedmekirurgi (\soregn)\\
+Helse Bergen\\
+Postboks 1400\\
+5021 Bergen
+
+\bigskip
+
+\noindent\begin{tabularx}{\textwidth}{@{}lX}
+\textbf{E-post} & \epost{soreg-norge@helse-bergen.no} \\
+\textbf{Kontakttelefon} & 55\,97\,44\,74 \\
+\textbf{Heimeside} & \url{https://helse-bergen.no/soreg} \\
+& \noindent\qrcode{https://helse-bergen.no/soreg} \\
+\textbf{Offentleggjering} & \url{https://www.kvalitetsregistre.no/registers/norsk-kvalitetsregister-fedmekirurgi}
+\end{tabularx}
+
+
+
+% Tekst til samandragskapittelet i starten av dokumentet
+\introtekst{
+% I juni 2015 fekk \soregn{} status som nasjonalt kvalitetsregister for fedmekirurgi.
+\soregn fekk status som nasjonalt kvalitetsregister i 2015 og dette er den femte årsrapporten frå registeret. Ved utgangen av 2019 deltek alle dei 14 offentlege, og fire av sju private sjukehus som utfører fedmekirurgi. Aleris, LHL-sjukehuset Gardermoen og Volvat Stokkan leverer ikkje data til registeret. 
+
+Denne rapporten er basert på data rapportert til \soregn per 15. juni 2020.
+Det er for 2019 rapportert 1930 operasjonar til \soregn; 1835 primæroperasjonar og 95 revisjonsoperasjonar.  
+Blant dei fedmeopererte var 69 \% under behandling for ein eller fleire fedmerelaterte sjukdommar, dei mest vanlege var muskel-/skjelettsmerter (35 \%), høgt blodtrykk (29 \%) og nattlege pustestopp (17 \%). Totalt er det registrert 7740 operasjonar i registeret.
+
+		Vi presenterer også i år analyser av kvaliteten på registerdata. Kvaliteten er generelt god, men innsamling av oppfølgande data har eit forbetringspotensiale og varierer mellom sjukehusa. Oppfølging etter fedmeoperasjon er viktig både for den enkelte pasient og for å kvalitetssikre behandlinga. Gjennom 2019 har vi difor leia eit prosjekt for å auke tal pasientar som blir fulgt opp innan normtid eit og to år etter fedmeoperasjon. 
+		
+	    Tala på sjukehusnivå er relativt små og må tolkast med varsemd. Generelt viser tala få komplikasjonar. Det er ingen registrerte dødsfall dei første 30 dagane etter operasjon, og 89 \% av pasientane hadde god vektnedgang%
+\footnote{Definert som ein nedgang i overvekta (\%-\kort{EBMIL}) på 50\prosent eller meir.}
+to år etter operasjon. Vekttapet etter roux-en-y gastrisk bypass er relativt likt ved dei ulike sjukehusa medan vekttapet etter gastrisk sleeve varierer mellom sjukehusa. Rapporten beskriv i år også utviklinga i bruken av ein-anastomose gastrisk bypass (såkalla minigastrisk bypass) som er ein relativt ny metode tatt i bruk dei seinare åra.
+
+% og \Sexpr{prosent(p_ebmil2_50)} av pasientane hadde god vektnedgang%
+% ny
+	    
+	Registeret bidrar til forsking og har internasjonalt samarbeid med utveksling av data. I 2019 bidrog registeret blant anna til ein stor multinasjonal registerstudie som omfatta meir enn 47 000 pasientar.
+	
+I den vidare utviklinga av registeret blir det viktig å kartlegge helserelatert livskvalitet før og etter fedmekirurgi. Verktøy for dette er utarbeida og vi ventar på å få på plass ei nettbasert og brukarvennleg plattform. 
+
+Vi i registerleiinga tek gjerne i mot innspel til årsrapporten og forslag til kva framtidige årsrapportar kan innehalde. Innspel kan sendast til \epost{soreg-norge@helse-bergen.no}.
+ 
+
+
+\newcommand{\sjukehusleveringsinfo}{%
+Ved utgangen av \Sexpr{rapporteringsaar} hadde
+\Sexpr{d %>% pull(OpererendeRESH) %>% unique %>% length}  %H ser rart ut
+av totalt \Sexpr{berre_gyldig_i("22", 2019)} 
+%** tala endres?
+offentlege og private sjukehus
+som utførte fedmeoperasjonar i Noreg i 
+\Sexpr{rapporteringsaar}, begynt å legge inn data i registeret.
+Eitt offentleg sjukehus (Moss) og tre private sjukehus
+(Aleris, \kort{LHL}-sykehuset Gardermoen og Volvat Stokkan) leverte ikkje data.
+Eitt sjukehus (Sykehuset Telemark) var i kontakt med oss angåande
+levering av data før tilbodet der vart lagt ned.}%
+% \sjukehusleveringsinfo
+
+% Denne fjerde årsrapporten frå \soregn gjev mellom anna ei oversikt over 
+% resultat for kvalitets\-indikatorar for behandlinga både for landet samla
+% og på sjukehusnivå.
+% Kvaliteteten på data som er lagde inn i registeret, er generelt god, og vi kan i år presentere 
+% analysar av datakvaliteten for alle sjukehusa som rapporterer inn til registeret.
+% 
+% Tala på sjukehusnivå er små og må tolkast med varsemd.
+% Det vart i \Sexpr{rapporteringsaar} rapportert \Sexpr{num(sum(d_dekgrad$npr))} fedmeoperasjonar
+% til Norsk pasientregister (\kort{NPR}), medan \Sexpr{num(nrow(d))} operasjonar
+% er registerte i \soregn{}.
+% Fedmeoperasjonar utførte på private sjukehus betalt av pasientane sjølve,
+% vert ikkje rapporterte til~\kort{NPR}.
+
+<<dodsfall-alle, echo=kjeldekode, results='hide'>>=
+# Undersøk om det var nokon dødsfall i rapporteringsåret.
+# Ser på både primær- og revisjonsoperasjonar, så resultatet
+# kan vera annleis enn det som står i resultatkapittelet.
+n_dodsfall_alleop_rapaar = sum(d$`6U_KomplAlvorGrad` == 5, na.rm = TRUE)
+
+# Tekst som vert brukt i neste avsnitt
+dodsfall_alleop_tekst = ifelse(
+  n_dodsfall_alleop_rapaar == 0,
+  paste0(", det var ingen registrerte dødsfall (død innan 30 dagar etter operasjon) i ",
+         rapporteringsaar), "")
+@
+
+% Generelt viser tala det er lite 
+% komplikasjonar etter
+% %** grønt: sjekk
+% fedmekirurgi i Noreg\Sexpr{dodsfall_alleop_tekst},
+% og \Sexpr{prosent(p_ebmil2_50)} av pasientane hadde god vektnedgang%
+% \footnote{Definert som ein nedgang i overvekta (\%-\kort{EBMIL})
+% på 50\prosent eller meir.}
+% to år etter fedmeoperasjonen.
+% 
+% Rapporten er noko mindre utfyllande enn det vi ynskte.
+% Dette er grunna kapasitetsproblem hjå Helse Nord~\kort{IKT}.
+% Ei planlagd oppgradering av overføring av data til
+% statistiske analysar er sterkt forseinka, noko som har ført til 
+% endring i planane for analysar til årsrapporten.
+% Til dømes måtte vi avstå frå å presentere førekomst av
+% fedmerelatert sjukdom hjå pasientane. 
+% 
+% Vi i registerleiinga tek gjerne imot innspel til årsrapporten og forslag til
+% kva framtidige årsrapportar kan innehalde. Desse kan sendast til
+% \epost{soreg-norge@helse-bergen.no}.
+
+
+\smallskip
+\forfattarliste
+}
+
+\end{document}
