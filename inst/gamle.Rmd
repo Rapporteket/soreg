@@ -1,5 +1,5 @@
 ---
-  title: "Sidebar"
+title: "Sidebar"
 output: flexdashboard::flex_dashboard
 runtime: shiny
 ---
@@ -15,24 +15,25 @@ library(purrr)
 library(stringr)
 library(magrittr)
 
-library(rapwhale)
+# library(rapwhale)
 library(flexdashboard)
 library(shinyWidgets)
+d_full <- soreg::get_arsrp("soreg")
+min_dato <-min(d_full$Operasjonsdato)
+max_dato <-max(d_full$Operasjonsdato)
+fyrstAar<-year(min_dato) 
+sistAar<-year(max_dato)
 ```
   
   
   Inputs {.sidebar}
 -------------------------------------
-  
-  
-  
-  
 ```{r}
 # shiny inputs defined here
 pickerInput(
   inputId = "sh",
   label = "velg sjukehus",
-  choices = unique(dt$OperererendeSykehus),
+  choices = unique(d_full$OperererendeSykehus),
   multiple = TRUE,
   options = pickerOptions(
     actionsBox = TRUE,
@@ -45,7 +46,7 @@ checkboxGroupInput(inputId = "aar", label ="år", choices=fyrstAar:sistAar)  # m
 
 
 # radioButtons("år",label ="years", fyrstAar:sistAar)  # multiple?
-# selectInput("sykeh", label="sykehus", unique(dt$OperererendeSykehus),multiple=TRUE)
+# selectInput("sykeh", label="sykehus", unique(d_full$OperererendeSykehus),multiple=TRUE)
 # selectInput("n_breaks", label = "Number of bins:",
 #            choices = c(10, 20, 35, 50), selected = 20)
 dateRangeInput('dateRange',
@@ -61,7 +62,7 @@ Column
 ### Chart 1
   
 ```{r}
-d_full <- arsrp("soreg")
+# shiny inputs defined here
 
 # Legg til info om operasjonsår
 d_full %<>% mutate(op_aar = year(Operasjonsdato),
@@ -168,14 +169,6 @@ d_kortligg_sjuk = d_prim_6v %>%
 kortligg_sh <- function(sh) {d_kortligg_sjuk %>% filter(OperererendeSykehus %in% sh)}
 kortligg_yr <- function(yr) {d_kortligg_sjuk %>% filter(op_aar %in% yr)}
 kortligg    <- function(sh,yr){d_kortligg_sjuk %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
-
-
-
-# shiny inputs defined here
-min_dato <-min(dt$Operasjonsdato)
-max_dato <-max(dt$Operasjonsdato)
-fyrstAar<-year(min_dato) 
-sistAar<-year(max_dato)
 ```
 
 ### Chart 2
