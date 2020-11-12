@@ -1,0 +1,523 @@
+---
+title: "Resultatportalen for docker"
+author: "Hannu"
+date: "12 11 2020"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny   
+---
+  
+```{r global, include=FALSE}
+library(tidyverse)
+library(lubridate)
+library(datasets)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(DT)
+library(purrr)
+library(stringr)
+library(magrittr)
+
+# library(rapwhale)
+library(flexdashboard)
+library(shinyWidgets)
+
+
+d_full <- soreg::get_arsrp("soreg")
+# Legg til info om operasjonsår
+d_full %<>% mutate(op_aar = year(Operasjonsdato),
+                   op_primar = (TidlFedmeOp==0))
+# Rekn ut BMI for alle tidspunkta
+# Merk: Ein registrerer kroppshøgd på alle tidspunkta *utanom*
+#       for operasjonstidspunktet! Me har altså kroppsvekt ved
+#       baseline, 6 veker etter operasjon, 1 år etter operasjon,
+#       2 år etter operasjon osv., men ikkje *ved* operasjon.
+#       Der har me berre vekt (men heller ikkje for alle, for
+#       operasjonsvekt er ikkje obligatorisk!).
+#
+#       Derfor må me ta ein spansk ein og bruka
+#       kroppshøgd ved *baseline* for utrekning
+#       av BMI på operasjonstidspunktet. :(
+d_full = d_full %>% mutate(bmi_baseline = BR_Vekt/(BR_Hoyde/100)^2,
+                           bmi_op = OperasjonVekt/(BR_Hoyde/100)^2,
+                           bmi_6v = `6U_Vekt`/(`6U_Hoyde`/100)^2,
+                           bmi_1a = `1Aar_Vekt`/(`1Aar_Hoyde`/100)^2,
+                           bmi_2a = `ToAar_Vekt`/(`ToAar_Hoyde`/100)^2)
+
+# Data for alle år opptil (og inkludert) rapporteringsår,
+# men ikkje for seinare år
+#
+# (Brukar '< dato + 1' i staden for '<= dato' for å handtera
+# det rett dersom ein i framtida endrar operasjonsdato
+# til å vera operasjonstidspunkt i staden for operasjondato
+# (ein dato tolka som tidspunkt er klokka 00:00 den aktuelle
+# datoen, ikkje 24:00, og inkluderer derfor ikkje tidsperioden
+# frå 00:00 til 24:00, så me ville mista det siste døgnet).)
+rapporteringsaar = 2019
+dato_opptilrapaar = as_date(paste0(rapporteringsaar, "-12-31")) # For ev. seinare bruk i teksten
+d_opptilrapaar = d_full %>% 
+  filter(Operasjonsdato < (dato_opptilrapaar + 1))
+
+# Data for alle år opptil (og inkludert) to år før rapporteringsåret,
+# dvs. alle data me i teorien burde ha toårs oppfølgingsdata på
+dato_toaarsdata = as_date(paste0(rapporteringsaar - 2, "-12-31")) # For ev. seinare bruk i teksten
+d_toaarsdata = d_full %>% 
+  filter(Operasjonsdato < (dato_toaarsdata + 1))
+
+# Og tilsvarande for eittårsdata
+dato_eittaarsdata = as_date(paste0(rapporteringsaar - 1, "-12-31")) # For ev. seinare bruk i teksten
+d_eittaarsdata = d_full %>% 
+  filter(Operasjonsdato < (dato_eittaarsdata + 1))
+
+# Dei som vart operert det aktuelle året
+d = d_full %>%  filter(op_aar == rapporteringsaar)
+
+# Talet på operasjonsmåtar
+n_op = nrow(d_full)
+n_pas = n_distinct(d$PasientID)
+
+# d_prim = d %>% filter(op_primar)  
+d_prim = d_full %>% filter(op_primar)    
+
+
+# I nokre analysar ser me berre på dei som har 6-vekesoppfølging
+# registrert. Hentar ut eiga datasett for desse
+d_prim_6v = d_prim %>% filter(`6U_KontrollType` %in% 1:3)
+
+d_toaarsdata_prim = d_toaarsdata %>% filter(op_primar)
+d_eittaarsdata_prim = d_eittaarsdata %>% filter(op_primar)
+maksdogn_vis = 14
+ 
+# Talet på primæroperasjonar og reoperasjonar
+n_prim = nrow(d_prim)
+n_reop = n_op - n_prim
+```
+
+
+```{r liggetid} 
+# Kva var den vanlegaste talet døgn å ligga etter operasjon
+liggedogn_typetal = d_prim_6v %>%
+  count(LiggeDogn) %>%
+  arrange(desc(n)) %$%
+  LiggeDogn %>%
+  first
+
+# funksjon for å regne ut kvalitetsindikatoren
+# definert for liggetid (andel pasienter med 3 dager eller færre)
+ki_liggetid = function(df){
+  
+  teljar = sum(df$LiggeDogn <= 3)
+  nemnar = nrow(df)
+  
+  ind = teljar/nemnar
+  
+  res = tibble(# forklaring="Del pasienter med 3 eller færre liggedøgn",
+               # ltx_tekst = "Tre/færre liggedøgn",
+               teljar, nemnar, ind = ind) # trenger ikke å definere at
+                          # variabler som er med i en group_by
+                          # skal være med, de kommer uansett
+  res            
+}
+
+# Kor mange låg mindre enn fire døgn
+p_kortligg = ki_liggetid(d_prim_6v)$ind
+
+# Kor mange låg mindre enn fire døgn per sjukehus
+d_kortligg_sjuk = d_prim_6v %>% 
+  group_by(OperererendeSykehus, op_aar) %>% 
+  do(ki_liggetid(.)) %>% 
+  arrange(desc(ind))
+
+kortligg_sh <- function(sh) {d_kortligg_sjuk %>% filter(OperererendeSykehus %in% sh)}
+kortligg_yr <- function(yr) {d_kortligg_sjuk %>% filter(op_aar %in% yr)}
+kortligg    <- function(sh,yr){d_kortligg_sjuk %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+```
+ 
+```{r reinnleggelse}
+# I analysar for reinnlegging ser me berre på dei som har 6-vekesoppfølging
+# registrert eller som er registrert som reinnlagd til trass for at dei
+# ikkje har 6-vekesoppfølging (jf. forklaringstekst for reinnleggings-
+# indikatoren i årsrapporten). Hentar ut eiga datasett for desse. Men det
+# viser seg at det òg er mogleg å svara «Vet ikke» (verdi 2) på om pasienten
+# vart reinnlagd. Desse gjev ingen informasjon, og vert derfor òg fjerna.
+d_reinn = d_prim %>% filter(((`6U_KontrollType` %in% 1:3) |
+                             (`6U_Behandling30Dager` == 1)) &
+                             (`6U_Behandling30Dager` != 2))
+
+# Tilsvarande for alvorlege komplikasjonar
+d_kompl = d_prim %>% filter((`6U_KontrollType` %in% 1:3) | (!is.na(`6U_KomplAlvorGrad`)))
+
+
+# funksjon for å regne ut
+# andel pasienter som får innleggelse innen 30 dager etter
+# operasjonen
+ki_30dager = function(df){
+
+  teljar = sum(df$`6U_Behandling30Dager` == 1)
+  nemnar = nrow(df)
+  
+  ind = teljar/nemnar
+  
+  res = tibble(#forklaring = "Reinnlegging innan 30 dagar etter operasjonen", 
+               #ltx_tekst = "Reinnlegging",
+               teljar, nemnar, ind = ind)
+  res   
+  
+}
+# andel pasienter som får innleggelse innen 30 dager etter operasjon
+p_30reinnlegg = ki_30dager(d_reinn)
+
+# andel pasienter som får innleggelse innen 30 dager etter operasjon per sjukehus
+d_innlegg30 = d_reinn %>% group_by(OperererendeSykehus, op_aar) %>% do(ki_30dager(.)) %>% arrange(desc(ind))
+innl30_sh <- function(sh) {d_innlegg30 %>% filter(OperererendeSykehus %in% sh)}
+innl30_yr <- function(yr) {d_innlegg30 %>% filter(op_aar %in% yr)}
+innl30 <- function(sh,yr){d_innlegg30 %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+```
+
+```{r komplikasjon}
+# funksjon for å regne ut
+# andel pasienter som får en alvorlig komplikasjon
+ki_kompl_alv =function(df){
+  
+  # Alvorlege komplikasjonar
+  teljar = sum(df$`6U_KomplAlvorGrad` >= 4, na.rm=TRUE)
+  nemnar = nrow(df)
+
+  ind = teljar/nemnar
+  
+  res = tibble(#forklaring = "Alvorlege komplikasjonar 30 dagar etter operasjonen", 
+               #ltx_tekst = "Alvorlege kompl.",
+                            teljar, nemnar, ind = ind) # trenger ikke å definere at
+                          # variabler som er med i en group_by
+                          # skal være med, de kommer uansett
+  res   
+  
+}
+# andel pasienter som får en alvorlig komplikasjon
+p_kompl_alv = ki_kompl_alv(d_kompl)
+
+# andel pasienter som får en alvorlig komplikasjon per sjukehus
+d_kompl_alv_sjukehus = d_kompl %>% group_by(OperererendeSykehus,op_aar) %>% do(ki_kompl_alv(.)) %>% arrange(desc(ind))
+
+kompl_sh <- function(sh) {d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %in% sh)}
+kompl_yr <- function(yr) {d_kompl_alv_sjukehus %>% filter(op_aar %in% yr)}
+kompl <- function(sh,yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+```
+ 
+ 
+```{r aarskontrollar}
+####################################################
+# +-90                                             #  slingringsmonn
+nitti_m  <-  function(yr=1, dag= today(), l=90) { dag-ddays(l)+years(yr) }             
+nitti_p  <-  function(yr=1, dag= today(), l=90) { dag+ddays(l)+years(yr) }
+nitti    <-  function(yr=1, dag= today(), l=90) { c(dag-ddays(l)+years(yr), dag+ddays(l)+years(yr)) }
+
+dmx <- d_full   # alle operasjoner for kontrollene
+dm  <- dmx   %>%  mutate( et_nor_m = nitti_m(dag= Operasjonsdato), et_nor_p = nitti_p(dag= Operasjonsdato),
+                          to_nor_m = nitti_m(yr=2, dag= Operasjonsdato), to_nor_p = nitti_p(yr=2, dag= Operasjonsdato),
+                          pTWL = 100*(BR_Vekt - `ToAar_Vekt`)/BR_Vekt )
+
+dn <-  dm %>% mutate(et_nt= EttAar_Oppfolgingsdato %within% interval( et_nor_m, et_nor_p ),
+                     to_nt= ToAar_Oppfolgingsdato %within% interval( to_nor_m, to_nor_p ),
+                     et_b4= EttAar_Oppfolgingsdato %within% interval( Operasjonsdato+1, et_nor_m-1 ),
+                     et_lt= EttAar_Oppfolgingsdato > et_nor_p,
+                     to_b4= ToAar_Oppfolgingsdato %within% interval( Operasjonsdato+1, to_nor_m-1 ),
+                     to_lt= ToAar_Oppfolgingsdato > to_nor_p)
+#                     fs1_gj_kt = `1Aar_OppfolgingsType` == 4 ,
+#                     fs1_u_kt  = `1Aar_OppfolgingsType` == 5 ,
+#                     fs2_gj_kt = `2Aar_OppfolgingsType` == 4 , 
+#                     fs2_u_kt  =  `2Aar_OppfolgingsType` == 5  )
+
+dt    <-  dn %>% select(  c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar", "Operasjonsmetode", "Opmetode_GBP",
+                           "et_b4", "et_nt", "et_lt", "to_b4",  "to_nt", "to_lt", "pTWL"))
+#                           "fs1_gj_kt", "fs1_u_kt", "fs2_gj_kt", "fs2_u_kt", "pTWL"))
+
+# fedmerelatert
+du    <-  dm %>% select("BR_SovnApne" ,"BR_Hypertoni" ,"BR_Diabetes","BR_Dyslipidemi",
+                        "BR_Dyspepsi" ,"BR_Depresjon","BR_MuskelSkjelettsmerter")
+fr <-  colSums(du,na.rm = TRUE) /nrow(du)
+fr <- sort(fr,decr=T)
+last_opday <- max(dt$Operasjonsdato)
+k1_last <- last_opday - months(15)
+k2_last <-  last_opday - months(27)
+
+# k1_dt <- dt %>% filter(Operasjonsdato < k1_last) %>% group_by(OperererendeSykehus) %>% mutate(ops = n())
+# k2_dt <- dt %>% filter(Operasjonsdato < k2_last) %>% group_by(OperererendeSykehus) %>% mutate(ops = n())
+
+k1nt  <-  dt %>% filter(Operasjonsdato < k1_last) %>% 
+                 group_by(OperererendeSykehus,op_aar) %>% 
+                 mutate(ops = n()) %>% 
+                 summarise(ktr1 = sum(et_nt, na.rm = T),oprs = ops[1],kt1 = sum(et_nt, na.rm = T)/ ops[1]) 
+
+k2nt  <-  dt %>% filter(Operasjonsdato < k2_last) %>% 
+                 group_by(OperererendeSykehus,op_aar) %>% 
+                 mutate(ops = n()) %>% 
+                 summarise(ktr2 = sum(to_nt, na.rm = T),oprs = ops[1],kt2 = sum(to_nt, na.rm = T)/ ops[1]) 
+
+k1_sh <- function(sh) {k1nt %>% filter(OperererendeSykehus %in% sh)}
+k1_yr <- function(yr) {k1nt %>% filter(op_aar %in% yr)}
+k2_sh <- function(sh) {k2nt %>% filter(OperererendeSykehus %in% sh)}
+k2_yr <- function(yr) {k2nt %>% filter(op_aar %in% yr)}
+
+k1 <- function(sh,yr) {k1nt %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+k2 <- function(sh,yr) {k2nt %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+```
+
+```{r TWL20}
+d_GS    <- dt %>% filter(Operasjonsmetode == 6)
+d_RYGBP    <- dt %>% filter(Operasjonsmetode == 1, Opmetode_GBP == 1)   # mini = Opmetode_GBP
+d_OAGB    <- dt %>% filter(Operasjonsmetode == 1, Opmetode_GBP == 2)
+
+d_TWL  <- dt %>% filter(Operasjonsmetode %in% c(1,6)) %>% filter(!is.na(pTWL)) %>% mutate(del20 = pTWL>=20.0)  # pTWL at 2 year must exist!  to_nt == TRUE
+d_slv  <- d_TWL %>% filter(Operasjonsmetode==6)
+d_gbp  <- d_TWL %>% filter(Operasjonsmetode==1, Opmetode_GBP==1)
+d_oa   <- d_TWL %>% filter(Operasjonsmetode==1, Opmetode_GBP==2)     
+
+detail    <-  function(dmx) {dmx %>% group_by(OperererendeSykehus, op_aar)}
+shw       <-  function(dmx) {dmx %>% tbl_df %>% rmarkdown::paged_table()}
+
+slv20   <-    detail(d_slv) %>% summarise("tyve"= sum(del20, na.rm = TRUE),  "ops"=n(), "minst20" = mean(del20, na.rm = TRUE))
+gbp20   <-    detail(d_gbp) %>% summarise("tyve"= sum(del20, na.rm = TRUE),  "ops"=n(), "minst20" = mean(del20, na.rm = TRUE))
+ oa20   <-    detail(d_oa)  %>% summarise("tyve"= sum(del20, na.rm = TRUE),  "ops"=n(), "minst20" = mean(del20, na.rm = TRUE))
+
+slvdel20 <- function(sh,yr) {slv20 %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+gbpdel20 <- function(sh,yr) {gbp20 %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+ oadel20 <- function(sh,yr) { oa20 %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+
+ 
+ 
+op_15m   <- dt %>% filter(Operasjonsdato<k1_last) %>% group_by(OperererendeSykehus) %>%  summarise("ops"=n())
+op_27m   <- dt %>% filter(Operasjonsdato<k2_last) %>% group_by(OperererendeSykehus) %>%  summarise("ops"=n())
+
+#           tb20 tabell for årsrapporten  
+tb <-          dt %>% group_by(OperererendeSykehus) %>% 
+                      summarise( "to år %TWL"= mean(pTWL, na.rm = TRUE)) 
+
+tb20 <-        dt %>% mutate(del20 = pTWL>=20.0 )  %>% group_by(OperererendeSykehus) %>% 
+                     summarise("ops"=n(), "del %TWL>=20.0"= mean(del20, na.rm = TRUE))
+
+tb20toar <-        dt %>% mutate(del20 = pTWL>=20.0 ) %>% filter(to_nt)  %>% group_by(OperererendeSykehus) %>% 
+                         summarise("ops"=n(), "del %TWL>=20.0"= mean(del20, na.rm = TRUE))
+
+
+tb20_GS <-        d_GS %>% mutate(del20= pTWL>=20.0 ) %>% filter(to_nt) %>% group_by(OperererendeSykehus) %>% 
+                           summarise("ops"=n(),  "del %TWL>=20.0"= mean(del20,na.rm = TRUE))
+
+tb20_RYGBP <-        d_RYGBP %>% mutate(del20= pTWL>=20.0 ) %>% filter(to_nt) %>% group_by(OperererendeSykehus) %>% 
+                                summarise("ops"=n(),  "del %TWL>=20.0"= mean(del20,na.rm = TRUE))
+
+tb20_OAGB <-        d_OAGB %>% mutate(del20= pTWL>=20.0 )  %>% filter(to_nt) %>% group_by(OperererendeSykehus) %>% 
+                              summarise("ops"=n(),  "del %TWL>=20.0"= mean(del20,na.rm = TRUE))
+
+
+ 
+tb20b <-    dt %>% mutate(del20= pTWL>=20.0 )  %>% group_by(OperererendeSykehus) %>%
+                       mutate(ops = n()) %>% summarise(kt2 = sum(to_nt, na.rm = T)/ ops[1]) 
+GS20 <- function(sh,yr) {d_GS %>%  mutate(del20= pTWL>=20.0 ) %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr) %>% group_by(OperererendeSykehus) %>% 
+                         filter(to_nt) %>%  summarise("ops"=n(),  "del %TWL>=20.0"= mean(del20,na.rm = TRUE))}
+GB20 <- function(sh,yr) {d_RYGBP %>% mutate(del20= pTWL>=20.0 ) %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr) %>% group_by(OperererendeSykehus) %>% 
+                         filter(to_nt) %>%  summarise("ops"=n(),  "del %TWL>=20.0"= mean(del20,na.rm = TRUE))} 
+```
+
+# Velg {.sidebar data-width=300}
+ 
+```{r}
+# shiny inputs defined here
+min_dato <-min(dt$Operasjonsdato)
+max_dato <-max(dt$Operasjonsdato)
+fyrstAar<-year(min_dato) 
+sistAar<-year(max_dato)
+
+pickerInput(
+      inputId = "sh",
+      label = "velg sjukehus",
+      choices = unique(dt$OperererendeSykehus),
+      multiple = TRUE,
+      options = pickerOptions(
+        actionsBox = TRUE,
+        title = "Please select a hospital",
+        header = "This is a list of hospitals"
+      )
+    )
+# sliderInput("ixs", label ="år", min=fyrstAar, max=sistAar, value=c(2017,2018), step=1)
+checkboxGroupInput(inputId = "aar", label ="år", choices=fyrstAar:sistAar)  # multiple?
+
+
+# radioButtons("år",label ="years", fyrstAar:sistAar)  # multiple?
+# selectInput("sykeh", label="sykehus", unique(dt$OperererendeSykehus),multiple=TRUE)
+# selectInput("n_breaks", label = "Number of bins:",
+#            choices = c(10, 20, 35, 50), selected = 20)
+dateRangeInput('dateRange',
+      label = 'Datointerval: yyyy-mm-dd',
+      start = min_dato, end = max_dato
+    )
+```
+
+# %TWL {data-width=700}
+
+### 2 års vekttap-%
+
+```{r}
+dmx  <- reactive({
+        dt %>% filter(OperererendeSykehus %in% input$sh) %>% filter( op_aar %in% input$aar) %>%
+                filter( Operasjonsdato >= input$dateRange[1] ) %>%
+                filter( Operasjonsdato  < input$dateRange[2] )
+}) 
+# hosp <- reactive({paste0("%TWL :",input$sh)})
+
+renderPlot({
+#  df_tidy <- gather(dmx$pTWL, cols, value)
+ggplot(dmx(), aes(stat='identity', x=pTWL, color=OperererendeSykehus)) + geom_density() +geom_vline(xintercept =20,linetype="dashed",color="black")
+})
+```
+
+
+# KI 1 
+
+## Column {data-width=500}
+
+### Liggedøgn
+```{r}
+lgg <- reactive({kortligg(input$sh, input$aar)})
+
+output$ligge <- renderDataTable({ lgg() }) 
+ 
+DT::dataTableOutput('ligge')
+```
+
+## Column {data-width=500}
+
+### Del pasientar med tre eller færre liggedøgn etter operasjon.  
+
+
+# KI 2
+
+## Column {data-width=500}
+
+### Reinnleggelse 30d
+```{r}
+innlgg <- reactive({innl30(input$sh, input$aar)})
+
+output$innl <- renderDataTable({ innlgg() }) 
+ 
+DT::dataTableOutput('innl')
+```
+
+## Column {data-width=500}
+
+### Del pasientar som har blitt reinnlagt på sjukehus innan 30 dagar etter operasjon.  
+
+# KI 3 
+
+## Column {data-width=500}
+
+### Komplikasjonar 30d
+```{r}
+kmpl <- reactive({kompl(input$sh, input$aar)})
+
+output$kpl <- renderDataTable({ kmpl() }) 
+ 
+DT::dataTableOutput('kpl')
+```
+
+## Column {data-width=500}
+
+### Del pasientar som får alvorlege komplikasjonar dei første 30 dagane etter operasjonen.  
+
+
+# KI 4 
+
+## Column {data-width=500}
+
+### Kontroll 1 år
+```{r}
+koo1 <- reactive({k1(input$sh, input$aar)})
+
+output$kei1 <- renderDataTable({ koo1() }) 
+ 
+DT::dataTableOutput('kei1')
+```
+
+
+## Column {data-width=500}
+
+### Del pasientar som blir følgde opp postoperativt innan normtid etter eitt år.  
+
+# KI 5  
+
+## Column {data-width=500}
+
+### Kontroll 2 år
+```{r}
+koo2 <- reactive({k2(input$sh, input$aar)})
+
+output$kei2 <- renderDataTable({ koo2() }) 
+ 
+DT::dataTableOutput('kei2')
+```
+
+
+## Column {data-width=500}
+
+### Del pasientar som blir følgde opp postoperativt innan normtid etter to år.  
+
+
+# KI 6  
+
+## Column {data-width=500}
+
+### GS, del med %TWL minst 20
+```{r}
+GSL <- reactive({slvdel20(input$sh, input$aar)})
+output$sleeve <- renderDataTable({ GSL() }) 
+DT::dataTableOutput('sleeve')
+```
+
+
+## Column {data-width=500}
+
+### GB, del pasientar med tap av 20% kroppsvekt eller meir (TWL ≥ 20%).  
+```{r}
+GBP <- reactive({gbpdel20(input$sh, input$aar)})
+output$bypass <- renderDataTable({ GBP() }) 
+DT::dataTableOutput('bypass')
+```
+
+### OAGB, del med %TWL minst 20
+```{r}
+OAGB <- reactive({oadel20(input$sh, input$aar)})
+output$oagb <- renderDataTable({ OAGB() }) 
+DT::dataTableOutput('oagb')
+```
+
+# Datatabellar
+ 
+## Column {data-width=150}
+
+### sjukehus
+```{r}
+renderText(input$sh)
+```
+### aar
+```{r}
+renderText(input$aar) 
+```
+
+ 
+## Column {data-width=850}
+
+### results
+```{r}
+vlgt <- reactive({ dt %>% filter( OperererendeSykehus %in% input$sh ) %>% filter( op_aar %in% input$aar) })
+kntrl <- reactive({ d_kompl_yr(input$aar)})
+
+output$tble <- renderDataTable({ vlgt() }) 
+# output$tble <- renderDataTable({ kntrl() }) 
+
+DT::dataTableOutput('tble')
+```
+
+ 
