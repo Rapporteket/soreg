@@ -23,7 +23,8 @@ Imports:
     rapbase,
     raplog,
     shiny,
-    shinyalert
+    shinyalert,
+    shinyWidgets
 Remotes:
     Rapporteket/rapbase@*release,
     Rapporteket/raplog@*release
