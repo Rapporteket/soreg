@@ -22,6 +22,7 @@ Imports:
     magrittr,
     rapbase,
     raplog,
+    rlang,
     shiny,
     shinyalert,
     shinyWidgets
