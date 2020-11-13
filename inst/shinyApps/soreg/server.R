@@ -85,10 +85,10 @@ server <- function(input, output, session) {
   n_reop = n_op - n_prim
   # Kva var den vanlegaste talet døgn å ligga etter operasjon
   liggedogn_typetal = d_prim_6v %>%
-    count(LiggeDogn) %>%
-    arrange(desc(n)) %$%
+    dplyr::count(LiggeDogn) %>%
+    dplyr::arrange(desc(n)) %$%
     LiggeDogn %>%
-    first
+    dplyr::first()
 
   # funksjon for å regne ut kvalitetsindikatoren
   # definert for liggetid (andel pasienter med 3 dager eller færre)
@@ -99,7 +99,7 @@ server <- function(input, output, session) {
 
     ind = teljar/nemnar
 
-    res = tibble(# forklaring="Del pasienter med 3 eller færre liggedøgn",
+    res = tibble::tibble(# forklaring="Del pasienter med 3 eller færre liggedøgn",
       # ltx_tekst = "Tre/færre liggedøgn",
       teljar, nemnar, ind = ind) # trenger ikke å definere at
     # variabler som er med i en group_by
