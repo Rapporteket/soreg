@@ -112,20 +112,27 @@ server <- function(input, output, session) {
 
   # Kor mange låg mindre enn fire døgn per sjukehus
   d_kortligg_sjuk = d_prim_6v %>%
-    group_by(OperererendeSykehus, op_aar) %>%
-    do(ki_liggetid(.)) %>%
-    arrange(desc(ind))
+    dplyr::group_by(OperererendeSykehus, op_aar) %>%
+    dplyr::do(ki_liggetid(.)) %>%
+    dplyr::arrange(desc(ind))
 
-  kortligg_sh <- function(sh) {d_kortligg_sjuk %>% filter(OperererendeSykehus %in% sh)}
-  kortligg_yr <- function(yr) {d_kortligg_sjuk %>% filter(op_aar %in% yr)}
-  kortligg    <- function(sh,yr){d_kortligg_sjuk %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+  kortligg_sh <- function(sh) {d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh)}
+  kortligg_yr <- function(yr) {d_kortligg_sjuk %>% dplyr::filter(op_aar %in% yr)}
+  kortligg    <- function(sh,yr){d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 
   # aarskontrollar
   ####################################################
   # +-90                                             #  slingringsmonn
-  nitti_m  <-  function(yr=1, dag= today(), l=90) { dag-ddays(l)+years(yr) }
-  nitti_p  <-  function(yr=1, dag= today(), l=90) { dag+ddays(l)+years(yr) }
-  nitti    <-  function(yr=1, dag= today(), l=90) { c(dag-ddays(l)+years(yr), dag+ddays(l)+years(yr)) }
+  nitti_m <- function(yr = 1, dag = lubridate::today(), l = 90) {
+    dag - lubridate::ddays(l) + lubridate::years(yr)
+  }
+  nitti_p <- function(yr = 1, dag = lubridate::today(), l = 90) {
+    dag + lubridate::ddays(l) + lubridate::years(yr)
+  }
+  nitti <- function(yr = 1, dag = lubridate::today(), l = 90) {
+    c(dag - lubridate::ddays(l) + years(yr),
+      dag + lubridate::ddays(l) + lubridate::years(yr))
+  }
 
   dmx <- d_full   # alle operasjoner for kontrollene
   dm  <- dmx   %>%  mutate( et_nor_m = nitti_m(dag= Operasjonsdato), et_nor_p = nitti_p(dag= Operasjonsdato),
