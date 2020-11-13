@@ -135,11 +135,15 @@ server <- function(input, output, session) {
   }
 
   dmx <- d_full   # alle operasjoner for kontrollene
-  dm  <- dmx   %>%  mutate( et_nor_m = nitti_m(dag= Operasjonsdato), et_nor_p = nitti_p(dag= Operasjonsdato),
-                            to_nor_m = nitti_m(yr=2, dag= Operasjonsdato), to_nor_p = nitti_p(yr=2, dag= Operasjonsdato),
-                            pTWL = 100*(BR_Vekt - `ToAar_Vekt`)/BR_Vekt )
+  dm <- dmx %>%
+    dplyr::mutate(et_nor_m = nitti_m(dag = Operasjonsdato),
+                  et_nor_p = nitti_p(dag = Operasjonsdato),
+                  to_nor_m = nitti_m(yr = 2, dag= Operasjonsdato),
+                  to_nor_p = nitti_p(yr = 2, dag= Operasjonsdato),
+                  pTWL = 100 * (BR_Vekt - `ToAar_Vekt`)/BR_Vekt )
 
-  dn <-  dm %>% mutate(et_nt= EttAar_Oppfolgingsdato %within% interval( et_nor_m, et_nor_p ),
+  dn <- dm %>%
+    dplyr::mutate(et_nt= EttAar_Oppfolgingsdato %within% interval( et_nor_m, et_nor_p ),
                        to_nt= ToAar_Oppfolgingsdato %within% interval( to_nor_m, to_nor_p ),
                        et_b4= EttAar_Oppfolgingsdato %within% interval( Operasjonsdato+1, et_nor_m-1 ),
                        et_lt= EttAar_Oppfolgingsdato > et_nor_p,
