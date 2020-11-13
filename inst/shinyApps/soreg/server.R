@@ -18,7 +18,7 @@ server <- function(input, output, session) {
   #                    op_primar=(TidlFedmeOp==0))
   d_full <- regData
   # Legg til info om operasjonsår
-  d_full %<>% mutate(op_aar = year(Operasjonsdato), op_primar = (TidlFedmeOp==0))
+  d_full %<>% dplyr::mutate(op_aar = lubridate::year(Operasjonsdato), op_primar = (TidlFedmeOp==0))
   # Rekn ut BMI for alle tidspunkta
   # Merk: Ein registrerer kroppshøgd på alle tidspunkta *utanom*
   #       for operasjonstidspunktet! Me har altså kroppsvekt ved
