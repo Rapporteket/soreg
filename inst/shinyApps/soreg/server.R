@@ -30,11 +30,12 @@ server <- function(input, output, session) {
   #       Derfor må me ta ein spansk ein og bruka
   #       kroppshøgd ved *baseline* for utrekning
   #       av BMI på operasjonstidspunktet. :(
-  d_full = d_full %>% mutate(bmi_baseline = BR_Vekt/(BR_Hoyde/100)^2,
-                             bmi_op = OperasjonVekt/(BR_Hoyde/100)^2,
-                             bmi_6v = `6U_Vekt`/(`6U_Hoyde`/100)^2,
-                             bmi_1a = `1Aar_Vekt`/(`1Aar_Hoyde`/100)^2,
-                             bmi_2a = `ToAar_Vekt`/(`ToAar_Hoyde`/100)^2)
+  d_full = d_full %>%
+    dplyr::mutate(bmi_baseline = BR_Vekt/(BR_Hoyde/100)^2,
+                  bmi_op = OperasjonVekt/(BR_Hoyde/100)^2,
+                  bmi_6v = `6U_Vekt`/(`6U_Hoyde`/100)^2,
+                  bmi_1a = `1Aar_Vekt`/(`1Aar_Hoyde`/100)^2,
+                  bmi_2a = `ToAar_Vekt`/(`ToAar_Hoyde`/100)^2)
   # Data for alle år opptil (og inkludert) rapporteringsår,
   # men ikkje for seinare år
   #
@@ -45,38 +46,38 @@ server <- function(input, output, session) {
   # datoen, ikkje 24:00, og inkluderer derfor ikkje tidsperioden
   # frå 00:00 til 24:00, så me ville mista det siste døgnet).)
   rapporteringsaar = 2019
-  dato_opptilrapaar = as_date(paste0(rapporteringsaar, "-12-31")) # For ev. seinare bruk i teksten
+  dato_opptilrapaar = lubridate::as_date(paste0(rapporteringsaar, "-12-31")) # For ev. seinare bruk i teksten
   d_opptilrapaar = d_full %>%
     filter(Operasjonsdato < (dato_opptilrapaar + 1))
 
   # Data for alle år opptil (og inkludert) to år før rapporteringsåret,
   # dvs. alle data me i teorien burde ha toårs oppfølgingsdata på
-  dato_toaarsdata = as_date(paste0(rapporteringsaar - 2, "-12-31")) # For ev. seinare bruk i teksten
+  dato_toaarsdata = lubridate::as_date(paste0(rapporteringsaar - 2, "-12-31")) # For ev. seinare bruk i teksten
   d_toaarsdata = d_full %>%
-    filter(Operasjonsdato < (dato_toaarsdata + 1))
+    dplyr::filter(Operasjonsdato < (dato_toaarsdata + 1))
 
   # Og tilsvarande for eittårsdata
-  dato_eittaarsdata = as_date(paste0(rapporteringsaar - 1, "-12-31")) # For ev. seinare bruk i teksten
+  dato_eittaarsdata = lubridate::as_date(paste0(rapporteringsaar - 1, "-12-31")) # For ev. seinare bruk i teksten
   d_eittaarsdata = d_full %>%
-    filter(Operasjonsdato < (dato_eittaarsdata + 1))
+    dplyr::filter(Operasjonsdato < (dato_eittaarsdata + 1))
 
   # Dei som vart operert det aktuelle året
-  d = d_full %>%  filter(op_aar == rapporteringsaar)
+  d = d_full %>%  dplyr::filter(op_aar == rapporteringsaar)
 
   # Talet på operasjonsmåtar
   n_op = nrow(d_full)
-  n_pas = n_distinct(d$PasientID)
+  n_pas = dplyr::n_distinct(d$PasientID)
 
   # d_prim = d %>% filter(op_primar)
-  d_prim = d_full %>% filter(op_primar)
+  d_prim = d_full %>% dplyr::filter(op_primar)
 
 
   # I nokre analysar ser me berre på dei som har 6-vekesoppfølging
   # registrert. Hentar ut eiga datasett for desse
-  d_prim_6v = d_prim %>% filter(`6U_KontrollType` %in% 1:3)
+  d_prim_6v = d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
 
-  d_toaarsdata_prim = d_toaarsdata %>% filter(op_primar)
-  d_eittaarsdata_prim = d_eittaarsdata %>% filter(op_primar)
+  d_toaarsdata_prim = d_toaarsdata %>% dplyr::filter(op_primar)
+  d_eittaarsdata_prim = d_eittaarsdata %>% dplyr::filter(op_primar)
   maksdogn_vis = 14
 
   # Talet på primæroperasjonar og reoperasjonar
