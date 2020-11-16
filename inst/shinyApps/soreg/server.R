@@ -12,85 +12,28 @@ server <- function(input, output, session) {
   registry_name <- "soreg"
 
   # Last inn data
-  # regData <- soreg::get_allevarnum("soreg")
-  regData <- soreg::get_arsrp("soreg")
-  # regData %<>% mutate(op_aar = year(Operasjonsdato),
-  #                    op_primar=(TidlFedmeOp==0))
-  d_full <- regData
-  # Legg til info om operasjonsår
-  d_full %<>% dplyr::mutate(op_aar = lubridate::year(Operasjonsdato), op_primar = (TidlFedmeOp==0))
+  # Legg til info om operasjonsår og primæroperasjon
+   d_full <- soreg::get_arsrp("soreg")
+    d_full %<>% dplyr::mutate(op_aar = lubridate::year(Operasjonsdato), op_primar = (TidlFedmeOp==0))
   # Rekn ut BMI for alle tidspunkta
-  # Merk: Ein registrerer kroppshøgd på alle tidspunkta *utanom*
-  #       for operasjonstidspunktet! Me har altså kroppsvekt ved
-  #       baseline, 6 veker etter operasjon, 1 år etter operasjon,
-  #       2 år etter operasjon osv., men ikkje *ved* operasjon.
-  #       Der har me berre vekt (men heller ikkje for alle, for
-  #       operasjonsvekt er ikkje obligatorisk!).
-  #
-  #       Derfor må me ta ein spansk ein og bruka
-  #       kroppshøgd ved *baseline* for utrekning
-  #       av BMI på operasjonstidspunktet. :(
-  d_full <- d_full %>%
+   d_full <- d_full %>%
     dplyr::mutate(bmi_baseline = BR_Vekt/(BR_Hoyde/100)^2,
                   bmi_op = OperasjonVekt/(BR_Hoyde/100)^2,
                   bmi_6v = `6U_Vekt`/(`6U_Hoyde`/100)^2,
                   bmi_1a = `1Aar_Vekt`/(`1Aar_Hoyde`/100)^2,
                   bmi_2a = `ToAar_Vekt`/(`ToAar_Hoyde`/100)^2)
-  # Data for alle år opptil (og inkludert) rapporteringsår,
-  # men ikkje for seinare år
-  #
-  # (Brukar '< dato + 1' i staden for '<= dato' for å handtera
-  # det rett dersom ein i framtida endrar operasjonsdato
-  # til å vera operasjonstidspunkt i staden for operasjondato
-  # (ein dato tolka som tidspunkt er klokka 00:00 den aktuelle
-  # datoen, ikkje 24:00, og inkluderer derfor ikkje tidsperioden
-  # frå 00:00 til 24:00, så me ville mista det siste døgnet).)
-  rapporteringsaar <- 2019
-  dato_opptilrapaar <- lubridate::as_date(paste0(rapporteringsaar, "-12-31")) # For ev. seinare bruk i teksten
-  d_opptilrapaar <- d_full %>%
-    filter(Operasjonsdato < (dato_opptilrapaar + 1))
-
-  # Data for alle år opptil (og inkludert) to år før rapporteringsåret,
-  # dvs. alle data me i teorien burde ha toårs oppfølgingsdata på
-  dato_toaarsdata <- lubridate::as_date(paste0(rapporteringsaar - 2, "-12-31")) # For ev. seinare bruk i teksten
-  d_toaarsdata <- d_full %>%
-    dplyr::filter(Operasjonsdato < (dato_toaarsdata + 1))
-
-  # Og tilsvarande for eittårsdata
-  dato_eittaarsdata <- lubridate::as_date(paste0(rapporteringsaar - 1, "-12-31")) # For ev. seinare bruk i teksten
-  d_eittaarsdata <- d_full %>%
-    dplyr::filter(Operasjonsdato < (dato_eittaarsdata + 1))
-
-  # Dei som vart operert det aktuelle året
-  d <- d_full %>%  dplyr::filter(op_aar == rapporteringsaar)
-
-  # Talet på operasjonsmåtar
-  n_op <- nrow(d_full)
-  n_pas <- dplyr::n_distinct(d$PasientID)
-
   # d_prim = d %>% filter(op_primar)
-  d_prim <- d_full %>% dplyr::filter(op_primar)
-
-
+   d_prim <- d_full %>% dplyr::filter(op_primar)
   # I nokre analysar ser me berre på dei som har 6-vekesoppfølging
   # registrert. Hentar ut eiga datasett for desse
-  d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
+   d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
+  # tidsinterval 
+  min_dato <-min(d_full$Operasjonsdato)
+  max_dato <-max(d_full$Operasjonsdato)
+  fyrstAar<-year(min_dato)
+  sistAar<-year(max_dato)
 
-  d_toaarsdata_prim = d_toaarsdata %>% dplyr::filter(op_primar)
-  d_eittaarsdata_prim <- d_eittaarsdata %>% dplyr::filter(op_primar)
-  maksdogn_vis <- 14
-
-  # Talet på primæroperasjonar og reoperasjonar
-  n_prim = nrow(d_prim)
-  n_reop = n_op - n_prim
-  # Kva var den vanlegaste talet døgn å ligga etter operasjon
-  liggedogn_typetal = d_prim_6v %>%
-    dplyr::count(LiggeDogn) %>%
-    dplyr::arrange(desc(n)) %$%
-    LiggeDogn %>%
-    dplyr::first()
-
-  # funksjon for å regne ut kvalitetsindikatoren
+ # funksjon for å regne ut kvalitetsindikatoren
   # definert for liggetid (andel pasienter med 3 dager eller færre)
   ki_liggetid = function(df){
 
@@ -120,6 +63,47 @@ server <- function(input, output, session) {
   kortligg_yr <- function(yr) {d_kortligg_sjuk %>% dplyr::filter(op_aar %in% yr)}
   kortligg    <- function(sh,yr){d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 
+
+
+ 
+  # rapporteringsaar <- 2019
+  # dato_opptilrapaar <- lubridate::as_date(paste0(rapporteringsaar, "-12-31")) # For ev. seinare bruk i teksten
+  # d_opptilrapaar <- d_full %>%
+    # filter(Operasjonsdato < (dato_opptilrapaar + 1))
+
+  # # Data for alle år opptil (og inkludert) to år før rapporteringsåret,
+  # # dvs. alle data me i teorien burde ha toårs oppfølgingsdata på
+  # dato_toaarsdata <- lubridate::as_date(paste0(rapporteringsaar - 2, "-12-31")) # For ev. seinare bruk i teksten
+  # d_toaarsdata <- d_full %>%
+    # dplyr::filter(Operasjonsdato < (dato_toaarsdata + 1))
+
+  # # Og tilsvarande for eittårsdata
+  # dato_eittaarsdata <- lubridate::as_date(paste0(rapporteringsaar - 1, "-12-31")) # For ev. seinare bruk i teksten
+  # d_eittaarsdata <- d_full %>%
+    # dplyr::filter(Operasjonsdato < (dato_eittaarsdata + 1))
+
+  # # Dei som vart operert det aktuelle året
+  # d <- d_full %>%  dplyr::filter(op_aar == rapporteringsaar)
+
+  # # Talet på operasjonsmåtar
+  # n_op <- nrow(d_full)
+  # n_pas <- dplyr::n_distinct(d$PasientID)
+
+  # d_toaarsdata_prim = d_toaarsdata %>% dplyr::filter(op_primar)
+  # d_eittaarsdata_prim <- d_eittaarsdata %>% dplyr::filter(op_primar)
+  # maksdogn_vis <- 14
+
+  # # Talet på primæroperasjonar og reoperasjonar
+  # n_prim = nrow(d_prim)
+  # n_reop = n_op - n_prim
+  # # Kva var den vanlegaste talet døgn å ligga etter operasjon
+  # liggedogn_typetal = d_prim_6v %>%
+    # dplyr::count(LiggeDogn) %>%
+    # dplyr::arrange(desc(n)) %$%
+    # LiggeDogn %>%
+    # dplyr::first()
+
+ 
   # aarskontrollar
   ####################################################
   # +-90                                             #  slingringsmonn
@@ -159,11 +143,7 @@ server <- function(input, output, session) {
 
   ##---------------
 
-  min_dato <-min(d_full$Operasjonsdato)
-  max_dato <-max(d_full$Operasjonsdato)
-  fyrstAar<-year(min_dato)
-  sistAar<-year(max_dato)
-
+ 
     #------------------------------------------------------------------------------
 
   # Gjenbrukbar funksjon for å bearbeide Rmd til html

@@ -23,6 +23,7 @@ ui <- tagList(
         tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico"))
       )
     ),
+#------------------------------------------------------ KI1 - KI6	
     tabPanel("KI1: Liggedøgn",
              sidebarLayout(
                sidebarPanel(width=3,
@@ -62,7 +63,8 @@ ui <- tagList(
                     label = 'Datointerval: yyyy-mm-dd',
                     start = min_dato, end = max_dato
      ),
-   tabPanel("KI og tabell",
+#------------------------------------------------------ KI1 - KI6	
+    tabPanel("KI og tabell",
       sidebarLayout(
         sidebarPanel(width = 3,
           selectInput(inputId = "varavn",
@@ -82,6 +84,7 @@ ui <- tagList(
         )
       )
     ),
+#-------------------------------------------------------- KI og tabell kan fjernes?	
     tabPanel("Samlerapport"
         ,
         tabPanel("Fordeling av mpg",
