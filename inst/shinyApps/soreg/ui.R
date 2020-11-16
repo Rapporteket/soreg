@@ -23,7 +23,7 @@ ui <- tagList(
         tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico"))
       )
     ),
-#------------------------------------------------------ KI1 - KI6	
+#------------------------------------------------------ KI1 - KI6
     tabPanel("KI1: Liggedøgn",
              sidebarLayout(
                sidebarPanel(width=3,
@@ -39,7 +39,7 @@ ui <- tagList(
                                 title = "Please select a hospital",
                                 header = "This is a list of hospitals"
                               )),
-                            checkboxGroupInput(inputId = "lggar", label ="år", choices=c(2017,2018)),  # multiple?
+                            checkboxGroupInput(inputId = "lggar", label ="år", choices=2014:2018),  # multiple?
                            selectInput(inputId= "vrb", label = "Variabel:", c("bmi_baseline")),
                             sliderInput("bn",  label = "Antall grupper:",
                                         min = 1,
@@ -49,7 +49,7 @@ ui <- tagList(
                            mainPanel(          tabsetPanel(
                              tabPanel("Plot en variabel",      plotOutput("PlotKI1")),
                              tabPanel("Data table", tableOutput("TableKI1")),
-                             tabPanel("own table", dataTableOutput('ligge'))
+                             tabPanel("own table", DT::dataTableOutput("ligge"))
                            )
                            ))
              ),
@@ -59,11 +59,11 @@ ui <- tagList(
     # selectInput("sykeh", label="sykehus", unique(dt$OperererendeSykehus),multiple=TRUE)
     # selectInput("n_breaks", label = "Number of bins:",
     #            choices = c(10, 20, 35, 50), selected = 20)
-     dateRangeInput('dateRange',
-                    label = 'Datointerval: yyyy-mm-dd',
-                    start = min_dato, end = max_dato
-     ),
-#------------------------------------------------------ KI1 - KI6	
+#      dateRangeInput('dateRange',
+#                     label = 'Datointerval: yyyy-mm-dd',
+#                     start = min_dato, end = max_dato
+#      ),
+# #------------------------------------------------------ KI1 - KI6
     tabPanel("KI og tabell",
       sidebarLayout(
         sidebarPanel(width = 3,
@@ -84,7 +84,7 @@ ui <- tagList(
         )
       )
     ),
-#-------------------------------------------------------- KI og tabell kan fjernes?	
+#-------------------------------------------------------- KI og tabell kan fjernes?
     tabPanel("Samlerapport"
         ,
         tabPanel("Fordeling av mpg",
