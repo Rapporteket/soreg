@@ -15,14 +15,7 @@ server <- function(input, output, session) {
   # Legg til info om operasjonsår og primæroperasjon
    d_full <- soreg::get_arsrp("soreg")
     d_full %<>% dplyr::mutate(op_aar = lubridate::year(Operasjonsdato), op_primar = (TidlFedmeOp==0))
-  # Rekn ut BMI for alle tidspunkta
-   d_full <- d_full %>%
-    dplyr::mutate(bmi_baseline = BR_Vekt/(BR_Hoyde/100)^2,
-                  bmi_op = OperasjonVekt/(BR_Hoyde/100)^2,
-                  bmi_6v = `6U_Vekt`/(`6U_Hoyde`/100)^2,
-                  bmi_1a = `1Aar_Vekt`/(`1Aar_Hoyde`/100)^2,
-                  bmi_2a = `ToAar_Vekt`/(`ToAar_Hoyde`/100)^2)
-  # d_prim = d %>% filter(op_primar)
+    # d_prim = d %>% filter(op_primar)
    d_prim <- d_full %>% dplyr::filter(op_primar)
   # I nokre analysar ser me berre på dei som har 6-vekesoppfølging
   # registrert. Hentar ut eiga datasett for desse
@@ -33,6 +26,7 @@ server <- function(input, output, session) {
   # fyrstAar<-lubridate::year(min_dato)
   # sistAar <-lubridate::year(max_dato)
 
+# LIGGEDØGN
  # funksjon for å regne ut kvalitetsindikatoren
  # definert for liggetid (andel pasienter med 3 dager eller færre)   -->  /R
   ki_liggetid <- function(df){
@@ -50,9 +44,7 @@ server <- function(input, output, session) {
     res
   }
 
-  # Kor mange låg mindre enn fire døgn
-  # p_kortligg = ki_liggetid(d_prim_6v)$ind
-
+ 
   # Kor mange låg mindre enn fire døgn per sjukehus
   d_kortligg_sjuk <- d_prim_6v %>%
     dplyr::group_by(OperererendeSykehus, op_aar) %>%
@@ -62,6 +54,72 @@ server <- function(input, output, session) {
   kortligg_sh <- function(sh) {d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh)}
   kortligg_yr <- function(yr) {d_kortligg_sjuk %>% dplyr::filter(op_aar %in% yr)}
   kortligg    <- function(sh,yr){d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+
+
+# REINNLEGGELSE
+# I analysar for reinnlegging ser me berre på dei som har 6-vekesoppfølging
+# registrert eller som er registrert som reinnlagd til trass for at dei
+# ikkje har 6-vekesoppfølging (jf. forklaringstekst for reinnleggings-
+# indikatoren i årsrapporten). Hentar ut eiga datasett for desse. Men det
+# viser seg at det òg er mogleg å svara «Vet ikke» (verdi 2) på om pasienten
+# vart reinnlagd. Desse gjev ingen informasjon, og vert derfor òg fjerna.
+d_reinn = d_prim %>% dplyr::filter(((`6U_KontrollType` %in% 1:3) |
+                             (`6U_Behandling30Dager` == 1)) &
+                             (`6U_Behandling30Dager` != 2))
+
+# Tilsvarande for alvorlege komplikasjonar
+d_kompl = d_prim %>% dplyr::filter((`6U_KontrollType` %in% 1:3) | (!is.na(`6U_KomplAlvorGrad`)))
+
+
+# funksjon for å regne ut
+# andel pasienter som får innleggelse innen 30 dager etter
+# operasjonen
+ki_30dager = function(df){
+
+  teljar = sum(df$`6U_Behandling30Dager` == 1)
+  nemnar = nrow(df)
+  
+  ind = teljar/nemnar
+  
+  res = tibble::tibble(#forklaring = "Reinnlegging innan 30 dagar etter operasjonen", 
+               #ltx_tekst = "Reinnlegging",
+               teljar, nemnar, ind = ind)
+  res   
+}
+ 
+# andel pasienter som får innleggelse innen 30 dager etter operasjon per sjukehus
+d_innlegg30 = d_reinn %>% 
+              dplyr::group_by(OperererendeSykehus, op_aar) %>% 
+			  dplyr::do(ki_30dager(.)) %>% 
+			  dplyr::arrange(desc(ind))
+innl30_sh <- function(sh) {d_innlegg30 %>% filter(OperererendeSykehus %in% sh)}
+innl30_yr <- function(yr) {d_innlegg30 %>% filter(op_aar %in% yr)}
+innl30 <- function(sh,yr){d_innlegg30 %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+
+# KOMPLIKASJONAR
+# funksjon for å regne ut
+# andel pasienter som får en alvorlig komplikasjon
+ki_kompl_alv =function(df){
+  
+  # Alvorlege komplikasjonar
+  teljar = sum(df$`6U_KomplAlvorGrad` >= 4, na.rm=TRUE)
+  nemnar = nrow(df)
+
+  ind = teljar/nemnar
+  
+  res = tibble::tibble( teljar, nemnar, ind = ind)  
+  res   
+}
+ 
+# andel pasienter som får en alvorlig komplikasjon per sjukehus
+d_kompl_alv_sjukehus = d_kompl %>% 
+                       dplyr::group_by(OperererendeSykehus,op_aar) %>% 
+					   dplyr::do(ki_kompl_alv(.)) %>% 
+					   dplyr::arrange(desc(ind))
+
+kompl_sh <- function(sh) {d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %in% sh)}
+kompl_yr <- function(yr) {d_kompl_alv_sjukehus %>% filter(op_aar %in% yr)}
+kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
  
   # aarskontrollar
   ####################################################
