@@ -28,14 +28,14 @@ server <- function(input, output, session) {
   # registrert. Hentar ut eiga datasett for desse
    d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
   # tidsinterval 
-  min_dato <-min(d_full$Operasjonsdato)
-  max_dato <-max(d_full$Operasjonsdato)
-  fyrstAar<-year(min_dato)
-  sistAar<-year(max_dato)
+  # min_dato <-min(d_full$Operasjonsdato)    ## hvordan kan disse sender til ui?DT
+  # max_dato <-max(d_full$Operasjonsdato)
+  # fyrstAar<-lubridate::year(min_dato)
+  # sistAar <-lubridate::year(max_dato)
 
  # funksjon for å regne ut kvalitetsindikatoren
-  # definert for liggetid (andel pasienter med 3 dager eller færre)
-  ki_liggetid = function(df){
+ # definert for liggetid (andel pasienter med 3 dager eller færre)   -->  /R
+  ki_liggetid <- function(df){
 
     teljar = sum(df$LiggeDogn <= 3)
     nemnar = nrow(df)
@@ -51,10 +51,10 @@ server <- function(input, output, session) {
   }
 
   # Kor mange låg mindre enn fire døgn
-  p_kortligg = ki_liggetid(d_prim_6v)$ind
+  # p_kortligg = ki_liggetid(d_prim_6v)$ind
 
   # Kor mange låg mindre enn fire døgn per sjukehus
-  d_kortligg_sjuk = d_prim_6v %>%
+  d_kortligg_sjuk <- d_prim_6v %>%
     dplyr::group_by(OperererendeSykehus, op_aar) %>%
     dplyr::do(ki_liggetid(.)) %>%
     dplyr::arrange(desc(ind))
@@ -62,47 +62,6 @@ server <- function(input, output, session) {
   kortligg_sh <- function(sh) {d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh)}
   kortligg_yr <- function(yr) {d_kortligg_sjuk %>% dplyr::filter(op_aar %in% yr)}
   kortligg    <- function(sh,yr){d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
-
-
-
- 
-  # rapporteringsaar <- 2019
-  # dato_opptilrapaar <- lubridate::as_date(paste0(rapporteringsaar, "-12-31")) # For ev. seinare bruk i teksten
-  # d_opptilrapaar <- d_full %>%
-    # filter(Operasjonsdato < (dato_opptilrapaar + 1))
-
-  # # Data for alle år opptil (og inkludert) to år før rapporteringsåret,
-  # # dvs. alle data me i teorien burde ha toårs oppfølgingsdata på
-  # dato_toaarsdata <- lubridate::as_date(paste0(rapporteringsaar - 2, "-12-31")) # For ev. seinare bruk i teksten
-  # d_toaarsdata <- d_full %>%
-    # dplyr::filter(Operasjonsdato < (dato_toaarsdata + 1))
-
-  # # Og tilsvarande for eittårsdata
-  # dato_eittaarsdata <- lubridate::as_date(paste0(rapporteringsaar - 1, "-12-31")) # For ev. seinare bruk i teksten
-  # d_eittaarsdata <- d_full %>%
-    # dplyr::filter(Operasjonsdato < (dato_eittaarsdata + 1))
-
-  # # Dei som vart operert det aktuelle året
-  # d <- d_full %>%  dplyr::filter(op_aar == rapporteringsaar)
-
-  # # Talet på operasjonsmåtar
-  # n_op <- nrow(d_full)
-  # n_pas <- dplyr::n_distinct(d$PasientID)
-
-  # d_toaarsdata_prim = d_toaarsdata %>% dplyr::filter(op_primar)
-  # d_eittaarsdata_prim <- d_eittaarsdata %>% dplyr::filter(op_primar)
-  # maksdogn_vis <- 14
-
-  # # Talet på primæroperasjonar og reoperasjonar
-  # n_prim = nrow(d_prim)
-  # n_reop = n_op - n_prim
-  # # Kva var den vanlegaste talet døgn å ligga etter operasjon
-  # liggedogn_typetal = d_prim_6v %>%
-    # dplyr::count(LiggeDogn) %>%
-    # dplyr::arrange(desc(n)) %$%
-    # LiggeDogn %>%
-    # dplyr::first()
-
  
   # aarskontrollar
   ####################################################
@@ -119,6 +78,7 @@ server <- function(input, output, session) {
   }
 
   dmx <- d_full   # alle operasjoner for kontrollene
+  
   dm <- dmx %>%
     dplyr::mutate(et_nor_m = nitti_m(dag = Operasjonsdato),
                   et_nor_p = nitti_p(dag = Operasjonsdato),
@@ -133,18 +93,11 @@ server <- function(input, output, session) {
                        et_lt= EttAar_Oppfolgingsdato > et_nor_p,
                        to_b4= ToAar_Oppfolgingsdato %within% interval( Operasjonsdato+1, to_nor_m-1 ),
                        to_lt= ToAar_Oppfolgingsdato > to_nor_p)
-  #                     fs1_gj_kt = `1Aar_OppfolgingsType` == 4 ,
-  #                     fs1_u_kt  = `1Aar_OppfolgingsType` == 5 ,
-  #                     fs2_gj_kt = `2Aar_OppfolgingsType` == 4 ,
-  #                     fs2_u_kt  =  `2Aar_OppfolgingsType` == 5  )
-
-  dt    <-  dn %>% select(  c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar", "Operasjonsmetode", "Opmetode_GBP",
-                              "et_b4", "et_nt", "et_lt", "to_b4",  "to_nt", "to_lt", "pTWL"))
-
-  ##---------------
-
  
-    #------------------------------------------------------------------------------
+  dt    <-  dn %>% dplyr::select(  c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar", "Operasjonsmetode", "Opmetode_GBP",
+                                   "et_b4", "et_nt", "et_lt", "to_b4",  "to_nt", "to_lt", "pTWL"))
+
+  ##-----------#------------------------------------------------------------------------------
 
   # Gjenbrukbar funksjon for å bearbeide Rmd til html
   htmlRenderRmd <- function(srcFile, params = list()) {
@@ -180,7 +133,7 @@ server <- function(input, output, session) {
   })
 
   # Figur og tabell
-
+#-------------------------------------------------------------------------------------- KI1 figur og tabell
   ## Figur
   output$PlotKI1 <- renderPlot({
    soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
@@ -194,7 +147,7 @@ server <- function(input, output, session) {
  lgg <- reactive({kortligg(input$sh, input$lggar)})
  output$ligge <- renderDataTable({ lgg() })
  ## DT::dataTableOutput('ligge')
-
+#--------------------------------------------------------------------------------------------------------
   # Samlerapport
   ## vis
   output$samlerapport <- renderUI({
