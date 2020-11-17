@@ -10,7 +10,6 @@ server <- function(input, output, session) {
 
   # Faste verdier for applikasjonen
   registry_name <- "soreg"
-
   # Last inn data
   # Legg til info om operasjonsår og primæroperasjon
    d_full <- soreg::get_arsrp("soreg")
@@ -20,8 +19,9 @@ server <- function(input, output, session) {
   # I nokre analysar ser me berre på dei som har 6-vekesoppfølging
   # registrert. Hentar ut eiga datasett for desse
    d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
-  # tidsinterval 
-  # min_dato <-min(d_full$Operasjonsdato)    ## hvordan kan disse sender til ui?DT
+
+  # tidsinterval
+  # min_dato <-min(d_full$Operasjonsdato)    ## hvordan kan disse sendes til ui?
   # max_dato <-max(d_full$Operasjonsdato)
   # fyrstAar<-lubridate::year(min_dato)
   # sistAar <-lubridate::year(max_dato)
@@ -44,7 +44,6 @@ server <- function(input, output, session) {
     res
   }
 
- 
   # Kor mange låg mindre enn fire døgn per sjukehus
   d_kortligg_sjuk <- d_prim_6v %>%
     dplyr::group_by(OperererendeSykehus, op_aar) %>%
@@ -53,7 +52,7 @@ server <- function(input, output, session) {
 
   kortligg_sh <- function(sh) {d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh)}
   kortligg_yr <- function(yr) {d_kortligg_sjuk %>% dplyr::filter(op_aar %in% yr)}
-  kortligg    <- function(sh,yr){d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+  kortligg    <- function(sh, yr){d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 
 
 # REINNLEGGELSE
@@ -78,19 +77,19 @@ ki_30dager = function(df){
 
   teljar = sum(df$`6U_Behandling30Dager` == 1)
   nemnar = nrow(df)
-  
+
   ind = teljar/nemnar
-  
-  res = tibble::tibble(#forklaring = "Reinnlegging innan 30 dagar etter operasjonen", 
+
+  res = tibble::tibble(#forklaring = "Reinnlegging innan 30 dagar etter operasjonen",
                #ltx_tekst = "Reinnlegging",
                teljar, nemnar, ind = ind)
-  res   
+  res
 }
- 
+
 # andel pasienter som får innleggelse innen 30 dager etter operasjon per sjukehus
-d_innlegg30 = d_reinn %>% 
-              dplyr::group_by(OperererendeSykehus, op_aar) %>% 
-			  dplyr::do(ki_30dager(.)) %>% 
+d_innlegg30 = d_reinn %>%
+              dplyr::group_by(OperererendeSykehus, op_aar) %>%
+			  dplyr::do(ki_30dager(.)) %>%
 			  dplyr::arrange(desc(ind))
 innl30_sh <- function(sh) {d_innlegg30 %>% filter(OperererendeSykehus %in% sh)}
 innl30_yr <- function(yr) {d_innlegg30 %>% filter(op_aar %in% yr)}
@@ -100,27 +99,27 @@ innl30 <- function(sh,yr){d_innlegg30 %>% filter(OperererendeSykehus %in% sh, op
 # funksjon for å regne ut
 # andel pasienter som får en alvorlig komplikasjon
 ki_kompl_alv =function(df){
-  
+
   # Alvorlege komplikasjonar
   teljar = sum(df$`6U_KomplAlvorGrad` >= 4, na.rm=TRUE)
   nemnar = nrow(df)
 
   ind = teljar/nemnar
-  
-  res = tibble::tibble( teljar, nemnar, ind = ind)  
-  res   
+
+  res = tibble::tibble( teljar, nemnar, ind = ind)
+  res
 }
- 
+
 # andel pasienter som får en alvorlig komplikasjon per sjukehus
-d_kompl_alv_sjukehus = d_kompl %>% 
-                       dplyr::group_by(OperererendeSykehus,op_aar) %>% 
-					   dplyr::do(ki_kompl_alv(.)) %>% 
+d_kompl_alv_sjukehus = d_kompl %>%
+                       dplyr::group_by(OperererendeSykehus,op_aar) %>%
+					   dplyr::do(ki_kompl_alv(.)) %>%
 					   dplyr::arrange(desc(ind))
 
 kompl_sh <- function(sh) {d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %in% sh)}
 kompl_yr <- function(yr) {d_kompl_alv_sjukehus %>% filter(op_aar %in% yr)}
 kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
- 
+
   # aarskontrollar
   ####################################################
   # +-90                                             #  slingringsmonn
@@ -136,7 +135,7 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
   }
 
   dmx <- d_full   # alle operasjoner for kontrollene
-  
+
   dm <- dmx %>%
     dplyr::mutate(et_nor_m = nitti_m(dag = Operasjonsdato),
                   et_nor_p = nitti_p(dag = Operasjonsdato),
@@ -151,7 +150,7 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
                        et_lt= EttAar_Oppfolgingsdato > et_nor_p,
                        to_b4= ToAar_Oppfolgingsdato %within% interval( Operasjonsdato+1, to_nor_m-1 ),
                        to_lt= ToAar_Oppfolgingsdato > to_nor_p)
- 
+
   dt    <-  dn %>% dplyr::select(  c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar", "Operasjonsmetode", "Opmetode_GBP",
                                    "et_b4", "et_nt", "et_lt", "to_b4",  "to_nt", "to_lt", "pTWL"))
 
@@ -184,13 +183,12 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
                confirmButtonText = rapbase::noOptOutOk())
   })
 
-
   # Veiledning
   output$veiledning <- renderUI({
     htmlRenderRmd("veiledning.Rmd")
   })
 
-  # Figur og tabell
+# KI1 - KI6
 #-------------------------------------------------------------------------------------- KI1 figur og tabell
   ## Figur
   output$PlotKI1 <- renderPlot({

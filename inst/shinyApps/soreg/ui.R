@@ -23,37 +23,60 @@ ui <- tagList(
         tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico"))
       )
     ),
-#------------------------------------------------------ KI1 - KI6	
+#------------------------------------------------------ KI1 - KI6
     tabPanel("KI1: Liggedøgn",
-	    # Sidebar with a slider input for number of bins 
+	    # Sidebar with a slider input for number of bins
     sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30),
-            selectInput("dataset",
-                        label = "Dataset",
-                        choices = ls("package:datasets")),
-            numericInput("num",
-                         "Number one",
-                         value = 0,
-                         min = 0,
-                         max = 100),
-            checkboxGroupInput("opr_aar",
-                               "Opr År",
-                               choices = 2014:2020)
-            ),
+      sidebarPanel(width=3,
+                   pickerInput(
+                     inputId = "sh",
+                     label = "velg sjukehus",
+                     choices =  c("Helse Bergen","Helse Stavanger",
+                                  "Testsjukhus Norge"),   # unique(d_full$OperererendeSykehus),  #
+                     selected = "Testsjukhus Norge",
+                     multiple = TRUE,
+                     options = pickerOptions(
+                       actionsBox = TRUE,
+                       title = "Please select a hospital",
+                       header = "This is a list of hospitals"
+                     )),
+                   checkboxGroupInput(inputId = "lggar",
+                                      label ="år",
+                                      choices = 2014:2020,
+                                      selected = 2016:2018),
+                   selectInput(inputId= "vrb", label = "Variabel:", c("BR_BMI", "PasientAlder")),
+                   sliderInput("bn",  label = "Antall grupper:",
+                               min = 1,
+                               max = 10,
+                               value = 5)
+      ),
+        # sidebarPanel(
+        #     sliderInput("bins",
+        #                 "Number of bins:",
+        #                 min = 1,
+        #                 max = 50,
+        #                 value = 30),
+        #     selectInput("dataset",
+        #                 label = "Dataset",
+        #                 choices = ls("package:datasets")),
+        #     numericInput("num",
+        #                  "Number one",
+        #                  value = 0,
+        #                  min = 0,
+        #                  max = 100),
+        #     checkboxGroupInput("opr_aar",
+        #                        "Opr År",
+        #                        choices = 2014:2020)
+
         # MailPanel
         mainPanel(
             navbarPage("Rapporteket",
-           tabPanel("KI1: Liggedøgn", plotOutput("distPlot")),
-           tabPanel("KI2: Reinnleggelse", plotOutput("dist2")),
+           tabPanel("KI1: Liggedøgn", plotOutput("plotKI1")),
+           tabPanel("KI2: Reinnleggelse", plotOutput("ligge")),
            tabPanel("KI3: Komplikasjonar", plotOutput("dist3")),
-           tabPanel("KI4: 1-årskrl. normtid", plotOutput("dist4")),
-           tabPanel("KI5: 2-årskrl. normtid", plotOutput("dist5")),
-           tabPanel("KI6: Vekttap minst 20%", plotOutput("dist6"))
+           tabPanel("KI4: 1-årskrl. nt.", plotOutput("dist4")),
+           tabPanel("KI5: 2-årskrl. nt.", plotOutput("dist5")),
+           tabPanel("KI6: Vekttap >= 20%", plotOutput("dist6"))
             ),
            navbarPage("soreg-stuff here",
                       tabPanel("Samlerapport"
@@ -77,11 +100,11 @@ ui <- tagList(
                                         )
                                )
                       ),
-                      tabPanel("Abonnement",       
+                      tabPanel("Abonnement",
                                sidebarLayout(
                           sidebarPanel(width = 3,
-                                       selectInput("subscriptionRep", 
-                                                   "Rapport:", 
+                                       selectInput("subscriptionRep",
+                                                   "Rapport:",
                                                    c("Samlerapport1", "Samlerapport2")),
                                        selectInput("subscriptionFreq", "Frekvens:",
                                                    list('\u00c5rlig'="årlig-year",
@@ -106,8 +129,8 @@ ui <- tagList(
         ) #mainPanel
     ),  #sidebarLayout
 
-  
- #-------------------------------------------------------- KI og tabell kan fjernes?	
+
+ #-------------------------------------------------------- KI og tabell kan fjernes?
  )
   ) # navbarPage
 ) # tagList
