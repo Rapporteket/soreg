@@ -77,12 +77,15 @@ ui <- tagList(
         # MailPanel
         mainPanel(
             navbarPage("Rapporteket",
-           tabPanel("KI1: Liggegraf", plotOutput("PlotKI1")),
-           tabPanel("KI1: Liggedøgn", DT::dataTableOutput("liggdogn")),
-           tabPanel("KI2: Reinnleggelse", plotOutput("PlotKI2")),
-           tabPanel("KI2: Reinnleggelse", DT::dataTableOutput("reinnl")),
-           tabPanel("KI3: Komplikasjonar", plotOutput("PlotKI3")),
-           tabPanel("KI3: Komplikasjonar", DT::dataTableOutput("kompl")),
+          navbarMenu("KI1: Liggedøgn",
+           tabPanel("graf", plotOutput("PlotKI1")),
+           tabPanel("tabell", DT::dataTableOutput("liggdogn"))),
+          navbarMenu("KI2: Reinnleggelse",
+           tabPanel("graf", plotOutput("PlotKI2")),
+           tabPanel("tabell", DT::dataTableOutput("reinnl"))),
+          navbarMenu("KI3: Komplikasjonar",
+           tabPanel("graf", plotOutput("PlotKI3")),
+           tabPanel("tabell", DT::dataTableOutput("kompl"))),
            tabPanel("KI4: 1-årskrl. nt.", plotOutput("dist4")),
            tabPanel("KI5: 2-årskrl. nt.", plotOutput("dist5")),
            tabPanel("KI6: Vekttap >= 20%", plotOutput("dist6"))
