@@ -6,6 +6,8 @@ library(soreg)
 library(lubridate)
 library(tibble)
 library(DT)
+library(dplyr)
+library(rapbase)
 
 server <- function(input, output, session) {
 
@@ -59,7 +61,7 @@ d_kompl = d_prim %>% dplyr::filter((`6U_KontrollType` %in% 1:3) | (!is.na(`6U_Ko
 # andel pasienter som får innleggelse innen 30 dager etter operasjon per sjukehus
 d_innlegg30 = d_reinn %>%
               dplyr::group_by(OperererendeSykehus, op_aar) %>%
-			  dplyr::do(ki_30dager(.)) %>%
+			  dplyr::do(soreg::ki_30dager(.)) %>%
 			  dplyr::arrange(desc(ind))
 innl30_sh <- function(sh) {d_innlegg30 %>% filter(OperererendeSykehus %in% sh)}
 innl30_yr <- function(yr) {d_innlegg30 %>% filter(op_aar %in% yr)}
@@ -70,8 +72,8 @@ innl30 <- function(sh,yr){d_innlegg30 %>% filter(OperererendeSykehus %in% sh, op
 # andel pasienter som får en alvorlig komplikasjon per sjukehus
 d_kompl_alv_sjukehus = d_kompl %>%
                        dplyr::group_by(OperererendeSykehus,op_aar) %>%
-					   dplyr::do(ki_kompl_alv(.)) %>%
-					   dplyr::arrange(desc(ind))
+					             dplyr::do(soreg::ki_kompl_alv(.)) %>%
+					             dplyr::arrange(desc(ind))
 
 kompl_sh <- function(sh) {d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %in% sh)}
 kompl_yr <- function(yr) {d_kompl_alv_sjukehus %>% filter(op_aar %in% yr)}
@@ -147,10 +149,53 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
 
 # KI1 - KI6
 #-------------------------------------------------------------------------------------- KI1 figur og tabell
-  ## Figur
+
+# lgdgn stats::
+  # Viss nokon har *veldig* mange liggedøgn, vert
+  # grafen uoversiktleg. Avgrensa derfor talet på
+  # liggedøgn me viser grafisk.
+  # maksdogn_vis = 14
+  # d_prim_6v %<>% dplyr::mutate(liggedogn_lenge = LiggeDogn > maksdogn_vis,
+  #                              liggedogn_trunk = pmin(LiggeDogn, maksdogn_vis + 1))
+  # n_liggedogn_lenge = sum(d_prim_6v$liggedogn_lenge, na.rm=TRUE)
+  # liggedogn_maks = max(d_prim_6v$LiggeDogn, na.rm=TRUE)
+
+  # Lang figurforklaring viss ikkje pasientane
+  # er med i grafen. :)
+  # liggedogngraf_forklaring = paste0(
+  #   "Talet på postoperative liggedøgn etter primæroperasjonar i~", rapporteringsaar,
+  #   ifelse(n_liggedogn_lenge > 0, paste0(", der vi berre viser detaljar for dei med maks ",
+  #                                        maksdogn_vis," postoperative liggedøgn. I tillegg var det ",
+  #                                        n_liggedogn_lenge, " ", ifelse(n_liggedogn_lenge != 1, "pasientar", "pasient"), " med \\emph{meir} enn ",
+  #                                        maksdogn_vis, " postoperative liggedøgn. Pasienten som låg lengst, hadde ",
+  #                                        liggedogn_maks, " postoperative liggedøgn."), "."), " Basert på data frå til saman ",
+  #   num(sum(!is.na(d_prim_6v$LiggeDogn))), " operasjonar ",
+  #   "(berre pasientar med seksvekers oppfølging er med).")
+
+  # lgdgn-graf
+  # Vis berre dei som låg maks så lenge på grafen
+  # Ta med 0 dagar berre om det finst (elles 1)
+  # liggedogn_breaks = seq(pmin(1, min(d_prim_6v$LiggeDogn, na.rm=TRUE)),
+  #                        maksdogn_vis + 1)
+  # liggedogn_tekst = liggedogn_breaks
+  # liggedogn_tekst[length(liggedogn_tekst)] = paste0("\u2265", maksdogn_vis + 1)
+
+   # ggplot2::ggplot(dplyr::filter(d_prim_6v, !is.na(LiggeDogn)), aes(x=liggedogn_trunk, fill=liggedogn_lenge))+
+   #  geom_bar(stat="count", show.legend = FALSE) +
+   #  scale_fill_manual(values = c("FALSE"=colPrim[3], "TRUE"=colKontr)) +
+   #  scale_x_continuous(breaks=liggedogn_breaks, labels = liggedogn_tekst, expand=c(0,.6)) +
+   #  scale_y_continuous(expand = expand_soyle) +
+   #  xlab("Liggedøgn") + ylab("Talet på\npasienter") +
+   #  fjern_x
+
+    ## Figur
   output$PlotKI1 <- renderPlot({
    soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
   })
+  output$lgdgn <- renderPlot({
+
+  })
+
   output$PlotKI2 <- renderPlot({
     soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
   })

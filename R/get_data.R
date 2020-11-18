@@ -8,7 +8,7 @@
 #'
 #' @return A data frame of registry data
 #' @name get_data
-#' @aliases get_allevarnum get_arsrp
+#' @aliases get_allevarnum get_arsrp describe_db
 
 
 #' @rdname get_data
