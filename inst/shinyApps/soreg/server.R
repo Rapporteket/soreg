@@ -163,6 +163,13 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
 
  lgg <- reactive({kortligg(input$sh, input$lggar)})
  output$liggdogn <- DT::renderDataTable({ lgg() })
+
+ innl <- reactive({innl30(input$sh, input$lggar)})
+ output$reinnl <- DT::renderDataTable({ innl() })
+
+ kmpl <- reactive({kompl(input$sh, input$lggar)})
+ output$kompl <- DT::renderDataTable({ kmpl() })
+
  ## DT::dataTableOutput('ligge')
 #--------------------------------------------------------------------------------------------------------
   # Samlerapport

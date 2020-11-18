@@ -73,8 +73,8 @@ ui <- tagList(
         mainPanel(
             navbarPage("Rapporteket",
            tabPanel("KI1: Liggedøgn", DT::dataTableOutput("liggdogn")),
-           tabPanel("KI2: Reinnleggelse", plotOutput("ligge")),
-           tabPanel("KI3: Komplikasjonar", plotOutput("dist3")),
+           tabPanel("KI2: Reinnleggelse", DT::dataTableOutput("reinnl")),
+           tabPanel("KI3: Komplikasjonar", DT::dataTableOutput("kompl")),
            tabPanel("KI4: 1-årskrl. nt.", plotOutput("dist4")),
            tabPanel("KI5: 2-årskrl. nt.", plotOutput("dist5")),
            tabPanel("KI6: Vekttap >= 20%", plotOutput("dist6"))
