@@ -2,6 +2,7 @@ library(shiny)
 library(shinyalert)
 library(shinyWidgets)
 library(rapbase)
+library(DT)
 
 addResourcePath('rap', system.file('www', package='rapbase'))
 regTitle = "SoReg"
@@ -71,7 +72,7 @@ ui <- tagList(
         # MailPanel
         mainPanel(
             navbarPage("Rapporteket",
-           tabPanel("KI1: Liggedøgn", plotOutput("plotKI1")),
+           tabPanel("KI1: Liggedøgn", DT::dataTableOutput("liggdogn")),
            tabPanel("KI2: Reinnleggelse", plotOutput("ligge")),
            tabPanel("KI3: Komplikasjonar", plotOutput("dist3")),
            tabPanel("KI4: 1-årskrl. nt.", plotOutput("dist4")),

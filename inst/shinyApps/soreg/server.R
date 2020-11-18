@@ -5,6 +5,7 @@ library(magrittr)
 library(soreg)
 library(lubridate)
 library(tibble)
+library(DT)
 
 server <- function(input, output, session) {
 
@@ -155,9 +156,13 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
   output$TableKI1 <- renderTable({
    soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn, makeTable = TRUE)
   })
+  ## Tabell
+#  output$liggdogn <- renderTable({
+#    DT::dataTableOutput(df = d_full, var = input$vrb, bins = input$bn, makeTable = TRUE)
+#  })
 
  lgg <- reactive({kortligg(input$sh, input$lggar)})
- output$ligge <- renderDataTable({ lgg() })
+ output$liggdogn <- DT::renderDataTable({ lgg() })
  ## DT::dataTableOutput('ligge')
 #--------------------------------------------------------------------------------------------------------
   # Samlerapport
