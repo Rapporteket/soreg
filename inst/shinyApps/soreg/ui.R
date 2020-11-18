@@ -77,6 +77,7 @@ ui <- tagList(
         # MailPanel
         mainPanel(
             navbarPage("Rapporteket",
+           tabPanel("KI1: Liggegraf", plotOutput("PlotKI1")),
            tabPanel("KI1: Liggedøgn", DT::dataTableOutput("liggdogn")),
            tabPanel("KI2: Reinnleggelse", DT::dataTableOutput("reinnl")),
            tabPanel("KI3: Komplikasjonar", DT::dataTableOutput("kompl")),
