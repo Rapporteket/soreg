@@ -151,6 +151,12 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
   output$PlotKI1 <- renderPlot({
    soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
   })
+  output$PlotKI2 <- renderPlot({
+    soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
+  })
+  output$PlotKI3 <- renderPlot({
+    soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
+  })
 
   ## Tabell
   output$TableKI1 <- renderTable({
