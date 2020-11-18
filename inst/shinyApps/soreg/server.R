@@ -4,7 +4,7 @@ library(shinyWidgets)
 library(magrittr)
 library(soreg)
 library(lubridate)
-library(tidyverse)
+library(tibble)
 
 server <- function(input, output, session) {
 
@@ -21,39 +21,22 @@ server <- function(input, output, session) {
    d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
 
   # tidsinterval
-  # min_dato <-min(d_full$Operasjonsdato)    ## hvordan kan disse sendes til ui?
-  # max_dato <-max(d_full$Operasjonsdato)
-  # fyrstAar<-lubridate::year(min_dato)
-  # sistAar <-lubridate::year(max_dato)
+   min_dato <-min(d_full$Operasjonsdato)    ## hvordan kan disse sendes til ui?
+   max_dato <-max(d_full$Operasjonsdato)
+   fyrstAar<-lubridate::year(min_dato)
+   sistAar <-lubridate::year(max_dato)
 
 # LIGGEDØGN
- # funksjon for å regne ut kvalitetsindikatoren
- # definert for liggetid (andel pasienter med 3 dager eller færre)   -->  /R
-  ki_liggetid <- function(df){
-
-    teljar = sum(df$LiggeDogn <= 3)
-    nemnar = nrow(df)
-
-    ind = teljar/nemnar
-
-    res = tibble::tibble(# forklaring="Del pasienter med 3 eller færre liggedøgn",
-      # ltx_tekst = "Tre/færre liggedøgn",
-      teljar, nemnar, ind = ind) # trenger ikke å definere at
-    # variabler som er med i en group_by
-    # skal være med, de kommer uansett
-    res
-  }
 
   # Kor mange låg mindre enn fire døgn per sjukehus
   d_kortligg_sjuk <- d_prim_6v %>%
     dplyr::group_by(OperererendeSykehus, op_aar) %>%
-    dplyr::do(ki_liggetid(.)) %>%
+    dplyr::do(soreg::ki_liggetid(.)) %>%
     dplyr::arrange(desc(ind))
 
   kortligg_sh <- function(sh) {d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh)}
   kortligg_yr <- function(yr) {d_kortligg_sjuk %>% dplyr::filter(op_aar %in% yr)}
   kortligg    <- function(sh, yr){d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
-
 
 # REINNLEGGELSE
 # I analysar for reinnlegging ser me berre på dei som har 6-vekesoppfølging
@@ -70,21 +53,7 @@ d_reinn = d_prim %>% dplyr::filter(((`6U_KontrollType` %in% 1:3) |
 d_kompl = d_prim %>% dplyr::filter((`6U_KontrollType` %in% 1:3) | (!is.na(`6U_KomplAlvorGrad`)))
 
 
-# funksjon for å regne ut
-# andel pasienter som får innleggelse innen 30 dager etter
-# operasjonen
-ki_30dager = function(df){
 
-  teljar = sum(df$`6U_Behandling30Dager` == 1)
-  nemnar = nrow(df)
-
-  ind = teljar/nemnar
-
-  res = tibble::tibble(#forklaring = "Reinnlegging innan 30 dagar etter operasjonen",
-               #ltx_tekst = "Reinnlegging",
-               teljar, nemnar, ind = ind)
-  res
-}
 
 # andel pasienter som får innleggelse innen 30 dager etter operasjon per sjukehus
 d_innlegg30 = d_reinn %>%
@@ -96,19 +65,6 @@ innl30_yr <- function(yr) {d_innlegg30 %>% filter(op_aar %in% yr)}
 innl30 <- function(sh,yr){d_innlegg30 %>% filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 
 # KOMPLIKASJONAR
-# funksjon for å regne ut
-# andel pasienter som får en alvorlig komplikasjon
-ki_kompl_alv =function(df){
-
-  # Alvorlege komplikasjonar
-  teljar = sum(df$`6U_KomplAlvorGrad` >= 4, na.rm=TRUE)
-  nemnar = nrow(df)
-
-  ind = teljar/nemnar
-
-  res = tibble::tibble( teljar, nemnar, ind = ind)
-  res
-}
 
 # andel pasienter som får en alvorlig komplikasjon per sjukehus
 d_kompl_alv_sjukehus = d_kompl %>%

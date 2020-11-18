@@ -25,7 +25,8 @@ Imports:
     rlang,
     shiny,
     shinyalert,
-    shinyWidgets
+    shinyWidgets,
+    tibble
 Remotes:
     Rapporteket/rapbase@*release,
     Rapporteket/raplog@*release
