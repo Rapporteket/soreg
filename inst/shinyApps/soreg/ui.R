@@ -45,10 +45,15 @@ ui <- tagList(
                                       label ="år",
                                       choices = 2014:2020,
                                       selected = 2016:2018),
-                   selectInput(inputId= "vrb", label = "Variabel:", c("BR_BMI", "PasientAlder")),
+                   dateRangeInput("dato_iv",
+                                  "Operasjonsinterval?",
+                                  start = min_dato,
+                                  end = max_dato),
+                   selectInput(inputId= "vrb",
+                               label = "Variabel:",
+                               c("BR_BMI", "PasientAlder")),
                    sliderInput("bn",  label = "Antall grupper:",
-                               min = 1,
-                               max = 10,
+                               min = 1, max = 10,
                                value = 5)
       ),
         # sidebarPanel(
