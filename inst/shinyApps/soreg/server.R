@@ -1,9 +1,9 @@
 # library(shiny)
 # library(shinyalert)
 # library(shinyWidgets)
-# library(magrittr)
+library(magrittr)
 # library(soreg)
-# library(lubridate)
+library(lubridate)
 # library(tibble)
 # library(DT)
 # library(dplyr)
@@ -129,8 +129,8 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
   }
 
   # widget
-  output$appUserName <- renderText(getUserFullName(session))
-  output$appOrgName <- renderText(getUserReshId(session))
+  output$appUserName <- renderText(rapbase::getUserFullName(session))
+  output$appOrgName <- renderText(rapbase::getUserReshId(session))
 
   # Brukerinformasjon
   userInfo <- rapbase::howWeDealWithPersonalData(session)
