@@ -194,16 +194,29 @@ liggedogn_maks = max(d_prim_6v$LiggeDogn, na.rm=TRUE)
   # lgdgn-graf
   # Vis berre dei som låg maks så lenge på grafen
   # Ta med 0 dagar berre om det finst (elles 1)
+
+## ? opm <-  reactive({ dplyr::filter(d_prim_6v, input$op_tech) })
+
 liggedogn_breaks = seq(
   pmin(1,  min(d_prim_6v$LiggeDogn, na.rm = TRUE)), maksdogn_vis + 1)
 liggedogn_tekst = liggedogn_breaks
 liggedogn_tekst[length(liggedogn_tekst)] = paste0("\u2265", maksdogn_vis + 1)
 ####### ---------------------------------------------------------------------80
-lggpl <- ggplot2::ggplot(dplyr::filter(d_prim_6v, LiggeDogn >=0),   #   !is.na(LiggeDogn)),
+
+output$lggpl <- renderPlot({
+  d_prim_6v <- dplyr::filter(d_prim_6v, input$op_tech)
+
+  ggplot2::ggplot(dplyr::filter(d_prim_6v, LiggeDogn >=0),   #   !is.na(LiggeDogn)),
                                                                     # ?? LiggeDogn[11] = -1455
-         ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
-         ggplot2::geom_bar(stat="count", show.legend = FALSE)
->
+  ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
+  ggplot2::geom_bar(stat="count", show.legend = FALSE)
+})
+#? lgg <- reactive({kortligg(input$sh, input$lggar)})
+# output$liggdogn <- DT::renderDataTable({ lgg() })
+# output$PlotKI2 <- renderPlot({
+#  soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
+# })
+
    #  scale_fill_manual(values = c("FALSE"=colPrim[3], "TRUE"=colKontr)) +
    #  scale_x_continuous(breaks=liggedogn_breaks, labels =
 #   liggedogn_tekst, expand=c(0,.6)) +
