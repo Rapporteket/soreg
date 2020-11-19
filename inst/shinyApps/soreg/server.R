@@ -122,9 +122,9 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
     system.file(srcFile, package="soreg") %>%
       knitr::knit() %>%
       markdown::markdownToHTML(.,
-                               options = c('fragment_only',
-                                           'base64_images',
-                                           'highlight_code')) %>%
+                               options = c(" fragment_only" ,
+                                           " base64_images" ,
+                                           " highlight_code" )) %>%
       shiny::HTML()
   }
 
@@ -222,7 +222,7 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
  kmpl <- reactive({kompl(input$sh, input$lggar)})
  output$kompl <- DT::renderDataTable({ kmpl() })
 
- ## DT::dataTableOutput('ligge')
+ ## DT::dataTableOutput(" ligge" )
 #--------------------------------------------------------------------------------------------------------
   # Samlerapport
   ## vis
@@ -261,8 +261,8 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
 
   ## lag tabell over gjeldende status for abonnement
   output$activeSubscriptions <- DT::renderDataTable(
-    rv$subscriptionTab, server = FALSE, escape = FALSE, selection = 'none',
-    options = list(dom = 'tp', ordning = FALSE), rownames = FALSE
+    rv$subscriptionTab, server = FALSE, escape = FALSE, selection = "none" ,
+    options = list(dom = "tp" , ordning = FALSE), rownames = FALSE
   )
 
   ## lag side som viser status for abonnement, også når det ikke finnes noen

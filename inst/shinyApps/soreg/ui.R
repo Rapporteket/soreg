@@ -4,12 +4,12 @@ library(shinyWidgets)
 # library(rapbase)
 # library(DT)
 
-addResourcePath('rap', system.file('www', package='rapbase'))
+addResourcePath("rap", system.file("www", package="rapbase"))
 regTitle = "SoReg"
 
 ui <- tagList(
     navbarPage(
-    title = div(a(includeHTML(system.file('www/logo.svg', package='rapbase'))),
+    title = div(a(includeHTML(system.file("www/logo.svg", package="rapbase"))),
                 regTitle),
     windowTitle = regTitle,
     theme = "rap/bootstrap.css",
@@ -123,9 +123,9 @@ ui <- tagList(
                                                    "Rapport:",
                                                    c("Samlerapport1", "Samlerapport2")),
                                        selectInput("subscriptionFreq", "Frekvens:",
-                                                   list('\u00c5rlig'="årlig-year",
+                                                   list("\u00c5rlig"="årlig-year",
                                                         Kvartalsvis="kvartalsvis-quarter",
-                                                        'M\u00e5nedlig'="månedlig-month",
+                                                        "M\u00e5nedlig"="månedlig-month",
                                                         Ukentlig="ukentlig-week",
                                                         Daglig="daglig-DSTday"),
                                                    selected = "månedlig-month"),
