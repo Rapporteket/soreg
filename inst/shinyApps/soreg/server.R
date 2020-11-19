@@ -154,11 +154,11 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
   # Viss nokon har *veldig* mange liggedøgn, vert
   # grafen uoversiktleg. Avgrensa derfor talet på
   # liggedøgn me viser grafisk.
-  # maksdogn_vis = 14
-  # d_prim_6v %<>% dplyr::mutate(liggedogn_lenge = LiggeDogn > maksdogn_vis,
-  #                              liggedogn_trunk = pmin(LiggeDogn, maksdogn_vis + 1))
-  # n_liggedogn_lenge = sum(d_prim_6v$liggedogn_lenge, na.rm=TRUE)
-  # liggedogn_maks = max(d_prim_6v$LiggeDogn, na.rm=TRUE)
+  maksdogn_vis = 14
+  d_prim_6v %<>% dplyr::mutate(liggedogn_lenge = LiggeDogn > maksdogn_vis,
+                               liggedogn_trunk = base::pmin(LiggeDogn, maksdogn_vis + 1))
+  n_liggedogn_lenge = base::sum(d_prim_6v$liggedogn_lenge, na.rm=TRUE)
+  liggedogn_maks = base::max(d_prim_6v$LiggeDogn, na.rm=TRUE)
 
   # Lang figurforklaring viss ikkje pasientane
   # er med i grafen. :)
@@ -175,13 +175,14 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
   # lgdgn-graf
   # Vis berre dei som låg maks så lenge på grafen
   # Ta med 0 dagar berre om det finst (elles 1)
-  # liggedogn_breaks = seq(pmin(1, min(d_prim_6v$LiggeDogn, na.rm=TRUE)),
-  #                        maksdogn_vis + 1)
-  # liggedogn_tekst = liggedogn_breaks
+  liggedogn_breaks = base::seq(base::pmin(1, base::min(d_prim_6v$LiggeDogn, na.rm=TRUE)),
+                         maksdogn_vis + 1)
+  liggedogn_tekst = liggedogn_breaks
   # liggedogn_tekst[length(liggedogn_tekst)] = paste0("\u2265", maksdogn_vis + 1)
 
-   # ggplot2::ggplot(dplyr::filter(d_prim_6v, !is.na(LiggeDogn)), aes(x=liggedogn_trunk, fill=liggedogn_lenge))+
-   #  geom_bar(stat="count", show.legend = FALSE) +
+ ## lggpl <- ggplot2::ggplot(dplyr::filter(d_prim_6v, !base::is.na(LiggeDogn)),
+ ##           aes(x=liggedogn_trunk, fill=liggedogn_lenge))
+  #         geom_bar(stat="count", show.legend = FALSE)
    #  scale_fill_manual(values = c("FALSE"=colPrim[3], "TRUE"=colKontr)) +
    #  scale_x_continuous(breaks=liggedogn_breaks, labels = liggedogn_tekst, expand=c(0,.6)) +
    #  scale_y_continuous(expand = expand_soyle) +
