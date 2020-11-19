@@ -1,8 +1,8 @@
 library(shiny)
 library(shinyalert)
 library(shinyWidgets)
-library(rapbase)
-library(DT)
+# library(rapbase)
+# library(DT)
 
 addResourcePath('rap', system.file('www', package='rapbase'))
 regTitle = "SoReg"
@@ -14,16 +14,16 @@ ui <- tagList(
     windowTitle = regTitle,
     theme = "rap/bootstrap.css",
 #-----------------------------------------------------------------------------------
-# 	tabPanel("Start",
-#       mainPanel(width = 12,
-#         htmlOutput("veiledning", inline = TRUE),
-#         shinyalert::useShinyalert(),
-#         appNavbarUserWidget(user = uiOutput("appUserName"),
-#                             organization = uiOutput("appOrgName"),
-#                             addUserInfo = TRUE),
-#         tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico"))
-#       )
-#     ),
+	tabPanel("Start",
+      mainPanel(width = 12,
+        htmlOutput("veiledning", inline = TRUE),
+        shinyalert::useShinyalert(),
+        rapbase::appNavbarUserWidget(user = uiOutput("appUserName"),
+                            organization = uiOutput("appOrgName"),
+                            addUserInfo = TRUE),
+        tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico"))
+      )
+    ),
 #------------------------------------------------------ KI1 - KI6
     tabPanel("KI1: Liggedøgn",
 	    # Sidebar with a slider input for number of bins
@@ -49,10 +49,6 @@ ui <- tagList(
                                   "Operasjonsinterval?",
                                   start = min_dato,
                                   end = max_dato),
-                   checkboxGroupInput("op_tech",
-                                      "operasjonsteknikk",
-                                      choices = c("GS", "GBP", "OA"),
-                                      selected = "GS"),
                    selectInput(inputId= "vrb",
                                label = "Variabel:",
                                c("BR_BMI", "PasientAlder")),

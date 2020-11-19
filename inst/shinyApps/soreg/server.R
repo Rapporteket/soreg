@@ -1,13 +1,13 @@
-library(shiny)
-library(shinyalert)
-library(shinyWidgets)
-library(magrittr)
-library(soreg)
-library(lubridate)
-library(tibble)
-library(DT)
-library(dplyr)
-library(rapbase)
+# library(shiny)
+# library(shinyalert)
+# library(shinyWidgets)
+# library(magrittr)
+# library(soreg)
+# library(lubridate)
+# library(tibble)
+# library(DT)
+# library(dplyr)
+# library(rapbase)
 
 server <- function(input, output, session) {
 
@@ -192,9 +192,9 @@ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% filter(OperererendeSykehus %i
   output$PlotKI1 <- renderPlot({
    soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
   })
-  output$lgdgn <- renderPlot({
-
-  })
+  # output$lgdgn <- renderPlot({
+  #
+  # })
 
   output$PlotKI2 <- renderPlot({
     soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
