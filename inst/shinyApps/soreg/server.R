@@ -144,9 +144,9 @@ dt  <-  dn %>%
       shiny::HTML()
   }
 
-  # widget
-  output$appUserName <- renderText(getUserFullName(session))
-  output$appOrgName <- renderText(getUserReshId(session))
+# widget
+output$appUserName <- renderText(getUserFullName(session))
+output$appOrgName <- renderText(getUserReshId(session))
 
   # Brukerinformasjon
   userInfo <- rapbase::howWeDealWithPersonalData(session)
@@ -197,12 +197,13 @@ liggedogn_maks = max(d_prim_6v$LiggeDogn, na.rm=TRUE)
 liggedogn_breaks = seq(
   pmin(1,  min(d_prim_6v$LiggeDogn, na.rm = TRUE)), maksdogn_vis + 1)
 liggedogn_tekst = liggedogn_breaks
-  # liggedogn_tekst[length(liggedogn_tekst)] =
-#                    paste0("\u2265", maksdogn_vis + 1)
-
- ## lggpl <- ggplot2::ggplot(dplyr::filter(d_prim_6v, ! is.na(LiggeDogn)),
- ##           aes(x=liggedogn_trunk, fill=liggedogn_lenge))
-  #         geom_bar(stat="count", show.legend = FALSE)
+liggedogn_tekst[length(liggedogn_tekst)] = paste0("\u2265", maksdogn_vis + 1)
+####### ---------------------------------------------------------------------80
+lggpl <- ggplot2::ggplot(dplyr::filter(d_prim_6v, LiggeDogn >=0),   #   !is.na(LiggeDogn)),
+                                                                    # ?? LiggeDogn[11] = -1455
+         ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
+         ggplot2::geom_bar(stat="count", show.legend = FALSE)
+>
    #  scale_fill_manual(values = c("FALSE"=colPrim[3], "TRUE"=colKontr)) +
    #  scale_x_continuous(breaks=liggedogn_breaks, labels =
 #   liggedogn_tekst, expand=c(0,.6)) +
