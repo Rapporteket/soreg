@@ -303,63 +303,61 @@ output$subscriptionContent <- renderUI({
     }
 })
 
-  ## nye abonnement
-  observeEvent (input$subscribe, {
-    package <- "soreg"
-    owner <- rapbase::getUserName(session)
-    interval <- strsplit(input$subscriptionFreq, "-")[[1]][2]
-    intervalName <- strsplit(input$subscriptionFreq, "-")[[1]][1]
-    runDayOfYear <- rapbase::makeRunDayOfYearSequence(
-      interval = interval)
-
+## nye abonnement
+observeEvent (input$subscribe, {
+  package <- "soreg"
+  owner <- rapbase::getUserName(session)
+  interval <- strsplit(input$subscriptionFreq, "-")[[1]][2]
+  intervalName <- strsplit(input$subscriptionFreq, "-")[[1]][1]
+  runDayOfYear <- rapbase::makeRunDayOfYearSequence(
+    interval = interval)
     email <- rapbase::getUserEmail(session)
     organization <- rapbase::getUserReshId(session)
 
-    if (input$subscriptionRep == "Samlerapport1") {
-      synopsis <- "Automatisk samlerapport1"
-      fun <- "samlerapport1Fun"
-      paramNames <- c("p1", "p2")
-      paramValues <- c("Alder", 1)
-
-    }
-    if (input$subscriptionRep == "Samlerapport2") {
+  if (input$subscriptionRep == "Samlerapport1") {
+    synopsis <- "Automatisk samlerapport1"
+    fun <- "samlerapport1Fun"
+    paramNames <- c("p1", "p2")
+    paramValues <- c("Alder", 1)
+  }
+  if (input$subscriptionRep == "Samlerapport2") {
       synopsis <- "Automatisk samlerapport2"
       fun <- "samlerapport2Fun"
       paramNames <- c("p1", "p2")
       paramValues <- c("BMI", 2)
-    }
-    rapbase::createAutoReport(synopsis = synopsis, package = package,
+  }
+  rapbase::createAutoReport(synopsis = synopsis, package = package,
                               fun = fun, paramNames = paramNames,
                               paramValues = paramValues, owner = owner,
                               email = email, organization = organization,
                               runDayOfYear = runDayOfYear,
                               interval = interval, intervalName = intervalName)
-    rv$subscriptionTab <- rapbase::makeUserSubscriptionTab(session)
-  })
+  rv$subscriptionTab <- rapbase::makeUserSubscriptionTab(session)
+})
 #----------------------------------------------------------------------------80
-  ## slett eksisterende abonnement
-  observeEvent(input$del_button, {
-    selectedRepId <- strsplit(input$del_button, "_")[[1]][2]
-    rapbase::deleteAutoReport(selectedRepId)
-    rv$subscriptionTab <- rapbase::makeUserSubscriptionTab(session)
-  })
+## slett eksisterende abonnement
+observeEvent(input$del_button, {
+  selectedRepId <- strsplit(input$del_button, "_")[[1]][2]
+  rapbase::deleteAutoReport(selectedRepId)
+  rv$subscriptionTab <- rapbase::makeUserSubscriptionTab(session)
+})
 
-  # Metadata
-  meta <- reactive({
-    soreg::describe_db(registry_name)
-  })
+# Metadata
+meta <- reactive({
+  soreg::describe_db(registry_name)
+})
 
-  output$meta_control <- renderUI({
-    tabs <- names(meta())
-    selectInput("meta_tab", "Velg tabell:", tabs)
-  })
+output$meta_control <- renderUI({
+  tabs <- names(meta())
+  selectInput("meta_tab", "Velg tabell:", tabs)
+})
 
-  output$meta_table <- DT::renderDataTable(
-    meta()[[input$meta_tab]], rownames = FALSE,
-    options = list(lengthMenu=c(25, 50, 100, 200, 400))
-  )
+output$meta_table <- DT::renderDataTable(
+  meta()[[input$meta_tab]], rownames = FALSE,
+  options = list(lengthMenu=c(25, 50, 100, 200, 400))
+)
 
-  output$meta_data <- renderUI({
-    DT::dataTableOutput("meta_table")
-  })
+output$meta_data <- renderUI({
+  DT::dataTableOutput("meta_table")
+})
 }
