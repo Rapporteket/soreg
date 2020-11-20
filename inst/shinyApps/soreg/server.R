@@ -211,11 +211,6 @@ output$lggpl <- renderPlot({
   ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
   ggplot2::geom_bar(stat="count", show.legend = FALSE)
 })
-#? lgg <- reactive({kortligg(input$sh, input$lggar)})
-# output$liggdogn <- DT::renderDataTable({ lgg() })
-# output$PlotKI2 <- renderPlot({
-#  soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
-# })
 
    #  scale_fill_manual(values = c("FALSE"=colPrim[3], "TRUE"=colKontr)) +
    #  scale_x_continuous(breaks=liggedogn_breaks, labels =

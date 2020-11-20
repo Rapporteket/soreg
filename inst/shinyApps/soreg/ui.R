@@ -27,6 +27,18 @@ tabPanel("Start",
       )
         ),
 #------------------------------------------------------ KI1 - KI6
+navbarMenu("Kvalitetindikatorar",
+ tabPanel("KI1",
+          navbarMenu("KI1: Liggedøgn",
+                     tabPanel("graf", plotOutput("lggpl")),
+                     tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),
+ tabPanel("KI2",),
+ tabPanel("KI3",),
+ tabPanel("KI4",),
+ tabPanel("KI5",),
+ tabPanel("KI6",),
+),
+
 tabPanel("KI1: Liggedøgn",
 	    # Sidebar with a slider input for number of bins
   sidebarLayout(
@@ -71,30 +83,9 @@ tabPanel("KI1: Liggedøgn",
     min = 1, max = 10, value = 5
   )
     ),
-        # sidebarPanel(
-        #     sliderInput("bins",
-        #                 "Number of bins:",
-        #                 min = 1,
-        #                 max = 50,
-        #                 value = 30),
-        #     selectInput("dataset",
-        #                 label = "Dataset",
-        #                 choices = ls("package:datasets")),
-        #     numericInput("num",
-        #                  "Number one",
-        #                  value = 0,
-        #                  min = 0,
-        #                  max = 100),
-        #     checkboxGroupInput("opr_aar",
-        #                        "Opr År",
-        #                        choices = 2014:2020)
-
-        # MailPanel
+# MailPanel
     mainPanel(
       navbarPage("Rapporteket",
-    navbarMenu("KI1: Liggedøgn",
-      tabPanel("graf", plotOutput("lggpl")),
-      tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),
     navbarMenu("KI2: Reinnleggelse",
       tabPanel("graf", plotOutput("PlotKI2")),
       tabPanel("tabell", DT::dataTableOutput("reinnl")) ),
@@ -106,49 +97,56 @@ tabPanel("KI1: Liggedøgn",
       tabPanel("KI6: Vekttap >= 20%", plotOutput("dist6")) ),
 
 #----------------------------------------------------------------------------80
-navbarPage("soreg-stuff here",
-  tabPanel("Samlerapport",
-  tabPanel("Fordeling av mpg",
-    sidebarLayout(
-      sidebarPanel(width = 3,
-      selectInput(
-        inputId = "varS",
-        label = "Variabel:",
-        c("mpg", "disp", "hp", "drat", "wt", "qsec")),
-        sliderInput(
-          inputId = "binsS",
-          label = "Antall grupper:",
-          min = 1, max = 10, value = 5),
-  downloadButton("downloadSamlerapport", "Last ned!") ),
-      mainPanel(uiOutput("samlerapport"))))
-                      ),
-    tabPanel("Abonnement",
-  sidebarLayout(
-    sidebarPanel(width = 3,
-      selectInput(
-        inputId = "subscriptionRep",
-        label = "Rapport:",
-        c("Samlerapport1", "Samlerapport2")),
-      selectInput(
-        inputId = "subscriptionFreq",
-        label = "Frekvens:",
-        list("\u00c5rlig" = "årlig-year",
-              Kvartalsvis = "kvartalsvis-quarter",
-          "M\u00e5nedlig" = "månedlig-month",
-                 Ukentlig = "ukentlig-week",
-                   Daglig = "daglig-DSTday"),
-                selected  = "månedlig-month"),
-      actionButton("subscribe", "Bestill!")
-                          ),
-    mainPanel(uiOutput("subscriptionContent")) )),
-    tabPanel("Metadata",
-  sidebarLayout(
-    sidebarPanel(uiOutput("meta_control")),
-    mainPanel(htmlOutput("meta_data")) ) )
-    ) #navbarPage
+
+   # ) #navbarPage
   ) #mainPanel
 ),  #sidebarLayout
 #----------------------------------------------------------------------------80
+
     )
-  ) # navbarPage
+  ),
+
+tabPanel("Samlerapport",
+         tabPanel("Fordeling av mpg",
+                  sidebarLayout(
+                    sidebarPanel(width = 3,
+                                 selectInput(
+                                   inputId = "varS",
+                                   label = "Variabel:",
+                                   c("mpg", "disp", "hp", "drat", "wt", "qsec")),
+                                 sliderInput(
+                                   inputId = "binsS",
+                                   label = "Antall grupper:",
+                                   min = 1, max = 10, value = 5),
+                                 downloadButton("downloadSamlerapport", "Last ned!") ),
+                    mainPanel(uiOutput("samlerapport"))))
+),
+# navbarPage("soreg-stuff here",
+tabPanel("Abonnement",
+         sidebarLayout(
+           sidebarPanel(width = 3,
+                        selectInput(
+                          inputId = "subscriptionRep",
+                          label = "Rapport:",
+                          c("Samlerapport1", "Samlerapport2")),
+                        selectInput(
+                          inputId = "subscriptionFreq",
+                          label = "Frekvens:",
+                          list("\u00c5rlig" = "årlig-year",
+                               Kvartalsvis = "kvartalsvis-quarter",
+                               "M\u00e5nedlig" = "månedlig-month",
+                               Ukentlig = "ukentlig-week",
+                               Daglig = "daglig-DSTday"),
+                          selected  = "månedlig-month"),
+                        actionButton("subscribe", "Bestill!")
+           ),
+           mainPanel(uiOutput("subscriptionContent")) )),
+tabPanel("Metadata",
+         sidebarLayout(
+           sidebarPanel(uiOutput("meta_control")),
+           mainPanel(htmlOutput("meta_data")) ) ) #Metadata
+
+
+
+    ) # navbarPage
 ) # tagList
