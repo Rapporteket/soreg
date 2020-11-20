@@ -1,9 +1,9 @@
 # library(shiny)
 # library(shinyalert)
 # library(shinyWidgets)
-# library(magrittr)
+library(magrittr)
 # library(soreg)
-# library(lubridate)
+library(lubridate)
 # library(tibble)
 # library(DT)
 # library(dplyr)
@@ -145,9 +145,10 @@ dt  <-  dn %>%
       shiny::HTML()
   }
 
-# widget
-output$appUserName <- renderText(getUserFullName(session))
-output$appOrgName <- renderText(getUserReshId(session))
+  # widget
+  output$appUserName <- renderText(rapbase::getUserFullName(session))
+  output$appOrgName <- renderText(rapbase::getUserReshId(session))
+
 
   # Brukerinformasjon
   userInfo <- rapbase::howWeDealWithPersonalData(session)
@@ -169,16 +170,16 @@ output$appOrgName <- renderText(getUserReshId(session))
     ## years available, hardcoded if outside known context
     if (rapbase::isRapContext()) {
       years <- soreg::data_years(registry_name)
-      # remove NAs if they exists (bad registry)
+      # remove NAs if they exist (bad registry)
       years <- years[!is.na(years)]
     } else {
       years <- c("2016", "2017", "2018", "2019", "2020")
     }
-    checkboxGroupInput(
+    shiny::checkboxGroupInput(
       inputId = "lggar",
       label ="År:",
       choices = years,
-      selected = 2016:2018)
+      selected = 2015:2018)
   })
 
 # KI1 - KI6

@@ -1,6 +1,6 @@
-library(shiny)
+# library(shiny)
 library(shinyalert)
-library(shinyWidgets)
+# library(shinyWidgets)
 # library(rapbase)
 # library(DT)
 
@@ -31,43 +31,44 @@ ui <- tagList(
     tabPanel("KI",
       sidebarLayout(
         sidebarPanel(width=3,
-                     pickerInput(
-                       inputId = "sh",
-                       label = "velg sjukehus",
-                       choices =  c("Helse Bergen","Helse Stavanger", "Testsjukhus Norge"),
-                       # unique(d_full$OperererendeSykehus),  #
-                       selected = "Testsjukhus Norge",
-                       multiple = TRUE,
-                       options = pickerOptions
-                       (actionsBox = TRUE,
-                         title = "Please select a hospital",
-                         header = "This is a list of hospitals")),
-                     shiny::uiOutput("uc_years"),
-                     checkboxGroupInput(
-                       inputId = "lggar",
-                       label ="år",
-                       choices = 2014:2020,
-                       selected = 2016:2018),
-                     dateRangeInput(
-                       inputId = "dato_iv",
-                       label = "Operasjonsinterval?",
-                       start = "2018-01-01",
-                       end = "2020-12-31"),
-                     checkboxGroupInput(
-                       inputId = "op_tech",
-                       label = "Operasjonsteknikk",
-                       choices = 1:15,
-                       selected = 6),
-                     selectInput(
-                       inputId = "vrb",
-                       label = "Variabel:",
-                       c("BR_BMI", "PasientAlder")),
-                     sliderInput(
-                       inputId = "bn",
-                       label = "Antall grupper:",
-                       min = 1, max = 10, value = 5
-                     )
-        ),
+          shiny::selectInput(inputId = "select_indicator",
+            label = "Velg indikator:",
+            choices = c("k1", "k2", "k3", "k4", "k5", "k6")),
+          shinyWidgets::pickerInput(
+            inputId = "sh",
+            label = "velg sjukehus",
+            choices = unique(d_full$OperererendeSykehus),
+                       # c("Helse Bergen","Helse Stavanger", "Testsjukhus Norge"),
+            selected = "Testsjukhus Norge",
+            multiple = TRUE,
+            options = pickerOptions
+            (actionsBox = TRUE,
+            title = "Please select a hospital",
+            header = "This is a list of hospitals")),
+          shiny::uiOutput("uc_years"),
+          shiny::checkboxGroupInput(
+            inputId = "lggar",
+            label ="år",
+            choices = 2014:2020,
+            selected = 2016:2018),
+          shiny::dateRangeInput(
+            inputId = "dato_iv",
+            label = "Operasjonsinterval?",
+            start = "2018-01-01", end = "2020-12-31"),
+          shiny::checkboxGroupInput(
+            inputId = "op_tech",
+            label = "Operasjonsteknikk",
+            choices = c(1,6),
+            selected = 6),
+          shiny::selectInput(
+            inputId = "vrb",
+            label = "Variabel:",
+            choices = c("BR_BMI", "PasientAlder")),
+          shiny::sliderInput(
+            inputId = "bn",
+            label = "Antall grupper:",
+            min = 1, max = 10, value = 5
+          )),
         mainPanel(
           navbarPage("KI1: Liggedøgn",
                      tabPanel("graf", plotOutput("lggpl")),
