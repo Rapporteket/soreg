@@ -31,7 +31,7 @@ ui <- tagList(
     tabPanel("KI",
       sidebarLayout(
         sidebarPanel(width=3,
-          shiny::selectInput(inputId = "select_indicator",
+          shiny::selectInput(inputId = "lggar",
             label = "Velg indikator:",
             choices = c("k1", "k2", "k3", "k4", "k5", "k6")),
           shinyWidgets::pickerInput(
@@ -41,16 +41,15 @@ ui <- tagList(
                        # c("Helse Bergen","Helse Stavanger", "Testsjukhus Norge"),
             selected = "Testsjukhus Norge",
             multiple = TRUE,
-            options = pickerOptions
-            (actionsBox = TRUE,
+            options = shinyWidgets::pickerOptions(actionsBox = TRUE,
             title = "Please select a hospital",
             header = "This is a list of hospitals")),
           shiny::uiOutput("uc_years"),
-          shiny::checkboxGroupInput(
-            inputId = "lggar",
-            label ="år",
-            choices = 2014:2020,
-            selected = 2016:2018),
+          # shiny::checkboxGroupInput(
+          #   inputId = "lggar_old",
+          #   label ="år",
+          #   choices = 2014:2020,
+          #   selected = 2016:2018),
           shiny::dateRangeInput(
             inputId = "dato_iv",
             label = "Operasjonsinterval?",

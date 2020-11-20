@@ -25,10 +25,10 @@ server <- function(input, output, session) {
    d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
 
 # tidsinterval
-   min_dato <-min(d_full$Operasjonsdato)    ## hvordan kan disse sendes til ui?
-   max_dato <-max(d_full$Operasjonsdato)
-   fyrstAar<-lubridate::year(min_dato)
-   sistAar <-lubridate::year(max_dato)
+   # min_dato <-min(d_full$Operasjonsdato)    ## hvordan kan disse sendes til ui?
+   # max_dato <-max(d_full$Operasjonsdato)
+   # fyrstAar<-lubridate::year(min_dato)
+   # sistAar <-lubridate::year(max_dato)
 
 # LIGGEDØGN
 
@@ -179,7 +179,7 @@ dt  <-  dn %>%
       inputId = "lggar",
       label ="År:",
       choices = years,
-      selected = 2015:2018)
+      selected = 2017:2018)
   })
 
 # KI1 - KI6
