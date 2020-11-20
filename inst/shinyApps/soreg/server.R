@@ -204,7 +204,7 @@ liggedogn_tekst[length(liggedogn_tekst)] = paste0("\u2265", maksdogn_vis + 1)
 ####### ---------------------------------------------------------------------80
 
 output$lggpl <- renderPlot({
-  d_prim_6v <- dplyr::filter(d_prim_6v, input$op_tech)
+  d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
 
   ggplot2::ggplot(dplyr::filter(d_prim_6v, LiggeDogn >=0),   #   !is.na(LiggeDogn)),
                                                                     # ?? LiggeDogn[11] = -1455
