@@ -165,6 +165,23 @@ dt  <-  dn %>%
     htmlRenderRmd("veiledning.Rmd")
   })
 
+  # KI user controls
+  output$uc_years <- renderUI({
+    ## years available, hardcoded if outside known context
+    if (rapbase::isRapContext()) {
+      years <- soreg::data_years(registry_name)
+      # remove NAs if they exists (bad registry)
+      years <- years[!is.na(years)]
+    } else {
+      years <- c("2016", "2017", "2018", "2019", "2020")
+    }
+    checkboxGroupInput(
+      inputId = "lggar",
+      label ="År:",
+      choices = years,
+      selected = 2016:2018)
+  })
+
 # KI1 - KI6
 #---------------------------- KI1 figur og tabell----------------------------80
 

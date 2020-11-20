@@ -2,11 +2,14 @@
 % Please edit documentation in R/get_data.R
 \name{get_data}
 \alias{get_data}
+\alias{data_years}
 \alias{get_allevarnum}
 \alias{get_arsrp}
 \alias{describe_db}
 \title{Get SoReg data}
 \usage{
+data_years(registry_name)
+
 get_allevarnum(registry_name)
 
 get_arsrp(registry_name)

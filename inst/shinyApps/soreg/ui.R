@@ -42,6 +42,7 @@ ui <- tagList(
                        (actionsBox = TRUE,
                          title = "Please select a hospital",
                          header = "This is a list of hospitals")),
+                     shiny::uiOutput("uc_years"),
                      checkboxGroupInput(
                        inputId = "lggar",
                        label ="år",
