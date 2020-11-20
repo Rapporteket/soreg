@@ -221,7 +221,8 @@ liggedogn_breaks = seq(
 liggedogn_tekst = liggedogn_breaks
 liggedogn_tekst[length(liggedogn_tekst)] = paste0("\u2265", maksdogn_vis + 1)
 ####### ---------------------------------------------------------------------80
-
+KIi  <- shiny::reactive({ input$KIix })
+output$QI <-    shiny::renderText({ KIi() })
 output$lggpl <- renderPlot({
   d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
 

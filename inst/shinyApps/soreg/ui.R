@@ -31,9 +31,9 @@ ui <- tagList(
     tabPanel("KI",
       sidebarLayout(
         sidebarPanel(width=3,
-          shiny::selectInput(inputId = "lggar",
+          shiny::selectInput(inputId = "KIix",
             label = "Velg indikator:",
-            choices = c("k1", "k2", "k3", "k4", "k5", "k6")),
+            choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6")),
           shinyWidgets::pickerInput(
             inputId = "sh",
             label = "velg sjukehus",
@@ -50,15 +50,15 @@ ui <- tagList(
           #   label ="år",
           #   choices = 2014:2020,
           #   selected = 2016:2018),
-          shiny::dateRangeInput(
-            inputId = "dato_iv",
-            label = "Operasjonsinterval?",
-            start = "2018-01-01", end = "2020-12-31"),
           shiny::checkboxGroupInput(
             inputId = "op_tech",
             label = "Operasjonsteknikk",
             choices = c(1,6),
             selected = 6),
+          shiny::dateRangeInput(
+            inputId = "dato_iv",
+            label = "Operasjonsinterval?",
+            start = "2018-01-01", end = "2020-12-31"),
           shiny::selectInput(
             inputId = "vrb",
             label = "Variabel:",
@@ -70,6 +70,7 @@ ui <- tagList(
           )),
         mainPanel(width = 9,
           shiny::tabsetPanel(
+            shiny::tabPanel(" txt",shiny::textOutput("QI")),
             shiny::tabPanel("Figur", shiny::plotOutput("lggpl")),
             shiny::tabPanel("Tabell", shiny::htmlOutput("TableKI1"))))
       #                tabPanel("graf", plotOutput("lggpl")),
