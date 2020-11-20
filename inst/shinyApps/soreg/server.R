@@ -140,7 +140,8 @@ dt  <-  dn %>%
       markdown::markdownToHTML(.,
                                options = c(" fragment_only" ,
                                            " base64_images" ,
-                                           " highlight_code" )) %>%
+                                           " highlight_code" ),
+                               encoding = "utf-8") %>%
       shiny::HTML()
   }
 
