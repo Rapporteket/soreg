@@ -140,7 +140,8 @@ dt  <-  dn %>%
       markdown::markdownToHTML(.,
                                options = c(" fragment_only" ,
                                            " base64_images" ,
-                                           " highlight_code" )) %>%
+                                           " highlight_code" ),
+                               encoding = "utf-8") %>%
       shiny::HTML()
   }
 
@@ -161,6 +162,23 @@ output$appOrgName <- renderText(getUserReshId(session))
   # Veiledning
   output$veiledning <- renderUI({
     htmlRenderRmd("veiledning.Rmd")
+  })
+
+  # KI user controls
+  output$uc_years <- renderUI({
+    ## years available, hardcoded if outside known context
+    if (rapbase::isRapContext()) {
+      years <- soreg::data_years(registry_name)
+      # remove NAs if they exists (bad registry)
+      years <- years[!is.na(years)]
+    } else {
+      years <- c("2016", "2017", "2018", "2019", "2020")
+    }
+    checkboxGroupInput(
+      inputId = "lggar",
+      label ="År:",
+      choices = years,
+      selected = 2016:2018)
   })
 
 # KI1 - KI6

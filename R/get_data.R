@@ -8,8 +8,24 @@
 #'
 #' @return A data frame of registry data
 #' @name get_data
-#' @aliases get_allevarnum get_arsrp
+#' @aliases data_years get_allevarnum get_arsrp
 #' @importFrom rapbase loadRegData
+
+
+#' @rdname get_data
+#' @export
+data_years <- function(registry_name) {
+
+  query <- "
+SELECT
+  YEAR(o_dato_op) AS year
+FROM
+  AlleVarNum
+GROUP BY
+  YEAR(o_dato_op);"
+
+  rapbase::loadRegData(registry_name, query)
+}
 
 #' @rdname get_data
 #' @export
