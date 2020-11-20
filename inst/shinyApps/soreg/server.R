@@ -1,9 +1,9 @@
 # library(shiny)
 # library(shinyalert)
 # library(shinyWidgets)
-# library(magrittr)
+library(magrittr)
 # library(soreg)
-# library(lubridate)
+library(lubridate)
 # library(tibble)
 # library(DT)
 # library(dplyr)
@@ -144,9 +144,10 @@ dt  <-  dn %>%
       shiny::HTML()
   }
 
-# widget
-output$appUserName <- renderText(getUserFullName(session))
-output$appOrgName <- renderText(getUserReshId(session))
+  # widget
+  output$appUserName <- renderText(rapbase::getUserFullName(session))
+  output$appOrgName <- renderText(rapbase::getUserReshId(session))
+
 
   # Brukerinformasjon
   userInfo <- rapbase::howWeDealWithPersonalData(session)
