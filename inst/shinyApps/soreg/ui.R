@@ -68,21 +68,24 @@ ui <- tagList(
             label = "Antall grupper:",
             min = 1, max = 10, value = 5
           )),
-        mainPanel(
-          navbarPage("KI1: Liggedøgn",
-                     tabPanel("graf", plotOutput("lggpl")),
-                     tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),
-          navbarPage("KI2: Reinnleggelse",
-                     tabPanel("graf", plotOutput("PlotKI2")),
-                     tabPanel("tabell", DT::dataTableOutput("reinnl")) ),
-          navbarPage("KI3: Komplikasjonar",
-                     tabPanel("graf", plotOutput("PlotKI3")),
-                     tabPanel("tabell", DT::dataTableOutput("kompl")) ),
-          tabPanel("KI4: 1-årskrl. nt.", plotOutput("dist4")),
-          tabPanel("KI5: 2-årskrl. nt.", plotOutput("dist5")),
-          tabPanel("KI6: Vekttap >= 20%", plotOutput("dist6")) ),
-      ), #sidebarlayout
-    ),
+        mainPanel(width = 9,
+          shiny::tabsetPanel(
+            shiny::tabPanel("Figur", shiny::plotOutput("lggpl")),
+            shiny::tabPanel("Tabell", shiny::htmlOutput("TableKI1"))))
+      #                tabPanel("graf", plotOutput("lggpl")),
+      #                tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),
+      #     navbarPage("KI2: Reinnleggelse",
+      #                tabPanel("graf", plotOutput("PlotKI2")),
+      #                tabPanel("tabell", DT::dataTableOutput("reinnl")) ),
+      #     navbarPage("KI3: Komplikasjonar",
+      #                tabPanel("graf", plotOutput("PlotKI3")),
+      #                tabPanel("tabell", DT::dataTableOutput("kompl")) ),
+      #     tabPanel("KI4: 1-årskrl. nt.", plotOutput("dist4")),
+      #     tabPanel("KI5: 2-årskrl. nt.", plotOutput("dist5")),
+      #     tabPanel("KI6: Vekttap >= 20%", plotOutput("dist6")) ),
+       ), #sidebarlayout
+    ), #KI
+
     #------------------------------------------------------ KI1 - KI6
     tabPanel("Samlerapport",
              tabPanel("Fordeling av mpg",
