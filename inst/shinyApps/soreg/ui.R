@@ -4,16 +4,15 @@ library(shinyWidgets)
 # library(rapbase)
 # library(DT)
 
-shiny::addResourcePath("rap", system.file("www", package="rapbase"))
+addResourcePath("rap", system.file("www", package="rapbase"))
 regTitle = "SoReg"
 
-ui <- shiny::tagList(
-  shiny::navbarPage(
-    title = div(a(includeHTML(system.file('www/logo.svg', package='rapbase'))),
+ui <- tagList(
+    navbarPage(
+    title = div(a(includeHTML(system.file("www/logo.svg", package="rapbase"))),
                 regTitle),
     windowTitle = regTitle,
     theme = "rap/bootstrap.css",
-<<<<<<< HEAD
 #----------------------------------------------------------------------------80
 tabPanel("Start",
   mainPanel(width = 12,
@@ -27,19 +26,77 @@ tabPanel("Start",
         tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico"))
       )
         ),
-
 #------------------------------------------------------ KI1 - KI6
-navbarMenu("KI1-KI6",
-          navbarMenu("KI1: Liggedøgn",
-           tabPanel("graf", plotOutput("lggpl")),
-           tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),
-
-           tabPanel("KI2",  ),
-           tabPanel("KI3",),
-           tabPanel("KI4",),
-           tabPanel("KI5",),
-           tabPanel("KI6",)
+tabPanel("KI",
+sidebarLayout(
+  sidebarPanel( width=3,
+    pickerInput(
+      inputId = "sh",
+      label = "velg sjukehus",
+      choices =  c("Helse Bergen","Helse Stavanger", "Testsjukhus Norge"),
+      # unique(d_full$OperererendeSykehus),  #
+      selected = "Testsjukhus Norge",
+      multiple = TRUE,
+      options = pickerOptions
+        (actionsBox = TRUE,
+         title = "Please select a hospital",
+         header = "This is a list of hospitals")),
+    checkboxGroupInput(
+        inputId = "lggar",
+        label ="år",
+        choices = 2014:2020,
+        selected = 2016:2018),
+    dateRangeInput(
+        inputId = "dato_iv",
+        label = "Operasjonsinterval?",
+        start = min_dato,
+        end = max_dato),
+    checkboxGroupInput(
+        inputId = "op_tech",
+        label = "Operasjonsteknikk",
+        choices = 1:15,
+        selected = 6),
+    selectInput(
+        inputId = "vrb",
+        label = "Variabel:",
+        c("BR_BMI", "PasientAlder")),
+    sliderInput(
+        inputId = "bn",
+        label = "Antall grupper:",
+        min = 1, max = 10, value = 5
+               )
+    ),
+  mainPanel(
+    navbarMenu("KI1: Liggedøgn",
+      tabPanel("graf", plotOutput("lggpl")),
+      tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),
+    navbarMenu("KI2: Reinnleggelse",
+      tabPanel("graf", plotOutput("PlotKI2")),
+      tabPanel("tabell", DT::dataTableOutput("reinnl")) ),
+    navbarMenu("KI3: Komplikasjonar",
+      tabPanel("graf", plotOutput("PlotKI3")),
+      tabPanel("tabell", DT::dataTableOutput("kompl")) ),
+    tabPanel("KI4: 1-årskrl. nt.", plotOutput("dist4")),
+    tabPanel("KI5: 2-årskrl. nt.", plotOutput("dist5")),
+    tabPanel("KI6: Vekttap >= 20%", plotOutput("dist6")) ),
+  ), #sidebarlayout
 ),
+# navbarMenu("More",
+#            tabPanel("Table",
+#                     DT::dataTableOutput("table")
+#            )
+
+# navbarMenu("KI1-KI6",
+#           navbarMenu("KI1: Liggedøgn",
+#            tabPanel("graf", plotOutput("lggpl")),
+#            tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),
+#
+#            tabPanel("KI2",  ),
+#            tabPanel("KI3",),
+#            tabPanel("KI4",),
+#            tabPanel("KI5",),
+#            tabPanel("KI6",)
+# ),
 #            sidebarLayout(
 #              sidebarPanel(width=3,
 #                           pickerInput(
@@ -149,65 +206,5 @@ tabPanel("Metadata",
   sidebarLayout(
   sidebarPanel(uiOutput("meta_control")),
   mainPanel(htmlOutput("meta_data")) ) ) #Metadata
-=======
-
-    tabPanel("Start",
-      mainPanel(width = 12,
-                htmlOutput("veiledning", inline = TRUE),
-                shinyalert::useShinyalert(),
-                rapbase::appNavbarUserWidget(
-                  user = uiOutput("appUserName"),
-                  organization = uiOutput("appOrgName"),
-                  addUserInfo = TRUE),
-                tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico"))
-      )
-    ),
-
-    tabPanel("Indikatorer",
-      sidebarLayout(
-        sidebarPanel(
-          width=3,
-          shiny::selectInput("select_indicator",
-                             label = "Velg indikator:",
-                             choices = c("k1", "k2", "k3")),
-          pickerInput(
-            inputId = "sh",
-            label = "velg sjukehus",
-            choices =  c("Helse Bergen","Helse Stavanger",
-                         "Testsjukhus Norge"),   # unique(d_full$OperererendeSykehus),  #
-            selected = "Testsjukhus Norge",
-            multiple = TRUE,
-            options = pickerOptions(
-              actionsBox = TRUE,
-              title = "Please select a hospital",
-              header = "This is a list of hospitals"
-            )),
-          checkboxGroupInput(inputId = "lggar",
-                             label ="år",
-                             choices = 2014:2020,
-                             selected = 2016:2018),
-          dateRangeInput("dato_iv",
-                         "Operasjonsinterval?",
-                         start = "2014-01-01",
-                         end = "2020-12-31"),
-          checkboxGroupInput("op_tech",
-                             "Operasjonsteknikk",
-                             choices = c("GS", "GBP", "OA"),
-                             selected = "GS"),
-          selectInput(inputId= "vrb",
-                      label = "Variabel:",
-                      c("BR_BMI", "PasientAlder")),
-          sliderInput("bn",  label = "Antall grupper:",
-                      min = 1, max = 10,
-                      value = 5)),
-        mainPanel(width = 9,
-          shiny::tabsetPanel(
-            shiny::tabPanel("Figur", shiny::plotOutput("PlotKI1")),
-            shiny::tabPanel("Tabell", shiny::htmlOutput("TableKI1"))
-          )
-        )
-      )
-    )
->>>>>>> ca860b779f81782de3f78b6298af7da5b84f626e
   ) # navbarPage
 ) # tagList
