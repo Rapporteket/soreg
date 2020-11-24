@@ -44,12 +44,10 @@ ui <- tagList(
             options = shinyWidgets::pickerOptions(actionsBox = TRUE,
             title = "Please select a hospital",
             header = "This is a list of hospitals")),
+			
           shiny::uiOutput("uc_years"),
-          # shiny::checkboxGroupInput(
-          #   inputId = "lggar_old",
-          #   label ="år",
-          #   choices = 2014:2020,
-          #   selected = 2016:2018),
+		  
+	  
           shiny::checkboxGroupInput(
             inputId = "op_tech",
             label = "Operasjonsteknikk",
@@ -71,7 +69,7 @@ ui <- tagList(
         mainPanel(width = 9,
           shiny::tabsetPanel(
             shiny::tabPanel(" txt",shiny::textOutput("QI")),
-            shiny::tabPanel("Figur", shiny::plotOutput("lggpl")),
+            shiny::tabPanel("Figur", shiny::plotOutput("pl")),
             shiny::tabPanel("Tabell", shiny::htmlOutput("TableKI1"))))
       #                tabPanel("graf", plotOutput("lggpl")),
       #                tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),

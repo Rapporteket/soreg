@@ -164,8 +164,9 @@ dt  <-  dn %>%
   output$veiledning <- renderUI({
     htmlRenderRmd("veiledning.Rmd")
   })
-
+#-----------------------------------------------------------------------------
   # KI user controls
+ 	
   output$uc_years <- renderUI({
     ## years available, hardcoded if outside known context
     if (rapbase::isRapContext()) {
@@ -210,10 +211,7 @@ liggedogn_maks = max(d_prim_6v$LiggeDogn, na.rm=TRUE)
   #   "(berre pasientar med seksvekers oppfølging er med).")
 #---------------------------- KI1 figur og tabell----------------------------80
 
-  # lgdgn-graf
-  # Vis berre dei som låg maks så lenge på grafen
-  # Ta med 0 dagar berre om det finst (elles 1)
-
+ 
 ## ? opm <-  reactive({ dplyr::filter(d_prim_6v, input$op_tech) })
 
 liggedogn_breaks = seq(
@@ -223,6 +221,7 @@ liggedogn_tekst[length(liggedogn_tekst)] = paste0("\u2265", maksdogn_vis + 1)
 ####### ---------------------------------------------------------------------80
 KIi  <- shiny::reactive({ input$KIix })
 output$QI <-    shiny::renderText({ KIi() })
+
 output$lggpl <- renderPlot({
   d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
 
@@ -232,12 +231,31 @@ output$lggpl <- renderPlot({
   ggplot2::geom_bar(stat="count", show.legend = FALSE)
 })
 
-   #  scale_fill_manual(values = c("FALSE"=colPrim[3], "TRUE"=colKontr)) +
-   #  scale_x_continuous(breaks=liggedogn_breaks, labels =
-#   liggedogn_tekst, expand=c(0,.6)) +
-   #  scale_y_continuous(expand = expand_soyle) +
-   #  xlab("Liggedøgn") + ylab("Talet på\npasienter") +
-   #  fjern_x
+output$reinnpl <- renderPlot({
+  d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
+
+  ggplot2::ggplot( data = d_prim_6v ,   #   !is.na(LiggeDogn)),
+                                                                    # ?? LiggeDogn[11] = -1455
+  ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
+  ggplot2::geom_bar(stat="count", show.legend = FALSE)
+})
+
+
+ 		  sw  <- shiny::reactive({
+		           switch(input$KIix,
+                          # 1 LiggeDogn
+						  output$lggpl,
+                          # 2 REINNLEGGELSE
+						  output$reinnpl
+						  # 3 komplikasjonar
+			               # 1,2,3,4,5,6						   
+			              )
+	    	       })
+
+      output$pl <- renderPlot({ 
+	               sw()
+	  })
+
 ##-----------#---------------------------------------------------------------80
 
     ## Figur
