@@ -28,7 +28,7 @@ server <- function(input, output, session) {
   d_kortligg_sjuk <- d_prim_6v %>%
     dplyr::group_by(OperererendeSykehus, op_aar) %>%
     dplyr::do(soreg::ki_liggetid(.)) %>%
-    dplyr::arrange(desc(ind))
+    dplyr::arrange(desc(ind)) %>% dplyr::ungroup()
   #----------------------------------------------------------------------------80
   kortligg_sh <- function(sh){
     d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh)}
@@ -38,6 +38,7 @@ server <- function(input, output, session) {
     d_kortligg_sjuk %>% dplyr::filter(
       OperererendeSykehus %in% sh,
       op_aar %in% yr)}
+  # kortligg <- snitt(d_kortligg_sjuk, sh, yr)
 
   # REINNLEGGELSE
   # I analysar for reinnlegging ser me berre på dei som har 6-vekesoppfølging
@@ -200,9 +201,6 @@ server <- function(input, output, session) {
 
   #---------------------------- KI1 figur og tabell----------------------------80
 
-
-  ## ? opm <-  reactive({ dplyr::filter(d_prim_6v, input$op_tech) })
-
   liggedogn_breaks = seq(
     pmin(1,  min(d_prim_6v$LiggeDogn, na.rm = TRUE)), maksdogn_vis + 1)
   liggedogn_tekst = liggedogn_breaks
@@ -233,8 +231,8 @@ server <- function(input, output, session) {
   # KI1 - KI6--------- # which KI: f() --------------- # KI user controls------80
   KI <- reactive({
     switch(input$KIix,
-           "KI1" =  kortligg(input$sh, input$aar), #  1 LiggeDogn  output$lggpl,
-           "KI2" =  innl30(input$sh, input$aar),   #  2 REINNLEGGELSE output$reinnpl
+           "KI1" =  snitt(d_kortligg_sjuk, input$sh, input$aar), #  1 LiggeDogn
+           "KI2" =  innl30(input$sh, input$aar),   #  2 REINNLEGGELSE
            "KI3" =  kompl(input$sh, input$aar),    #  3 komplikasjonar
            "KI4" =  runif,        #  4  1 årskontrollar i normtid
            "KI5" =  rexp,         #  5  2 årskontrollar i normtid
