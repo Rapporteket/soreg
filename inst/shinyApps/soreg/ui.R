@@ -13,7 +13,7 @@ ui <- tagList(
                 regTitle),
     windowTitle = regTitle,
     theme = "rap/bootstrap.css",
-    #----------------------------------------------------------------------------80
+#----------------------------------------------------------------------------80
     tabPanel("Start",
       mainPanel(width = 12,
                 shinyalert::useShinyalert(),
@@ -22,40 +22,25 @@ ui <- tagList(
                   organization = uiOutput("appOrgName"),
                   addUserInfo = TRUE
                 ),
-                tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico")),
-                "Noe om SoReg (foreløpig feil i rendring av Rmd...)"
+         tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico")),
+         "Noe om SoReg (foreløpig feil i rendring av Rmd...)"
                 #htmlOutput("veiledning", inline = TRUE)
       )
     ),
-    #------------------------------------------------------ KI1 - KI6
+#------------------------------------------------------ KI1 - KI6
     tabPanel("KI",
       sidebarLayout(
         sidebarPanel(width=3,
           shiny::selectInput(inputId = "KIix",
-            label = "Velg indikator:",
-            choices = c(1, 2, 3, 4, 5, 6)),
-          shinyWidgets::pickerInput(
-            inputId = "sh",
-            label = "velg sjukehus",
-            choices = unique(d_full$OperererendeSykehus),
-                       # c("Helse Bergen","Helse Stavanger", "Testsjukhus Norge"),
-            selected = "Testsjukhus Norge",
-            multiple = TRUE,
-            options = shinyWidgets::pickerOptions(actionsBox = TRUE,
-            title = "Please select a hospital",
-            header = "This is a list of hospitals")),
-			
+            label = "Kvalitetsindikator:",
+            choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6")),
           shiny::uiOutput("uc_years"),
-<<<<<<< HEAD
-=======
-		  
-	  
->>>>>>> 64b544ac5261e9f503f0a75951a2a01bebf69bc6
           shiny::checkboxGroupInput(
             inputId = "op_tech",
             label = "Operasjonsteknikk",
-            choices = c(1,6),
+            choices = c(1,6,"OAGB"),
             selected = 6),
+ 	    #  GBP  GS  OAGB
           shiny::dateRangeInput(
             inputId = "dato_iv",
             label = "Operasjonsinterval?",
@@ -71,16 +56,9 @@ ui <- tagList(
           )),
         mainPanel(width = 9,
           shiny::tabsetPanel(
-<<<<<<< HEAD
-            # base::switch( shiny::textOutput("QI"),
-            shiny::tabPanel(" txt", shiny::textOutput("QI")),
             shiny::tabPanel("Figur", shiny::plotOutput("lggpl")),
-            shiny::tabPanel("Tabell", shiny::htmlOutput("TableKI1")))),
-=======
-            shiny::tabPanel(" txt",shiny::textOutput("QI")),
-            shiny::tabPanel("Figur", shiny::plotOutput("pl")),
-            shiny::tabPanel("Tabell", shiny::htmlOutput("TableKI1"))))
->>>>>>> 64b544ac5261e9f503f0a75951a2a01bebf69bc6
+            shiny::tabPanel("Tabell", shiny::htmlOutput("DT")),
+            shiny::tabPanel(" txt",shiny::textOutput("QI")) ))
       #                tabPanel("graf", plotOutput("lggpl")),
       #                tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),
       #     navbarPage("KI2: Reinnleggelse",
@@ -94,46 +72,46 @@ ui <- tagList(
       #     tabPanel("KI6: Vekttap >= 20%", plotOutput("dist6")) ),
        ), #sidebarlayout
     ), #KI
-
-    #------------------------------------------------------ KI1 - KI6
-    tabPanel("Samlerapport",
-             tabPanel("Fordeling av mpg",
-                      sidebarLayout(
-                        sidebarPanel(width = 3,
-                                     selectInput(
-                                       inputId = "varS",
-                                       label = "Variabel:",
-                                       c("mpg", "disp", "hp", "drat", "wt", "qsec")),
-                                     sliderInput(
-                                       inputId = "binsS",
-                                       label = "Antall grupper:",
-                                       min = 1, max = 10, value = 5),
-                                     downloadButton("downloadSamlerapport", "Last ned!") ),
-                        mainPanel(uiOutput("samlerapport"))))
+#------------------------------------------------------ KI1 - KI6------------80
+tabPanel("Samlerapport",
+    tabPanel("Fordeling av mpg",
+    sidebarLayout(
+        sidebarPanel(width = 3,
+        selectInput(
+         inputId = "varS",
+         label = "Variabel:",
+         c("mpg", "disp", "hp", "drat", "wt", "qsec")),
+        sliderInput(
+         inputId = "binsS",
+         label = "Antall grupper:",
+         min = 1, max = 10, value = 5),
+    downloadButton("downloadSamlerapport", "Last ned!") ),
+    mainPanel(uiOutput("samlerapport"))))
     ),
-    # navbarPage("soreg-stuff here",
+# navbarPage("soreg-stuff here",
     tabPanel("Abonnement",
-             sidebarLayout(
-               sidebarPanel(width = 3,
-                            selectInput(
-                              inputId = "subscriptionRep",
-                              label = "Rapport:",
-                              c("Samlerapport1", "Samlerapport2")),
-                            selectInput(
-                              inputId = "subscriptionFreq",
-                              label = "Frekvens:",
-                              list("\u00c5rlig" = "årlig-year",
-                                   Kvartalsvis = "kvartalsvis-quarter",
-                                   "M\u00e5nedlig" = "månedlig-month",
-                                   Ukentlig = "ukentlig-week",
-                                   Daglig = "daglig-DSTday"),
-                              selected  = "månedlig-month"),
-                            actionButton("subscribe", "Bestill!")
-               ),
-               mainPanel(uiOutput("subscriptionContent")) )),
+    sidebarLayout
+	(
+        sidebarPanel(width = 3,
+        selectInput(
+         inputId = "subscriptionRep",
+         label = "Rapport:",
+         c("Samlerapport1", "Samlerapport2")),
+        selectInput(
+         inputId = "subscriptionFreq",
+         label = "Frekvens:",
+         list("\u00c5rlig" = "årlig-year",
+              Kvartalsvis = "kvartalsvis-quarter",
+             "M\u00e5nedlig" = "månedlig-month",
+              Ukentlig = "ukentlig-week",
+              Daglig = "daglig-DSTday"),
+              selected  = "månedlig-month"),
+        actionButton("subscribe", "Bestill!")),
+        mainPanel(uiOutput("subscriptionContent"))
+    )),
     tabPanel("Metadata",
-             sidebarLayout(
-               sidebarPanel(uiOutput("meta_control")),
-               mainPanel(htmlOutput("meta_data")) ) ) #Metadata
+    sidebarLayout(
+     sidebarPanel(uiOutput("meta_control")),
+     mainPanel(htmlOutput("meta_data")) ) ) #Metadata
   ) # navbarPage
 ) # tagList

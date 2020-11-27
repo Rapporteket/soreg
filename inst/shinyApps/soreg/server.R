@@ -1,9 +1,9 @@
 # library(shiny)
 # library(shinyalert)
 # library(shinyWidgets)
-#library(magrittr)
+library(magrittr)
 # library(soreg)
-#library(lubridate)
+# library(lubridate)
 # library(tibble)
 # library(DT)
 # library(dplyr)
@@ -24,11 +24,6 @@ server <- function(input, output, session) {
   # registrert. Hentar ut eiga datasett for desse
    d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
 
-# tidsinterval
-   # min_dato <-min(d_full$Operasjonsdato)    ## hvordan kan disse sendes til ui?
-   # max_dato <-max(d_full$Operasjonsdato)
-   # fyrstAar<-lubridate::year(min_dato)
-   # sistAar <-lubridate::year(max_dato)
 
 # LIGGEDØGN
 
@@ -164,9 +159,8 @@ dt  <-  dn %>%
   output$veiledning <- renderUI({
     htmlRenderRmd("veiledning.Rmd")
   })
-#-----------------------------------------------------------------------------
-  # KI user controls
- 	
+
+#-----------------------------------------------------# years in data -------80
   output$uc_years <- renderUI({
     ## years available, hardcoded if outside known context
     if (rapbase::isRapContext()) {
@@ -177,14 +171,11 @@ dt  <-  dn %>%
       years <- c("2016", "2017", "2018", "2019", "2020")
     }
     shiny::checkboxGroupInput(
-      inputId = "lggar",
+      inputId = "aar",
       label ="År:",
       choices = years,
       selected = 2017:2018)
   })
-
-# KI1 - KI6
-#---------------------------- KI1 figur og tabell----------------------------80
 
 # lgdgn stats::
   # Viss nokon har *veldig* mange liggedøgn, vert
@@ -211,7 +202,7 @@ liggedogn_maks = max(d_prim_6v$LiggeDogn, na.rm=TRUE)
   #   "(berre pasientar med seksvekers oppfølging er med).")
 #---------------------------- KI1 figur og tabell----------------------------80
 
- 
+
 ## ? opm <-  reactive({ dplyr::filter(d_prim_6v, input$op_tech) })
 
 liggedogn_breaks = seq(
@@ -225,8 +216,8 @@ output$QI <-    shiny::renderText({ KIi() })
 output$lggpl <- renderPlot({
   d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
 
-  ggplot2::ggplot(dplyr::filter(d_prim_6v, LiggeDogn >=0),   #   !is.na(LiggeDogn)),
-                                                             # ?? LiggeDogn[11] = -1455
+  ggplot2::ggplot(dplyr::filter(d_prim_6v, LiggeDogn >=0), #   !is.na(LiggeDogn)),
+                                                  # ?? LiggeDogn[11] = -1455
   ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
   ggplot2::geom_bar(stat="count", show.legend = FALSE)
 })
@@ -235,25 +226,42 @@ output$reinnpl <- renderPlot({
   d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
 
   ggplot2::ggplot( data = d_prim_6v ,   #   !is.na(LiggeDogn)),
-                                                                    # ?? LiggeDogn[11] = -1455
+
   ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
   ggplot2::geom_bar(stat="count", show.legend = FALSE)
 })
 
 
- 		  sw  <- shiny::reactive({
-		           switch(input$KIix,
-                          # 1 LiggeDogn
-						  output$lggpl,
-                          # 2 REINNLEGGELSE
-						  output$reinnpl
-						  # 3 komplikasjonar
-			               # 1,2,3,4,5,6						   
-			              )
-	    	       })
+# KI1 - KI6--------- # which KI: f() --------------- # KI user controls------80
+KI <- reactive({
+  shinyWidgets::pickerInput(
+    inputId = "sh",
+    label = "velg sjukehus",
+    choices = unique(d_full$OperererendeSykehus),
+    # c("Helse Bergen","Helse Stavanger", "Testsjukhus Norge"),
+    selected = "Testsjukhus Norge",
+    multiple = TRUE,
+    options = shinyWidgets::pickerOptions(actionsBox = TRUE,
+                                          title = "Please select a hospital",
+                                          header = "This is a list of hospitals"))
 
-      output$pl <- renderPlot({ 
-	               sw()
+  switch( input$KIix,
+    "KI1" =  kortligg(sh, output$uc_years),       #  1 LiggeDogn  output$lggpl,
+    "KI2" =  innl30(sh, aar),        #  2 REINNLEGGELSE    output$reinnpl
+    "KI3" =  kompl(sh, aar),         #  3 komplikasjonar
+		"KI4" =  runif,        #  4  1 årskontrollar i normtid
+		"KI5" =  rexp,         #  5  2 årskontrollar i normtid
+		"KI6" =  rnorm)        #  6   del %TWL >= 20
+     # ds(input$n)       # tal trukket fra fordelingen  #  year, hospital
+
+   })
+
+    output$DT <-  renderTable({ KI() })
+#---------------------------- KI1 figur og tabell----------------------------80
+
+
+      output$pl <- renderPlot({
+	               lggpl()
 	  })
 
 ##-----------#---------------------------------------------------------------80
@@ -262,9 +270,6 @@ output$reinnpl <- renderPlot({
 output$PlotKI1 <- renderPlot({
   soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
   })
-  # output$lgdgn <- renderPlot({
-  #
-  # })
 
 output$PlotKI2 <- renderPlot({
   soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
@@ -281,10 +286,6 @@ output$TableKI1 <- renderTable({
      bins = input$bn,
      makeTable = TRUE)
   })
-## Tabell
-#  output$liggdogn <- renderTable({
-#    DT::dataTableOutput(df = d_full, var = input$vrb, bins = input$bn, makeTable = TRUE)
-#  })
 
 lgg <- reactive({kortligg(input$sh, input$lggar)})
  output$liggdogn <- DT::renderDataTable({ lgg() })
