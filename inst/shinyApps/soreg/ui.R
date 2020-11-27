@@ -44,7 +44,13 @@ ui <- tagList(
             options = shinyWidgets::pickerOptions(actionsBox = TRUE,
             title = "Please select a hospital",
             header = "This is a list of hospitals")),
+			
           shiny::uiOutput("uc_years"),
+<<<<<<< HEAD
+=======
+		  
+	  
+>>>>>>> 64b544ac5261e9f503f0a75951a2a01bebf69bc6
           shiny::checkboxGroupInput(
             inputId = "op_tech",
             label = "Operasjonsteknikk",
@@ -65,10 +71,16 @@ ui <- tagList(
           )),
         mainPanel(width = 9,
           shiny::tabsetPanel(
+<<<<<<< HEAD
             # base::switch( shiny::textOutput("QI"),
             shiny::tabPanel(" txt", shiny::textOutput("QI")),
             shiny::tabPanel("Figur", shiny::plotOutput("lggpl")),
             shiny::tabPanel("Tabell", shiny::htmlOutput("TableKI1")))),
+=======
+            shiny::tabPanel(" txt",shiny::textOutput("QI")),
+            shiny::tabPanel("Figur", shiny::plotOutput("pl")),
+            shiny::tabPanel("Tabell", shiny::htmlOutput("TableKI1"))))
+>>>>>>> 64b544ac5261e9f503f0a75951a2a01bebf69bc6
       #                tabPanel("graf", plotOutput("lggpl")),
       #                tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),
       #     navbarPage("KI2: Reinnleggelse",
