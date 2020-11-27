@@ -159,7 +159,6 @@ dt  <-  dn %>%
 
 #-----------------------------------------------------# years in data -------80
   output$uc_sh <- shiny::renderUI({
-
     shinyWidgets::pickerInput(
       inputId = "sh",
       label = "velg sjukehus",
@@ -170,8 +169,6 @@ dt  <-  dn %>%
                                             title = "Please select a hospital",
                                             header = "This is a list of hospitals"))
     })
-
-
 
   output$uc_years <- renderUI({
     ## years available, hardcoded if outside known context
@@ -248,6 +245,31 @@ KI <- reactive({
     output$DT <-  renderTable({ KI() })
 #---------------------------- KI1 figur og tabell----------------------------80
 
+pl <- reactive({
+  switch( input$KIix,
+    "KI1" = {
+            d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
+
+            ggplot2::ggplot(data = dplyr::filter(d_prim_6v, LiggeDogn >=0), #
+                            # ?? LiggeDogn[11] = -1455
+            ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
+            ggplot2::geom_bar(stat="count", show.legend = FALSE)
+          }  ,       #  1 LiggeDogn  output$lggpl,
+   "KI2" = {
+     d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
+     ggplot2::ggplot( data =  dplyr::filter(d_prim_6v, LiggeDogn < 3),   #   !is.na(LiggeDogn)),
+     ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
+    ggplot2::geom_bar(stat="count", show.legend = FALSE)
+          } ,        #  2 REINNLEGGELSE    output$reinnpl
+          "KI3" =  rexp ,         #  3 komplikasjonar
+          "KI4" =  runif,        #  4  1 årskontrollar i normtid
+          "KI5" =  rexp,         #  5  2 årskontrollar i normtid
+          "KI6" =  rnorm)        #  6   del %TWL >= 20
+})
+
+output$graf  <- renderPlot( pl())
+
+#------------------------
       output$pl <- renderPlot({
         switch( input$KIix,
                 "KI1" =   {
