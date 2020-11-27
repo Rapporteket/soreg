@@ -31,28 +31,19 @@ ui <- tagList(
 tabPanel("KI",
  sidebarLayout(
   sidebarPanel(width=3,
-    shiny::selectInput(inputId = "KIix",
-                        label = "Kvalitetsindikator:",
-                      choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6")),
-    shinyWidgets::pickerInput(
-     inputId = "sh",
-     label = "velg sjukehus",
-     choices = unique(output$data$OperererendeSykehus),
-                       # c("Helse Bergen","Helse Stavanger", "Testsjukhus Norge"),
-    selected = "Testsjukhus Norge",
-    multiple = TRUE,
-    options = shinyWidgets::pickerOptions(actionsBox = TRUE,
-                            title = "Please select a hospital",
-                           header = "This is a list of hospitals")),
-          shiny::uiOutput("uc_years"),
-          shiny::checkboxGroupInput(
-            inputId = "op_tech",
-            label = "Operasjonsteknikk",
-            choices = c(1,6,"OAGB"),
-            selected = 6),
+   shiny::selectInput(inputId = "KIix",
+      label = "Kvalitetsindikator:",
+    choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6")),
+    shiny::uiOutput("uc_sh"),
+    shiny::uiOutput("uc_years"),
+    shiny::checkboxGroupInput(
+      inputId = "op_tech",
+      label = "Operasjonsteknikk",
+      choices = c(1,6,"OAGB"),
+      selected = 6),
  	    #  GBP  GS  OAGB
-          shiny::dateRangeInput(
-            inputId = "dato_iv",
+   shiny::dateRangeInput(
+     inputId = "dato_iv",
             label = "Operasjonsinterval?",
             start = "2018-01-01", end = "2020-12-31"),
           shiny::selectInput(

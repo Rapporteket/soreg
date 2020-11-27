@@ -158,7 +158,21 @@ dt  <-  dn %>%
   })
 
 #-----------------------------------------------------# years in data -------80
-  output$data <- shiny::renderUI({  d_full })
+  output$uc_sh <- shiny::renderUI({
+
+    shinyWidgets::pickerInput(
+      inputId = "sh",
+      label = "velg sjukehus",
+      choices = (unique(d_full$OperererendeSykehus)),
+      selected = "Testsjukhus Norge",
+      multiple = TRUE,
+      options = shinyWidgets::pickerOptions(actionsBox = TRUE,
+                                            title = "Please select a hospital",
+                                            header = "This is a list of hospitals"))
+    })
+
+
+
   output$uc_years <- renderUI({
     ## years available, hardcoded if outside known context
     if (rapbase::isRapContext()) {
