@@ -27,13 +27,23 @@ ui <- tagList(
                 #htmlOutput("veiledning", inline = TRUE)
       )
     ),
-#------------------------------------------------------ KI1 - KI6
-    tabPanel("KI",
-      sidebarLayout(
-        sidebarPanel(width=3,
-          shiny::selectInput(inputId = "KIix",
-            label = "Kvalitetsindikator:",
-            choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6")),
+#------------------------------------------------------ KI1 - KI6------------80
+tabPanel("KI",
+ sidebarLayout(
+  sidebarPanel(width=3,
+    shiny::selectInput(inputId = "KIix",
+                        label = "Kvalitetsindikator:",
+                      choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6")),
+    shinyWidgets::pickerInput(
+     inputId = "sh",
+     label = "velg sjukehus",
+     choices = unique(d_full$OperererendeSykehus),
+                       # c("Helse Bergen","Helse Stavanger", "Testsjukhus Norge"),
+    selected = "Testsjukhus Norge",
+    multiple = TRUE,
+    options = shinyWidgets::pickerOptions(actionsBox = TRUE,
+                            title = "Please select a hospital",
+                           header = "This is a list of hospitals")),
           shiny::uiOutput("uc_years"),
           shiny::checkboxGroupInput(
             inputId = "op_tech",

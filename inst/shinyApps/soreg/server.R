@@ -234,21 +234,11 @@ output$reinnpl <- renderPlot({
 
 # KI1 - KI6--------- # which KI: f() --------------- # KI user controls------80
 KI <- reactive({
-  shinyWidgets::pickerInput(
-    inputId = "sh",
-    label = "velg sjukehus",
-    choices = unique(d_full$OperererendeSykehus),
-    # c("Helse Bergen","Helse Stavanger", "Testsjukhus Norge"),
-    selected = "Testsjukhus Norge",
-    multiple = TRUE,
-    options = shinyWidgets::pickerOptions(actionsBox = TRUE,
-                                          title = "Please select a hospital",
-                                          header = "This is a list of hospitals"))
 
   switch( input$KIix,
-    "KI1" =  kortligg(sh, output$uc_years),       #  1 LiggeDogn  output$lggpl,
-    "KI2" =  innl30(sh, aar),        #  2 REINNLEGGELSE    output$reinnpl
-    "KI3" =  kompl(sh, aar),         #  3 komplikasjonar
+    "KI1" =  kortligg(input$sh, input$aar),       #  1 LiggeDogn  output$lggpl,
+    "KI2" =  innl30(input$sh, input$aar),        #  2 REINNLEGGELSE    output$reinnpl
+    "KI3" =  kompl(input$sh, input$aar),         #  3 komplikasjonar
 		"KI4" =  runif,        #  4  1 årskontrollar i normtid
 		"KI5" =  rexp,         #  5  2 årskontrollar i normtid
 		"KI6" =  rnorm)        #  6   del %TWL >= 20
