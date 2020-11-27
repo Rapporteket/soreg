@@ -269,34 +269,7 @@ pl <- reactive({
 
 output$graf  <- renderPlot( pl())
 
-#------------------------
-      output$pl <- renderPlot({
-        switch( input$KIix,
-                "KI1" =   {
-                  renderPlot({
-                    d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
 
-            ggplot2::ggplot(dplyr::filter(d_prim_6v, LiggeDogn >=0), #
-                                    # ?? LiggeDogn[11] = -1455
-            ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
-            ggplot2::geom_bar(stat="count", show.legend = FALSE)
-                  })
-                },       #  1 LiggeDogn  output$lggpl,
-                "KI2" =  {
-                  renderPlot({
-                    d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
-
-                    ggplot2::ggplot( data = d_prim_6v ,   #   !is.na(LiggeDogn)),
-
-                  ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
-                  ggplot2::geom_bar(stat="count", show.legend = FALSE)
-                  })
-                },        #  2 REINNLEGGELSE    output$reinnpl
-                "KI3" =  kompl(input$sh, input$aar),         #  3 komplikasjonar
-                "KI4" =  runif,        #  4  1 årskontrollar i normtid
-                "KI5" =  rexp,         #  5  2 årskontrollar i normtid
-                "KI6" =  rnorm)        #  6   del %TWL >= 20
-	  })
 
 ##-----------#---------------------------------------------------------------80
 
