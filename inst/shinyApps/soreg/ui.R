@@ -37,7 +37,7 @@ tabPanel("KI",
     shinyWidgets::pickerInput(
      inputId = "sh",
      label = "velg sjukehus",
-     choices = unique(d_full$OperererendeSykehus),
+     choices = unique(output$data$OperererendeSykehus),
                        # c("Helse Bergen","Helse Stavanger", "Testsjukhus Norge"),
     selected = "Testsjukhus Norge",
     multiple = TRUE,
@@ -66,7 +66,7 @@ tabPanel("KI",
           )),
         mainPanel(width = 9,
           shiny::tabsetPanel(
-            shiny::tabPanel("Figur", shiny::plotOutput("lggpl")),
+            shiny::tabPanel("Figur", shiny::plotOutput("pl")),
             shiny::tabPanel("Tabell", shiny::htmlOutput("DT")),
             shiny::tabPanel(" txt",shiny::textOutput("QI")) ))
       #                tabPanel("graf", plotOutput("lggpl")),

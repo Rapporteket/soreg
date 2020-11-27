@@ -24,10 +24,7 @@ server <- function(input, output, session) {
   # registrert. Hentar ut eiga datasett for desse
    d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
 
-
-# LIGGEDØGN
-
-  # Kor mange låg mindre enn fire døgn per sjukehus
+# LIGGEDØGN  ---#-------------- Kor mange låg mindre enn fire døgn per sjukehus
   d_kortligg_sjuk <- d_prim_6v %>%
     dplyr::group_by(OperererendeSykehus, op_aar) %>%
     dplyr::do(soreg::ki_liggetid(.)) %>%
@@ -161,6 +158,7 @@ dt  <-  dn %>%
   })
 
 #-----------------------------------------------------# years in data -------80
+  output$data <- shiny::renderUI({  d_full })
   output$uc_years <- renderUI({
     ## years available, hardcoded if outside known context
     if (rapbase::isRapContext()) {
@@ -176,7 +174,6 @@ dt  <-  dn %>%
       choices = years,
       selected = 2017:2018)
   })
-
 # lgdgn stats::
   # Viss nokon har *veldig* mange liggedøgn, vert
   # grafen uoversiktleg. Avgrensa derfor talet på
@@ -189,17 +186,6 @@ d_prim_6v %<>%
 n_liggedogn_lenge = sum(d_prim_6v$liggedogn_lenge, na.rm=TRUE)
 liggedogn_maks = max(d_prim_6v$LiggeDogn, na.rm=TRUE)
 
-  # Lang figurforklaring viss ikkje pasientane
-  # er med i grafen. :)
-  # liggedogngraf_forklaring = paste0(
-  #   "Talet på postoperative liggedøgn etter primæroperasjonar i~", rapporteringsaar,
-  #   ifelse(n_liggedogn_lenge > 0, paste0(", der vi berre viser detaljar for dei med maks ",
-  #                     maksdogn_vis," postoperative liggedøgn. I tillegg var det ",
-  #      n_liggedogn_lenge, " ", ifelse(n_liggedogn_lenge != 1, "pasientar", "pasient"), " med \\emph{meir} enn ",
-  #                maksdogn_vis, " postoperative liggedøgn. Pasienten som låg lengst, hadde ",
-  #               liggedogn_maks, " postoperative liggedøgn."), "."), " Basert på data frå til saman ",
-  #   num(sum(!is.na(d_prim_6v$LiggeDogn))), " operasjonar ",
-  #   "(berre pasientar med seksvekers oppfølging er med).")
 #---------------------------- KI1 figur og tabell----------------------------80
 
 
@@ -231,7 +217,6 @@ output$reinnpl <- renderPlot({
   ggplot2::geom_bar(stat="count", show.legend = FALSE)
 })
 
-
 # KI1 - KI6--------- # which KI: f() --------------- # KI user controls------80
 KI <- reactive({
 
@@ -249,9 +234,32 @@ KI <- reactive({
     output$DT <-  renderTable({ KI() })
 #---------------------------- KI1 figur og tabell----------------------------80
 
-
       output$pl <- renderPlot({
-	               lggpl()
+        switch( input$KIix,
+                "KI1" =   {
+                  renderPlot({
+                    d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
+
+            ggplot2::ggplot(dplyr::filter(d_prim_6v, LiggeDogn >=0), #
+                                    # ?? LiggeDogn[11] = -1455
+            ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
+            ggplot2::geom_bar(stat="count", show.legend = FALSE)
+                  })
+                },       #  1 LiggeDogn  output$lggpl,
+                "KI2" =  {
+                  renderPlot({
+                    d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
+
+                    ggplot2::ggplot( data = d_prim_6v ,   #   !is.na(LiggeDogn)),
+
+                  ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
+                  ggplot2::geom_bar(stat="count", show.legend = FALSE)
+                  })
+                },        #  2 REINNLEGGELSE    output$reinnpl
+                "KI3" =  kompl(input$sh, input$aar),         #  3 komplikasjonar
+                "KI4" =  runif,        #  4  1 årskontrollar i normtid
+                "KI5" =  rexp,         #  5  2 årskontrollar i normtid
+                "KI6" =  rnorm)        #  6   del %TWL >= 20
 	  })
 
 ##-----------#---------------------------------------------------------------80
