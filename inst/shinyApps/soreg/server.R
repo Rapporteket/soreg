@@ -10,7 +10,7 @@ library(lubridate)
 # library(rapbase)
 
 server <- function(input, output, session) {
-  #----------------------------------------------------------------------------80
+#----------------------------------------------------------------------------80
   # Faste verdier for applikasjonen
   registry_name <- "soreg"
   # Last inn data
@@ -47,8 +47,8 @@ server <- function(input, output, session) {
   # viser seg at det òg er mogleg å svara «Vet ikke» (verdi 2) på om pasienten
   # vart reinnlagd. Desse gjev ingen informasjon, og vert derfor òg fjerna.
   d_reinn <- d_prim %>% dplyr::filter(((`6U_KontrollType` %in% 1:3) |
-                                         (`6U_Behandling30Dager` == 1)) &
-                                        (`6U_Behandling30Dager` != 2))
+                                       (`6U_Behandling30Dager` == 1)) &
+                                       (`6U_Behandling30Dager` != 2))
 
   # Tilsvarande for alvorlege komplikasjonar
   d_kompl <- d_prim %>%
