@@ -33,7 +33,7 @@ ui <- tagList(
         sidebarPanel(width=3,
           shiny::selectInput(inputId = "KIix",
             label = "Velg indikator:",
-            choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6")),
+            choices = c(1, 2, 3, 4, 5, 6)),
           shinyWidgets::pickerInput(
             inputId = "sh",
             label = "velg sjukehus",
@@ -45,11 +45,6 @@ ui <- tagList(
             title = "Please select a hospital",
             header = "This is a list of hospitals")),
           shiny::uiOutput("uc_years"),
-          # shiny::checkboxGroupInput(
-          #   inputId = "lggar_old",
-          #   label ="år",
-          #   choices = 2014:2020,
-          #   selected = 2016:2018),
           shiny::checkboxGroupInput(
             inputId = "op_tech",
             label = "Operasjonsteknikk",
@@ -70,9 +65,10 @@ ui <- tagList(
           )),
         mainPanel(width = 9,
           shiny::tabsetPanel(
-            shiny::tabPanel(" txt",shiny::textOutput("QI")),
+            # base::switch( shiny::textOutput("QI"),
+            shiny::tabPanel(" txt", shiny::textOutput("QI")),
             shiny::tabPanel("Figur", shiny::plotOutput("lggpl")),
-            shiny::tabPanel("Tabell", shiny::htmlOutput("TableKI1"))))
+            shiny::tabPanel("Tabell", shiny::htmlOutput("TableKI1")))),
       #                tabPanel("graf", plotOutput("lggpl")),
       #                tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),
       #     navbarPage("KI2: Reinnleggelse",

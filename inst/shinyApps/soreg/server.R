@@ -1,9 +1,9 @@
 # library(shiny)
 # library(shinyalert)
 # library(shinyWidgets)
-library(magrittr)
+#library(magrittr)
 # library(soreg)
-library(lubridate)
+#library(lubridate)
 # library(tibble)
 # library(DT)
 # library(dplyr)
@@ -223,11 +223,12 @@ liggedogn_tekst[length(liggedogn_tekst)] = paste0("\u2265", maksdogn_vis + 1)
 ####### ---------------------------------------------------------------------80
 KIi  <- shiny::reactive({ input$KIix })
 output$QI <-    shiny::renderText({ KIi() })
+
 output$lggpl <- renderPlot({
   d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
 
   ggplot2::ggplot(dplyr::filter(d_prim_6v, LiggeDogn >=0),   #   !is.na(LiggeDogn)),
-                                                                    # ?? LiggeDogn[11] = -1455
+                                                             # ?? LiggeDogn[11] = -1455
   ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
   ggplot2::geom_bar(stat="count", show.legend = FALSE)
 })
