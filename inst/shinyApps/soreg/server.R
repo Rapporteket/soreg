@@ -18,7 +18,7 @@ server <- function(input, output, session) {
   d_full <- soreg::get_arsrp("soreg")
   d_full %<>% dplyr::mutate(
     op_aar = lubridate::year(Operasjonsdato),
-    op_primar = (TidlFedmeOp==0))
+    op_primar = (TidlFedmeOp == 0))
   d_prim <- d_full %>% dplyr::filter(op_primar)
   # I nokre analysar ser me berre på dei som har 6-vekesoppfølging
   # registrert. Hentar ut eiga datasett for desse
@@ -30,10 +30,10 @@ server <- function(input, output, session) {
     dplyr::do(soreg::ki_liggetid(.)) %>%
     dplyr::arrange(desc(ind)) %>% dplyr::ungroup()
   #----------------------------------------------------------------------------80
-  kortligg_sh <- function(sh){
-    d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh)}
-  kortligg_yr <- function(yr){
-    d_kortligg_sjuk %>% dplyr::filter(op_aar %in% yr)}
+  # kortligg_sh <- function(sh){
+  #   d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh)}
+  # kortligg_yr <- function(yr){
+  #   d_kortligg_sjuk %>% dplyr::filter(op_aar %in% yr)}
   kortligg    <- function(sh, yr){
     d_kortligg_sjuk %>% dplyr::filter(
       OperererendeSykehus %in% sh,
@@ -62,10 +62,10 @@ server <- function(input, output, session) {
     dplyr::group_by(OperererendeSykehus, op_aar) %>%
     dplyr::do(soreg::ki_30dager(.)) %>%
     dplyr::arrange(desc(ind))
-  innl30_sh <- function(sh){d_innlegg30 %>%
-      filter(OperererendeSykehus %in% sh)}
-  innl30_yr <- function(yr){d_innlegg30 %>%
-      filter(op_aar %in% yr)}
+  # innl30_sh <- function(sh){d_innlegg30 %>%
+  #     filter(OperererendeSykehus %in% sh)}
+  # innl30_yr <- function(yr){d_innlegg30 %>%
+  #     filter(op_aar %in% yr)}
   innl30 <- function(sh,yr){d_innlegg30 %>%
       filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 
@@ -73,14 +73,14 @@ server <- function(input, output, session) {
 
   # andel pasienter som får en alvorlig komplikasjon per sjukehus
   d_kompl_alv_sjukehus <- d_kompl %>%
-    dplyr::group_by(OperererendeSykehus,op_aar) %>%
+    dplyr::group_by(OperererendeSykehus, op_aar) %>%
     dplyr::do(soreg::ki_kompl_alv(.)) %>%
     dplyr::arrange(desc(ind))
 
-  kompl_sh <- function(sh){d_kompl_alv_sjukehus %>%
-      filter(OperererendeSykehus %in% sh)}
-  kompl_yr <- function(yr){d_kompl_alv_sjukehus %>%
-      filter(op_aar %in% yr)}
+  # kompl_sh <- function(sh){d_kompl_alv_sjukehus %>%
+  #     filter(OperererendeSykehus %in% sh)}
+  # kompl_yr <- function(yr){d_kompl_alv_sjukehus %>%
+  #     filter(op_aar %in% yr)}
   kompl <- function(sh, yr){d_kompl_alv_sjukehus %>%
       filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 
@@ -187,6 +187,25 @@ server <- function(input, output, session) {
       choices = years,
       selected = 2017:2018)
   })
+  output$uc_opr <- renderUI({
+    # shiny::checkboxGroupInput(
+    #   inputId = "prim",
+    #   label = "Revisjonsoperasjon ?",
+    #   choices = unique(d_full$op_primar),
+    #   selected = 0)
+    shiny::checkboxGroupInput(
+      inputId = "op_tech",
+      label = "Operasjonsteknikk",
+      choices =   unique(d_full$Operasjonsmetode),  #c(1,6),
+      selected = 6)   # 6 = sleeve
+    # conditional buttons?
+    #  this should only appear iff op_tech == 1
+    # shiny::checkboxGroupInput(
+    #   inputId = "GB_tech",  # skal bare eksistere omm op_tech==1
+    #   label = "OA GBP",
+    #   choices = c(1,2),
+    #   selected = 1)  # One anastomosis gastric bypass
+  })
   # lgdgn stats::
   # Viss nokon har *veldig* mange liggedøgn, vert
   # grafen uoversiktleg. Avgrensa derfor talet på
@@ -209,24 +228,24 @@ server <- function(input, output, session) {
   KIi  <- shiny::reactive({ input$KIix })
   output$QI <- shiny::renderText({ KIi() })
 
-  output$lggpl <- renderPlot({
-    d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
-
-    ggplot2::ggplot(
-      dplyr::filter(d_prim_6v, LiggeDogn >=0), #   !is.na(LiggeDogn)),
-      # ?? LiggeDogn[11] = -1455
-      ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
-      ggplot2::geom_bar(stat="count", show.legend = FALSE)
-  })
-
-  output$reinnpl <- renderPlot({
-    d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
-
-    ggplot2::ggplot(
-      data = d_prim_6v,   #   !is.na(LiggeDogn)),
-      ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
-      ggplot2::geom_bar(stat="count", show.legend = FALSE)
-  })
+  # output$lggpl <- renderPlot({
+  #   d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
+  #
+  #   ggplot2::ggplot(
+  #     dplyr::filter(d_prim_6v, LiggeDogn >=0), #   !is.na(LiggeDogn)),
+  #     # ?? LiggeDogn[11] = -1455
+  #     ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
+  #     ggplot2::geom_bar(stat="count", show.legend = FALSE)
+  # })
+  #
+  # output$reinnpl <- renderPlot({
+  #   d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
+  #
+  #   ggplot2::ggplot(
+  #     data = d_prim_6v,   #   !is.na(LiggeDogn)),
+  #     ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
+  #     ggplot2::geom_bar(stat="count", show.legend = FALSE)
+  # })
 
   # KI1 - KI6--------- # which KI: f() --------------- # KI user controls------80
   KI <- reactive({

@@ -36,17 +36,7 @@ tabPanel("KI",
     choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6")),
     shiny::uiOutput("uc_sh"),
     shiny::uiOutput("uc_years"),
-    shiny::checkboxGroupInput(
-      inputId = "op_tech",
-      label = "Operasjonsteknikk",
-      choices = c(1,6),
-      selected = 6),
-   shiny::checkboxGroupInput(
-     inputId = "GB_tech",  # bare eksisterer omm op_tech==1
-     label = "OA GBP",
-     choices = c(1,2),
-     selected = 1),
-
+    shiny::uiOutput("uc_opr"),
  	    #  GBP  GS  OAGB
    shiny::dateRangeInput(
      inputId = "dato_iv",
