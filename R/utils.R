@@ -45,3 +45,16 @@ NULL
 #' @importFrom rlang .data
 #' @usage .data
 NULL
+
+#' Data pronouns
+#'
+#' See \code{rlang::\link[rlang:tidyeval-data]{.env}} for details
+#'
+#' @name .env
+#' @rdname pronoun
+#' @keywords internal
+#' @export
+#' @importFrom rlang .env
+#' @usage .env
+NULL
+
