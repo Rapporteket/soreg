@@ -9,8 +9,8 @@
 #' @export
 
 snitt <- function(df, sh, yr) {df %>%
-  dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+  dplyr::filter(.data$OperererendeSykehus %in% sh, .data$op_aar %in% yr)}
 
-OperererendeSykehus <- op_aar <- NULL
+# OperererendeSykehus <- op_aar <- NULL
 
 

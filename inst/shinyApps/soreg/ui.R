@@ -54,8 +54,17 @@ tabPanel("KI",
         mainPanel(width = 9,
           shiny::tabsetPanel(
             shiny::tabPanel("Figur", shiny::plotOutput("graf")),  # lggpl  virker
+            shiny::tabPanel("Tabell", shiny::htmlOutput("DT")) ),
+            # shiny::tabPanel(" txt",shiny::textOutput("QI")) ), 
+		  shiny::tabsetPanel(
+            shiny::tabPanel("Figur", shiny::plotOutput("graf")),  # lggpl  virker
             shiny::tabPanel("Tabell", shiny::htmlOutput("DT")),
-            shiny::tabPanel(" txt",shiny::textOutput("QI")) ))
+            shiny::tabPanel(" txt",shiny::textOutput("QI")) ), 
+          shiny::tabsetPanel(
+            shiny::tabPanel("Figur", shiny::plotOutput("graf")),  # lggpl  virker
+            shiny::tabPanel("Tabell", shiny::htmlOutput("DT")),
+            shiny::tabPanel(" txt",shiny::textOutput("QI")) )
+			)						
       #                tabPanel("graf", plotOutput("lggpl")),
       #                tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),
       #     navbarPage("KI2: Reinnleggelse",
