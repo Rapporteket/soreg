@@ -12,10 +12,6 @@ snitt(df, sh, yr)
 \item{sh}{hospital(s)}
 
 \item{yr}{year(s)}
-
-\item{OpererendeSykehus}{operating hospital}
-
-\item{op_aar}{operasjonsår}
 }
 \value{
 A data frame for choice of hospitals and years
