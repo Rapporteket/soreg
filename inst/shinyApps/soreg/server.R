@@ -24,21 +24,17 @@ server <- function(input, output, session) {
   # registrert. Hentar ut eiga datasett for desse
   d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
 
-  # LIGGEDØGN  ---#-------------- Kor mange låg mindre enn fire døgn per sjukehus
+# LIGGEDØGN  ---#-------------- Kor mange låg mindre enn fire døgn per sjukehus
   d_kortligg_sjuk <- d_prim_6v %>%
     dplyr::group_by(OperererendeSykehus, op_aar) %>%
     dplyr::do(soreg::ki_liggetid(.)) %>%
     dplyr::arrange(desc(ind)) %>% dplyr::ungroup()
-  #----------------------------------------------------------------------------80
-  # kortligg_sh <- function(sh){
-  #   d_kortligg_sjuk %>% dplyr::filter(OperererendeSykehus %in% sh)}
-  # kortligg_yr <- function(yr){
-  #   d_kortligg_sjuk %>% dplyr::filter(op_aar %in% yr)}
-  kortligg    <- function(sh, yr){
+#----------------------------------------------------------------------------80
+   kortligg    <- function(sh, yr){
     d_kortligg_sjuk %>% dplyr::filter(
       OperererendeSykehus %in% sh,
       op_aar %in% yr)}
-  # kortligg <- snitt(d_kortligg_sjuk, sh, yr)
+# kortligg <- snitt(d_kortligg_sjuk, sh, yr)
 
   # REINNLEGGELSE
   # I analysar for reinnlegging ser me berre på dei som har 6-vekesoppfølging
@@ -66,8 +62,9 @@ server <- function(input, output, session) {
   #     filter(OperererendeSykehus %in% sh)}
   # innl30_yr <- function(yr){d_innlegg30 %>%
   #     filter(op_aar %in% yr)}
-  innl30 <- function(sh,yr){d_innlegg30 %>%
+ innl30 <- function(sh,yr){d_innlegg30 %>%
       filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+# innl30 <- snitt(d_innlegg30, sh, yr)
 
   # KOMPLIKASJONAR
 
@@ -83,6 +80,7 @@ server <- function(input, output, session) {
   #     filter(op_aar %in% yr)}
   kompl <- function(sh, yr){d_kompl_alv_sjukehus %>%
       filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+# kompl <- snitt(d_kompl_alv_sjukehus, sh, yr)
 
   # aarskontrollar
   ####################################################
@@ -251,8 +249,8 @@ server <- function(input, output, session) {
   KI <- reactive({
     switch(input$KIix,
            "KI1" =  snitt(d_kortligg_sjuk, input$sh, input$aar), #  1 LiggeDogn
-           "KI2" =  innl30(input$sh, input$aar),   #  2 REINNLEGGELSE
-           "KI3" =  kompl(input$sh, input$aar),    #  3 komplikasjonar
+           "KI2" =  snitt(d_innlegg30, input$sh, input$aar),     #  2 REINNLEGGELSE
+           "KI3" =  snitt(d_kompl_alv_sjukehus, input$sh, input$aar),    #  3 komplikasjonar
            "KI4" =  runif,        #  4  1 årskontrollar i normtid
            "KI5" =  rexp,         #  5  2 årskontrollar i normtid
            "KI6" =  rnorm)        #  6   del %TWL >= 20
@@ -270,8 +268,8 @@ server <- function(input, output, session) {
 
               ggplot2::ggplot(data = dplyr::filter(d_prim_6v, LiggeDogn >=0), #
                               # ?? LiggeDogn[11] = -1455
-                              ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
-                ggplot2::geom_bar(stat="count", show.legend = FALSE)
+              ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
+              ggplot2::geom_bar(stat="count", show.legend = FALSE)
             }  ,       #  1 LiggeDogn  output$lggpl,
             "KI2" = {
               d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
@@ -280,6 +278,28 @@ server <- function(input, output, session) {
                 ggplot2::geom_bar(stat="count", show.legend = FALSE)
             } ,        #  2 REINNLEGGELSE    output$reinnpl
             "KI3" =  rexp ,         #  3 komplikasjonar
+# d_kompl_graf = d_kompl %>%
+  # filter(!is.na(`6U_KomplAlvorGrad`)) %>% 
+  # count(`6U_KomplAlvorGrad`) %>% 
+  # mutate(kompl_grad_tekst = factor(`6U_KomplAlvorGrad`,
+                                   # levels=rev(c(1:4,6:7,5)),
+                                   # labels=rev(c("Grad I: Ingen tiltak",
+                                            # "Grad II: Farmakologiske tiltak",
+                                            # "Grad IIIa: Intervensjon uten narkose",
+                                            # "Grad IIIb: Intervensjon i narkose",
+                                            # "Grad IVa: Intensivbehandling med eitt sviktande organ",
+                                            # "Grad IVb: Intensivbehandling med meir enn eitt sviktande organ",
+                                            # "Grad V: Død"))))
+
+# ggplot(d_kompl_graf, aes(x=kompl_grad_tekst, y=n))+
+  # geom_bar(stat="identity", fill=colPrim[3], width = 2/3) +
+  # scale_y_continuous(breaks=sett_avkutningspunkt_bredde(5),
+                     # expand = expansion(mult = c(0, .05))) +
+  # scale_x_discrete(drop = FALSE) +
+  # xlab(NULL) + ylab("Talet på pasienter") + 
+  # coord_flip() + fjern_y + fjern_y_ticks +
+  # theme(panel.grid.minor.x = element_blank())
+			
             "KI4" =  runif,        #  4  1 årskontrollar i normtid
             "KI5" =  rexp,         #  5  2 årskontrollar i normtid
             "KI6" =  rnorm)        #  6   del %TWL >= 20
