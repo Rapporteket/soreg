@@ -2,11 +2,16 @@
 % Please edit documentation in R/utils.R
 \name{.data}
 \alias{.data}
+\alias{.env}
 \title{Data pronouns}
 \usage{
 .data
+
+.env
 }
 \description{
 See \code{rlang::\link[rlang:tidyeval-data]{.data}} for details
+
+See \code{rlang::\link[rlang:tidyeval-data]{.env}} for details
 }
 \keyword{internal}
