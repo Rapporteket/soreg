@@ -38,6 +38,13 @@ tabPanel("KI",
     shiny::uiOutput("uc_years"),
 	shiny::uiOutput("uc_prim"),
     shiny::uiOutput("uc_opr"),
+	shiny::conditionalPanel(
+	  condition = "input.op_tech == 1",  # skal bare eksistere omm op_tech==1
+	  shiny::checkboxGroupInput(
+	    inputId = "OA",
+	    label = "OA GBP",
+	    choices = c(1,2),
+	    selected = 1) ) , # One anastomosis gastric bypass
  	    #  GBP  GS  OAGB
    shiny::dateRangeInput(
      inputId = "dato_iv",

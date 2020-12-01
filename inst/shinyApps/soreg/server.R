@@ -185,30 +185,24 @@ output$uc_sh <- shiny::renderUI({
       choices = years,
       selected = 2017:2018)
   })
-  
+
   output$uc_prim <- renderUI({
      shiny::checkboxGroupInput(
       inputId = "prim",
-      label = "Revisjonsoperasjon ?",
+      label = "Primæroperasjon ?",
       choices = unique(d_full$op_primar),
-      selected = 0)
+      selected = TRUE)
   })
-  
-  output$uc_opr <- renderUI({
-     shiny::checkboxGroupInput(
+
+output$uc_opr <- renderUI({
+shiny::checkboxGroupInput(
       inputId = "op_tech",
       label = "Operasjonsteknikk",
       choices =   unique(d_full$Operasjonsmetode),  #c(1,6),
-      selected = 6)   # 6 = sleeve
-    # conditional buttons?
-    #  this should only appear iff op_tech == 1
-    shiny::conditionalPanel(
-      condition = "input.op_tech == 1",  # skal bare eksistere omm op_tech==1
-	shiny::checkboxGroupInput(
-      label = "OA GBP",
-      choices = c(1,2),
-      selected = 1) )  # One anastomosis gastric bypass
-  })
+      selected = 6) # 6 = sleeve
+    # conditional buttons?       this should appear iff op_tech == 1
+
+})
   # lgdgn stats::
   # Viss nokon har *veldig* mange liggedøgn, vert
   # grafen uoversiktleg. Avgrensa derfor talet på
@@ -284,8 +278,8 @@ output$uc_sh <- shiny::renderUI({
             } ,        #  2 REINNLEGGELSE    output$reinnpl
             "KI3" =  rexp ,         #  3 komplikasjonar
 # d_kompl_graf = d_kompl %>%
-  # filter(!is.na(`6U_KomplAlvorGrad`)) %>% 
-  # count(`6U_KomplAlvorGrad`) %>% 
+  # filter(!is.na(`6U_KomplAlvorGrad`)) %>%
+  # count(`6U_KomplAlvorGrad`) %>%
   # mutate(kompl_grad_tekst = factor(`6U_KomplAlvorGrad`,
                                    # levels=rev(c(1:4,6:7,5)),
                                    # labels=rev(c("Grad I: Ingen tiltak",
@@ -301,10 +295,10 @@ output$uc_sh <- shiny::renderUI({
   # scale_y_continuous(breaks=sett_avkutningspunkt_bredde(5),
                      # expand = expansion(mult = c(0, .05))) +
   # scale_x_discrete(drop = FALSE) +
-  # xlab(NULL) + ylab("Talet på pasienter") + 
+  # xlab(NULL) + ylab("Talet på pasienter") +
   # coord_flip() + fjern_y + fjern_y_ticks +
   # theme(panel.grid.minor.x = element_blank())
-			
+
             "KI4" =  runif,        #  4  1 årskontrollar i normtid
             "KI5" =  rexp,         #  5  2 årskontrollar i normtid
             "KI6" =  rnorm)        #  6   del %TWL >= 20
