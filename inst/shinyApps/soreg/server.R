@@ -20,27 +20,27 @@ colKontr="#FF7260"                                    # Kontrastfarge
 # Av og til treng me litt mørkare/lysare variantar av primærfargane
 # (og *førre/neste* verdi i fargeskalaen er *heilt ueigna*!).
 # Legg til desse som alternativ fargeskala
-colPrim_mork = farge_morkare(colPrim, grad=5)
-colPrim_lys = farge_morkare(colPrim, grad=-5)
+##colPrim_mork = farge_morkare(colPrim, grad=5)
+##colPrim_lys = farge_morkare(colPrim, grad=-5)
 
 # Offisielle årsrapportfargar for qicharts2-diagram
 options(qic.signalcol = colKontr, qic.linecol = colPrim[3])
 
 # ggplot2-tema for figurar
-tema = theme_light(base_size=skriftstorleik)
+#tema = theme_light(base_size=skriftstorleik)
 
 # Finare, litt varme fargar på panelstriper
-tema$strip.background$fill="#f3f1ee"
-tema$strip.background$colour="#e4e0da"
-tema$strip.text.x = element_text(colour="black")
+#tema$strip.background$fill="#f3f1ee"
+#tema$strip.background$colour="#e4e0da"
+#tema$strip.text.x = element_text(colour="black")
 
 # Større avstand mellom panel (nødvendig sidan me
 # ikkje brukar farga panelbakgrunn, og ting ser
 # litt rotete ut om det er lite luft mellom panela)
-tema$panel.spacing=unit("13" ,"pt")
+#tema$panel.spacing=unit("13" ,"pt")
 
 # Men nokre plott krev liten panelavstand
-liten_panel_avstand = theme(panel.spacing = unit(6, "pt"))
+#liten_panel_avstand = theme(panel.spacing = unit(6, "pt"))
 
 # Bruk same fargar på rutenetta som på panelbakgrunnen
 # Merk: panel.background vert teikna *under* akselinjer
@@ -50,13 +50,13 @@ liten_panel_avstand = theme(panel.spacing = unit(6, "pt"))
 #
 #       Derfor teiknar me *aldri* panel.border, berre panel.background.
 #       (fixme: må kanskje endrast dersom me tar i bruk fleirpanelsgrafar?)
-tema$panel.border = element_blank()
-tema$panel.background$colour=tema$strip.background$colour
-tema$panel.grid.major$colour=tema$strip.background$colour
-tema$panel.grid.minor$colour=tema$strip.background$fill
-
-# La teksten på y-aksen vera vassrett
-tema$axis.title.y$angle=0
+# tema$panel.border = element_blank()
+# tema$panel.background$colour=tema$strip.background$colour
+# tema$panel.grid.major$colour=tema$strip.background$colour
+# tema$panel.grid.minor$colour=tema$strip.background$fill
+#
+# # La teksten på y-aksen vera vassrett
+# tema$axis.title.y$angle=0
 
 # Fjern luft til venstre for y-akseteksten og legg
 # til ekstra luft til høgre for han, fjern luft under
@@ -67,32 +67,32 @@ tema$axis.title.y$angle=0
 # (Merk: Me set den ytre margen til 3 punkt
 # opp og nede i staden for 0 punkt for å sikra at at
 # kantane på alle bokstavane alltid vert med.)
-tema$axis.title.y$margin=margin(r=tema$text$size/2)
-tema$axis.title.x$margin=margin(t=tema$text$size/2)
-tema$plot.margin=margin(3, 3, 3, 3)
+# tema$axis.title.y$margin=margin(r=tema$text$size/2)
+# tema$axis.title.x$margin=margin(t=tema$text$size/2)
+# tema$plot.margin=margin(3, 3, 3, 3)
 
 # Bruk temaet som standardtema
-theme_set(tema)
+#theme_set(tema)
 
 # Fjern vannrette eller loddrette rutenett
 # ved førespurnad
-fjern_x = theme(panel.grid.major.x = element_blank(),
-                panel.grid.minor.x = element_blank())
-fjern_y = theme(panel.grid.major.y = element_blank(),
-                panel.grid.minor.y = element_blank())
+# fjern_x = theme(panel.grid.major.x = element_blank(),
+#                 panel.grid.minor.x = element_blank())
+# fjern_y = theme(panel.grid.major.y = element_blank(),
+#                 panel.grid.minor.y = element_blank())
 
 # Fjern strekmarkeringar for viste tal/kategoriar
 # (tilsvarer «major breaks» på aksen).
 # Dette er nyttig for søylediagram med kategoriske
 # verdiar, der strekmarkeringane er unødvendige/stygge.
-fjern_x_ticks = theme(axis.ticks.x = element_blank())
-fjern_y_ticks = theme(axis.ticks.y = element_blank())
+#fjern_x_ticks = theme(axis.ticks.x = element_blank())
+#fjern_y_ticks = theme(axis.ticks.y = element_blank())
 
 # Søyler skal i starta heilt inn til aksen, men ha litt luft
 # over seg, altså asymmetriske expand-verdiar. Her er ein
 # variabel som definerer dette, og som ein kan mata til
 # expand-argumentet til skaladefinisjonar.
-expand_soyle = expansion(mult = c(0.0, .05), add = 0)
+#expand_soyle = expansion(mult = c(0.0, .05), add = 0)
 
 # Funksjon for å rekna ut rimeleg høgd på figurar
 # som har vassrette stolpediagram
@@ -375,36 +375,11 @@ shiny::dateRangeInput(
                                ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
                 ggplot2::geom_bar(stat="count", show.legend = FALSE)
             } ,        #  2 REINNLEGGELSE    output$reinnpl
-<<<<<<< HEAD
-            "KI3" =  {      #  3 komplikasjonar
-d_kompl_graf = d_kompl %>%
-dplyr::filter(!is.na(`6U_KomplAlvorGrad`)) %>%
-dplyr::count(`6U_KomplAlvorGrad`) %>%
-dplyr::mutate(kompl_grad_tekst = factor(`6U_KomplAlvorGrad`,
-levels=rev(c(1:4,6:7,5)),
-labels=rev(c("Grad I: Ingen tiltak",
-"Grad II: Farmakologiske tiltak",
-"Grad IIIa: Intervensjon uten narkose",
-"Grad IIIb: Intervensjon i narkose",
-"Grad IVa: Intensivbehandling med eitt sviktande organ",
-"Grad IVb: Intensivbehandling med meir enn eitt sviktande organ",
-"Grad V: Død"))))
-
-ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x=kompl_grad_tekst, y=n))+
- ggplot2::geom_bar(stat="identity", fill=colPrim[3], width = 2/3) +
-  ggplot2::coord_flip()},
-  # scale_y_continuous(breaks=sett_avkutningspunkt_bredde(5),
-                     # expand = expansion(mult = c(0, .05))) +
-  # scale_x_discrete(drop = FALSE) +
-  # xlab(NULL) + ylab("Talet på pasienter") +
-  # coord_flip() + fjern_y + fjern_y_ticks +
-  # theme(panel.grid.minor.x = element_blank())
-=======
             "KI3" =  { #  3 KOMPLIKASJONAR
 d_kompl_graf = d_kompl %>%
  dplyr::filter(!is.na(`6U_KomplAlvorGrad`)) %>%
  dplyr::count(`6U_KomplAlvorGrad`) %>%
- dplyr::mutate(kompl_grad_tekst = 
+ dplyr::mutate(kompl_grad_tekst =
  factor(`6U_KomplAlvorGrad`,
  levels=rev(c(1:4,6:7,5)),
  labels=rev(c("Grad I: Ingen tiltak",
@@ -415,16 +390,15 @@ d_kompl_graf = d_kompl %>%
               "Grad IVb: Intensivbehandling med meir enn eitt sviktande organ",
               "Grad V: Død"))))
 
- ggplot(d_kompl_graf, aes(x=kompl_grad_tekst, y=n))+
-   geom_bar(stat="identity", fill=colPrim[3], width = 2/3) +
-   scale_y_continuous(breaks=sett_avkutningspunkt_bredde(5),
-                     expand = expansion(mult = c(0, .05))) +
-  scale_x_discrete(drop = FALSE) +
-  xlab(NULL) + ylab("Talet på pasienter") +
-   coord_flip() + fjern_y + fjern_y_ticks +
-   theme(panel.grid.minor.x = element_blank())},
->>>>>>> 081485f307bcf689ae22a96910f3020ae2de58c8
-
+ ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x=kompl_grad_tekst, y=n))+
+   ggplot2::geom_bar(stat="identity", fill=colPrim[3], width = 2/3) +
+   ggplot2::coord_flip()},
+  #  scale_y_continuous(breaks=sett_avkutningspunkt_bredde(5),
+  #                    expand = expansion(mult = c(0, .05))) +
+  # scale_x_discrete(drop = FALSE) +
+  # xlab(NULL) + ylab("Talet på pasienter") +
+  #  coord_flip() + fjern_y + fjern_y_ticks +
+  #  theme(panel.grid.minor.x = element_blank())},
             "KI4" =  runif,        #  4  1 årskontrollar i normtid
             "KI5" =  rexp,         #  5  2 årskontrollar i normtid
             "KI6" =  rnorm)        #  6   del %TWL >= 20
