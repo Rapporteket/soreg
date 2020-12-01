@@ -201,8 +201,15 @@ shiny::checkboxGroupInput(
       choices =   unique(d_full$Operasjonsmetode),  #c(1,6),
       selected = 6) # 6 = sleeve
     # conditional buttons?       this should appear iff op_tech == 1
-
 })
+
+output$uc_dates <- renderUI({
+shiny::dateRangeInput(
+     inputId = "dato_iv",
+     label = "Operasjonsinterval?",
+     start = min(d_full$Operasjonsdato), end = max(d_full$Operasjonsdato)),
+})
+
   # lgdgn stats::
   # Viss nokon har *veldig* mange liggedøgn, vert
   # grafen uoversiktleg. Avgrensa derfor talet på

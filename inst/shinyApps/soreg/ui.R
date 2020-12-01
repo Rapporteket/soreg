@@ -46,10 +46,7 @@ tabPanel("KI",
 	    choices = c(1,2),
 	    selected = 1) ) , # One anastomosis gastric bypass
  	    #  GBP  GS  OAGB
-   shiny::dateRangeInput(
-     inputId = "dato_iv",
-            label = "Operasjonsinterval?",
-            start = "2018-01-01", end = "2020-12-31"),
+	shiny::uiOutput("uc_dates"),	
           shiny::selectInput(
             inputId = "vrb",
             label = "Variabel:",
