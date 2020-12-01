@@ -11,6 +11,5 @@
 snitt <- function(df, sh, yr) {df %>%
   dplyr::filter(.data$OperererendeSykehus %in% .env$sh, .data$op_aar %in% .env$yr)}
 
-# OperererendeSykehus <- op_aar <- NULL
 
 
