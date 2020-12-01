@@ -47,11 +47,11 @@ tabPanel("KI",
 	    selected = 1) ) , # One anastomosis gastric bypass
  	    #  GBP  GS  OAGB
 	shiny::uiOutput("uc_dates"),	
-          shiny::selectInput(
+          shiny::selectInput(  # optional
             inputId = "vrb",
             label = "Variabel:",
             choices = c("BR_BMI", "PasientAlder")),
-          shiny::sliderInput(
+          shiny::sliderInput(  # optional
             inputId = "bn",
             label = "Antall grupper:",
             min = 1, max = 10, value = 5
