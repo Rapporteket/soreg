@@ -157,17 +157,17 @@ server <- function(input, output, session) {
     htmlRenderRmd("veiledning.Rmd")
   })
 
-  #-----------------------------------------------------# years in data -------80
-  output$uc_sh <- shiny::renderUI({
-    shinyWidgets::pickerInput(
-      inputId = "sh",
-      label = "velg sjukehus",
-      choices = (unique(d_full$OperererendeSykehus)),
-      selected = "Testsjukhus Norge",
-      multiple = TRUE,
-      options = shinyWidgets::pickerOptions(actionsBox = TRUE,
-                                            title = "Please select a hospital",
-                                            header = "This is a list of hospitals"))
+#-----------------------------------------------------# years in data -------80
+output$uc_sh <- shiny::renderUI({
+  shinyWidgets::pickerInput(
+    inputId = "sh",
+    label = "velg sjukehus",
+    choices = (unique(d_full$OperererendeSykehus)),
+    selected = "Testsjukhus Norge",
+    multiple = TRUE,
+    options = shinyWidgets::pickerOptions(actionsBox = TRUE,
+                                  title = "Please select a hospital",
+                                  header = "This is a list of hospitals"))
   })
 
   output$uc_years <- renderUI({
@@ -185,24 +185,29 @@ server <- function(input, output, session) {
       choices = years,
       selected = 2017:2018)
   })
+  
+  output$uc_prim <- renderUI({
+     shiny::checkboxGroupInput(
+      inputId = "prim",
+      label = "Revisjonsoperasjon ?",
+      choices = unique(d_full$op_primar),
+      selected = 0)
+  })
+  
   output$uc_opr <- renderUI({
-    # shiny::checkboxGroupInput(
-    #   inputId = "prim",
-    #   label = "Revisjonsoperasjon ?",
-    #   choices = unique(d_full$op_primar),
-    #   selected = 0)
-    shiny::checkboxGroupInput(
+     shiny::checkboxGroupInput(
       inputId = "op_tech",
       label = "Operasjonsteknikk",
       choices =   unique(d_full$Operasjonsmetode),  #c(1,6),
       selected = 6)   # 6 = sleeve
     # conditional buttons?
     #  this should only appear iff op_tech == 1
-    # shiny::checkboxGroupInput(
-    #   inputId = "GB_tech",  # skal bare eksistere omm op_tech==1
-    #   label = "OA GBP",
-    #   choices = c(1,2),
-    #   selected = 1)  # One anastomosis gastric bypass
+    shiny::conditionalPanel(
+      condition = "input.op_tech == 1",  # skal bare eksistere omm op_tech==1
+	shiny::checkboxGroupInput(
+      label = "OA GBP",
+      choices = c(1,2),
+      selected = 1) )  # One anastomosis gastric bypass
   })
   # lgdgn stats::
   # Viss nokon har *veldig* mange liggedøgn, vert

@@ -36,6 +36,7 @@ tabPanel("KI",
     choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6")),
     shiny::uiOutput("uc_sh"),
     shiny::uiOutput("uc_years"),
+	shiny::uiOutput("uc_prim"),
     shiny::uiOutput("uc_opr"),
  	    #  GBP  GS  OAGB
    shiny::dateRangeInput(
@@ -54,7 +55,7 @@ tabPanel("KI",
         mainPanel(width = 9,
           shiny::tabsetPanel(
             shiny::tabPanel("Figur", shiny::plotOutput("graf")),  # lggpl  virker
-            shiny::tabPanel("Tabell", shiny::htmlOutput("DT")) ),
+            shiny::tabPanel("Tabell", shiny::htmlOutput("DT")) )
             # shiny::tabPanel(" txt",shiny::textOutput("QI")) )
 			)
       #                tabPanel("graf", plotOutput("lggpl")),
