@@ -13,6 +13,7 @@ server <- function(input, output, session) {
 #----------------------------------------------------------------------------80
   # Faste verdier for applikasjonen
   registry_name <- "soreg"
+
   # Last inn data
   # Legg til info om operasjonsår og primæroperasjon
   d_full <- soreg::get_arsrp("soreg")
@@ -207,7 +208,7 @@ output$uc_dates <- renderUI({
 shiny::dateRangeInput(
      inputId = "dato_iv",
      label = "Operasjonsinterval?",
-     start = min(d_full$Operasjonsdato), end = max(d_full$Operasjonsdato)),
+     start = min(d_full$Operasjonsdato), end = max(d_full$Operasjonsdato))
 })
 
   # lgdgn stats::
@@ -283,22 +284,23 @@ shiny::dateRangeInput(
                                ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
                 ggplot2::geom_bar(stat="count", show.legend = FALSE)
             } ,        #  2 REINNLEGGELSE    output$reinnpl
-            "KI3" =  rexp ,         #  3 komplikasjonar
-# d_kompl_graf = d_kompl %>%
-  # filter(!is.na(`6U_KomplAlvorGrad`)) %>%
-  # count(`6U_KomplAlvorGrad`) %>%
-  # mutate(kompl_grad_tekst = factor(`6U_KomplAlvorGrad`,
-                                   # levels=rev(c(1:4,6:7,5)),
-                                   # labels=rev(c("Grad I: Ingen tiltak",
-                                            # "Grad II: Farmakologiske tiltak",
-                                            # "Grad IIIa: Intervensjon uten narkose",
-                                            # "Grad IIIb: Intervensjon i narkose",
-                                            # "Grad IVa: Intensivbehandling med eitt sviktande organ",
-                                            # "Grad IVb: Intensivbehandling med meir enn eitt sviktande organ",
-                                            # "Grad V: Død"))))
+            "KI3" =  {      #  3 komplikasjonar
+d_kompl_graf = d_kompl %>%
+dplyr::filter(!is.na(`6U_KomplAlvorGrad`)) %>%
+dplyr::count(`6U_KomplAlvorGrad`) %>%
+dplyr::mutate(kompl_grad_tekst = factor(`6U_KomplAlvorGrad`,
+levels=rev(c(1:4,6:7,5)),
+labels=rev(c("Grad I: Ingen tiltak",
+"Grad II: Farmakologiske tiltak",
+"Grad IIIa: Intervensjon uten narkose",
+"Grad IIIb: Intervensjon i narkose",
+"Grad IVa: Intensivbehandling med eitt sviktande organ",
+"Grad IVb: Intensivbehandling med meir enn eitt sviktande organ",
+"Grad V: Død"))))
 
-# ggplot(d_kompl_graf, aes(x=kompl_grad_tekst, y=n))+
-  # geom_bar(stat="identity", fill=colPrim[3], width = 2/3) +
+ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x=kompl_grad_tekst, y=n))+
+ ggplot2::geom_bar(stat="identity", fill=colPrim[3], width = 2/3) +
+  ggplot2::coord_flip()},
   # scale_y_continuous(breaks=sett_avkutningspunkt_bredde(5),
                      # expand = expansion(mult = c(0, .05))) +
   # scale_x_discrete(drop = FALSE) +
