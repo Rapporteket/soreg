@@ -21,6 +21,7 @@ Imports:
     DT,
     dplyr,
     kableExtra,
+    lubridate,
     magrittr,
     rapbase,
     raplog,
