@@ -7,7 +7,7 @@
 grafikk()
 }
 \value{
-settings
+colPrim
 }
 \description{
 Graphics settings
