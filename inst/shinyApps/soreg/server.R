@@ -11,6 +11,7 @@ library(lubridate)
 
 server <- function(input, output, session) {
 grafikk()
+  colPrim=c("#000059", "#084594", "#2171b5", "#4292c6")  #skal til graf_innst
 #------------------ lagning av datatabeller     --------------------------   80
 # Faste verdier for applikasjonen
 registry_name <- "soreg"
@@ -32,7 +33,7 @@ d_kortligg_sjuk <- d_prim_6v %>%
  dplyr::arrange(desc(ind)) %>% dplyr::ungroup()
 #----------------------------------------------------------------------------80
 kortligg    <- function(sh, yr){
-d_kortligg_sjuk %>% 
+d_kortligg_sjuk %>%
 dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 # kortligg <- snitt(d_kortligg_sjuk, sh, yr)
 
@@ -55,14 +56,14 @@ d_innlegg30 <- d_reinn %>%
  dplyr::group_by(OperererendeSykehus, op_aar) %>%
  dplyr::do(soreg::ki_30dager(.)) %>%
  dplyr::arrange(desc(ind))
- 
+
 innl30 <- function(sh,yr){d_innlegg30 %>%
  dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 # innl30 <- snitt(d_innlegg30, sh, yr)
 
 # KI3 KOMPLIKASJONAR
 # Tilsvarande for alvorlege komplikasjonar
-d_kompl <- d_prim %>% 
+d_kompl <- d_prim %>%
 dplyr::filter((`6U_KontrollType` %in% 1:3) | (!is.na(`6U_KomplAlvorGrad`)))
 
 # andel pasienter som får en alvorlig komplikasjon per sjukehus
@@ -71,7 +72,7 @@ d_kompl_alv_sjukehus <- d_kompl %>%
  dplyr::do(soreg::ki_kompl_alv(.)) %>%
  dplyr::arrange(desc(ind))
 
- kompl <- function(sh, yr){d_kompl_alv_sjukehus %>% 
+ kompl <- function(sh, yr){d_kompl_alv_sjukehus %>%
  dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 # kompl <- snitt(d_kompl_alv_sjukehus, sh, yr)
 

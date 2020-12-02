@@ -34,7 +34,7 @@ nitti_m <- function(yr = 1, dag = lubridate::today(), l = 90) {
 #' @return end day of 'normtid'
 #' @export
 
-  nitti_p <- function(yr = 1, dag = lubridate::today(), l = 90) {
+nitti_p <- function(yr = 1, dag = lubridate::today(), l = 90) {
     dag + lubridate::ddays(l) + lubridate::years(yr)
   }
 
