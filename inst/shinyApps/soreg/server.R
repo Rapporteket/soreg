@@ -75,46 +75,17 @@ d_kompl_alv_sjukehus <- d_kompl %>%
  dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 # kompl <- snitt(d_kompl_alv_sjukehus, sh, yr)
 
-# slingringsmonn for aarskontrollar
-####################################################
-# +-90                                             #  slingringsmonn
-  # nitti_m <- function(yr = 1, dag = lubridate::today(), l = 90) {
-    # dag - lubridate::ddays(l) + lubridate::years(yr)
-  # }
-  # nitti_p <- function(yr = 1, dag = lubridate::today(), l = 90) {
-    # dag + lubridate::ddays(l) + lubridate::years(yr)
-  # }
-  # nitti <- function(yr = 1, dag = lubridate::today(), l = 90) {
-    # c(dag - lubridate::ddays(l) + years(yr),
-      # dag + lubridate::ddays(l) + lubridate::years(yr))
-  # }
+# KI4 Årskontroll 1 år 
+# KI5 Årskontroll 2 år
 
-  dmx <- d_full   # alle operasjoner for kontrollene
+ d_aarkrs <- aars_ktrl(d_full)
+ ak1 <- k1(sh, yr)
+ ak2 <- k2(sh, yr)
 
-  dm <- dmx %>%  dplyr::mutate(et_nor_m = nitti_m(dag = Operasjonsdato),
-                               et_nor_p = nitti_p(dag = Operasjonsdato),
-                               to_nor_m = nitti_m(yr = 2, dag= Operasjonsdato),
-                               to_nor_p = nitti_p(yr = 2, dag= Operasjonsdato),
-                               pTWL = 100 * (BR_Vekt - `ToAar_Vekt`)/BR_Vekt )
+# KI6 Del %TWL >= 20
 
-  dn <- dm %>%
-    dplyr::mutate(
-      et_nt = EttAar_Oppfolgingsdato %within% interval(et_nor_m, et_nor_p),
-      to_nt = ToAar_Oppfolgingsdato %within% interval(to_nor_m, to_nor_p),
-      et_b4 = EttAar_Oppfolgingsdato %within%
-        interval( Operasjonsdato+1, et_nor_m-1 ),
-      et_lt = EttAar_Oppfolgingsdato > et_nor_p,
-      to_b4 = ToAar_Oppfolgingsdato %within%
-        interval( Operasjonsdato+1, to_nor_m-1 ),
-      to_lt = ToAar_Oppfolgingsdato > to_nor_p)
-  #----------------------------------------------------------------------------80
-  dt  <-  dn %>%
-    dplyr::select(
-      c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar",
-        "Operasjonsmetode", "Opmetode_GBP",
-        "et_b4", "et_nt", "et_lt", "to_b4",  "to_nt", "to_lt", "pTWL"))
-
-  ##-----------#---------------------------------------------------------------80
+ 
+##-----------#-------------------------------------------------------------- 80
 
   # Gjenbrukbar funksjon for å bearbeide Rmd til html
   htmlRenderRmd <- function(srcFile, params = list()) {
