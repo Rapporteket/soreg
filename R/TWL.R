@@ -8,7 +8,6 @@
 #' @export
 
 TWL <- function(dt){
-# 34567890 ----------------------------------------------------------------- 80
 d_GS    <- dt %>% dplyr::filter(.data$Operasjonsmetode == 6)
 d_RYGBP <- dt %>% dplyr::filter(.data$Operasjonsmetode == 1,
                                 .data$Opmetode_GBP == 1)   # mini = .data$Opmetode_GBP
@@ -17,7 +16,7 @@ d_OAGB  <- dt %>% dplyr::filter(.data$Operasjonsmetode == 1,
 
 d_TWL  <- dt %>% dplyr::filter(.data$Operasjonsmetode %in% c(1, 6)) %>%
                  dplyr::filter(!is.na(.env$TWL)) %>% dplyr::mutate(del20 = .env$TWL >= 20.0)
-# pTWL at 2 year must exist!  to_nt == TRUE
+
 d_slv  <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 6)
 d_gbp  <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
                                   .data$Opmetode_GBP == 1)
@@ -26,7 +25,6 @@ d_oa   <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
 
 detail    <-  function(dmx) {dmx %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar)}
-# shw       <-  function(dmx) {dmx %>% .env$tbl_df %>% rmarkdown::paged_table()}
 
 slv20   <-    detail(d_slv) %>%
  dplyr::summarise("tyve"= sum(.env$del20, na.rm = TRUE),  "ops" = dplyr::n(),
@@ -48,10 +46,6 @@ dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
  dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
                .data$op_aar %in% .env$yr)}
 
-#op_15m   <- dt %>% dplyr::filter(Operasjonsdato<k1_last) %>% dplyr::group_by(.data$OperererendeSykehus) %>%  dplyr::summarise("ops"=n())
-# op_27m   <- dt %>% dplyr::filter(Operasjonsdato<k2_last) %>% dplyr::group_by(.data$OperererendeSykehus) %>%  dplyr::summarise("ops"=n())
-# 34567890 ----------------------------------------------------------------- 80
-#           tb20 tabell for årsrapporten
 tb <-     dt %>% dplyr::group_by(.data$OperererendeSykehus) %>%
                  dplyr::summarise( "to år %TWL"= mean(.env$pTWL, na.rm = TRUE))
 
@@ -64,7 +58,6 @@ tb20toar <- dt %>% dplyr::mutate(del20 = .env$pTWL>=20.0 ) %>%
  dplyr::filter(.env$to_nt)  %>% dplyr::group_by(.data$OperererendeSykehus) %>%
  dplyr::summarise("ops" = dplyr::n(),
                   "del %TWL>=20.0"= mean(.env$del20, na.rm = TRUE))
-
 
 tb20_GS <- .env$d_GS %>% dplyr::mutate(del20= .env$pTWL>=20.0 ) %>%
  dplyr::filter(.env$to_nt) %>% dplyr::group_by(.data$OperererendeSykehus) %>%
@@ -86,7 +79,6 @@ tb20b <- dt %>% dplyr::mutate(del20= .env$TWL>=20.0 ) %>%
  dplyr::mutate(ops = dplyr::n()) %>%
  dplyr::summarise(kt2 = sum(.env$to_nt, na.rm = T)/ .env$ops[1]) }
 
-#--------------------------------------------------------------------------- 80
 #' Pick particular hospitals and years from a data frame
 #'
 #' @param sh hospital
@@ -96,13 +88,11 @@ tb20b <- dt %>% dplyr::mutate(del20= .env$TWL>=20.0 ) %>%
 #'
 #' @export
 
-
-GS20 <- function(sh, yr) {.env$d_GS %>%  dplyr::mutate(del20= .env$pTWL >= 20.0 ) %>%
- dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
-               .data$op_aar %in% .env$yr) %>%
- dplyr::group_by(.data$OperererendeSykehus) %>%
- dplyr::filter(.env$to_nt) %>%
- dplyr::summarise("ops"= dplyr::n(),
+GS20 <- function(sh, yr) {.env$d_GS %>%  dplyr::mutate(del20 = .env$pTWL >= 20.0 ) %>%
+dplyr::filter(.data$OperererendeSykehus %in% .env$sh, .data$op_aar %in% .env$yr) %>%
+dplyr::group_by(.data$OperererendeSykehus) %>%
+dplyr::filter(.env$to_nt) %>%
+dplyr::summarise("ops"= dplyr::n(),
                   "del %TWL>=20.0" = mean(.env$del20, na.rm = TRUE))}
 
 #--------------------------------------------------------------------------- 80
