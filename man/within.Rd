@@ -4,9 +4,9 @@
 \alias{\%within\%}
 \title{Interval inclusion operator}
 \usage{
-expr \%within\% interval
+a \%within\% b
 }
 \description{
-See \code{magrittr::\link[lubridate:within]{\%within\%}} for details.
+See \code{lubridate::\link[lubridate:within]{\%within\%}} for details.
 }
 \keyword{internal}

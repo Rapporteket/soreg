@@ -36,14 +36,14 @@ NULL
 
 #' Interval inclusion operator
 #'
-#' See \code{magrittr::\link[lubridate:within]{\%within\%}} for details.
+#' See \code{lubridate::\link[lubridate:within]{\%within\%}} for details.
 #'
 #' @name %within%
 #' @rdname within
 #' @keywords internal
 #' @export
 #' @importFrom lubridate %within%
-#' @usage expr \%within\% interval
+#' @usage a \%within\% b
 NULL
 
 
