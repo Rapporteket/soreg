@@ -34,6 +34,19 @@ NULL
 #' @usage lhs \%$\% rhs
 NULL
 
+#' Interval inclusion operator
+#'
+#' See \code{magrittr::\link[lubridate:within]{\%within\%}} for details.
+#'
+#' @name %within%
+#' @rdname within
+#' @keywords internal
+#' @export
+#' @importFrom lubridate %within%
+#' @usage expr \%within\% interval
+NULL
+
+
 #' Data pronouns
 #'
 #' See \code{rlang::\link[rlang:tidyeval-data]{.data}} for details
