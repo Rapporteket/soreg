@@ -9,6 +9,7 @@
 [![GitHub open issues](https://img.shields.io/github/issues/rapporteket/soreg.svg)](https://github.com/rapporteket/soreg/issues)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Doc](https://img.shields.io/badge/Doc--grey.svg)](https://rapporteket.github.io/soreg/)
+[![R build status](https://github.com/Rapporteket/soreg/workflows/R-CMD-check/badge.svg)](https://github.com/Rapporteket/soreg/actions)
 <!-- badges: end -->
 
 The goal of soreg is to ...
