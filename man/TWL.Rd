@@ -11,8 +11,6 @@ TWL(dt)
 }
 \value{
 A data frame for choice of hospitals and years
-
-A data frame for choice of hospitals and years
 }
 \description{
 Pick particular hospitals and years from a data frame
