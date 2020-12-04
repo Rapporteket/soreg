@@ -2,13 +2,12 @@ Package: soreg
 Title: soreg at Rapporteket
 Version: 0.0.1.9001
 Authors@R: c(
-    person(given = "Hannu",
-           family = "Lyyjynen",
+    person("Hannu",
+           "Lyyjynen",
            role = c("aut", "cre"),
-           email = "hapu66@gmail.com",
-           comment = c(ORCID = "YOUR-ORCID-ID")),
-    person(given = "Are",
-           family = "Edvardsen",
+           email = "hapu66@gmail.com"),
+    person("Are",
+           "Edvardsen",
            role = c("aut"),
            email = "biorakel@gmail.com",
            comment = c(ORCID = "0000-0002-5210-3656"))
