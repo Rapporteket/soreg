@@ -36,8 +36,6 @@ NULL
 
 #' Interval inclusion operator
 #'
-#' See \code{lubridate::\link[lubridate:within]{\%within\%}} for details.
-#'
 #' @name %within%
 #' @rdname within
 #' @keywords internal

@@ -7,6 +7,6 @@
 a \%within\% b
 }
 \description{
-See \code{lubridate::\link[lubridate:within]{\%within\%}} for details.
+Interval inclusion operator
 }
 \keyword{internal}
