@@ -237,7 +237,10 @@ shiny::dateRangeInput(
                                                d_TWL$Opmetode_GBP == 1)
              d_oa   <- d_TWL %>% dplyr::filter(d_TWL$Operasjonsmetode == 1,
                                                d_TWL$Opmetode_GBP == 2)
-             snitt(d_slv, input$sh, input$aar)
+             dplyr::bind_rows(
+             snitt(d_slv, input$sh, input$aar),
+              snitt(d_gbp, input$sh, input$aar))
+
 
     })                                  #  6   del %TWL >= 20
   })
