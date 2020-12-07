@@ -3,13 +3,11 @@
 
 <!-- badges: start -->
 [![Version](https://img.shields.io/github/v/release/rapporteket/soreg?sort=semver)](https://github.com/rapporteket/soreg/releases)
-[![Travis build status](https://travis-ci.org/Rapporteket/soreg.svg?branch=master)](https://travis-ci.org/Rapporteket/soreg)
-[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/Rapporteket/soreg?branch=master&svg=true)](https://ci.appveyor.com/project/Rapporteket/soreg)
+[![R build status](https://github.com/Rapporteket/soreg/workflows/R-CMD-check/badge.svg)](https://github.com/Rapporteket/soreg/actions)
 [![Codecov test coverage](https://codecov.io/gh/Rapporteket/soreg/branch/master/graph/badge.svg)](https://codecov.io/gh/Rapporteket/soreg?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/rapporteket/soreg.svg)](https://github.com/rapporteket/soreg/issues)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Doc](https://img.shields.io/badge/Doc--grey.svg)](https://rapporteket.github.io/soreg/)
-[![R build status](https://github.com/Rapporteket/soreg/workflows/R-CMD-check/badge.svg)](https://github.com/Rapporteket/soreg/actions)
 <!-- badges: end -->
 
 The goal of soreg is to ...
