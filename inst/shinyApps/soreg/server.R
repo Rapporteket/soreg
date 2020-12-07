@@ -221,20 +221,25 @@ shiny::dateRangeInput(
     switch(input$KIix,
            "KI1" =  snitt(d_kortligg_sjuk, input$sh, input$aar), #  1 LiggeDogn
            "KI2" =  snitt(d_innlegg30, input$sh, input$aar),     #  2 REINNLEGGELSE
-           "KI3" =  snitt(d_kompl_alv_sjukehus, input$sh, input$aar),    #  3 komplikasjonar
-           "KI4" =  # runif,        #  4  1 årskontrollar i normtid
-		            {k <- 1
-					k1 <- aar_ktr_tb(d_full, k)
-					snitt(k1, input$sh, input$aar)
-					},
-           "KI5" =  # rexp,         #  5  2 årskontrollar i normtid
-		            {k <- 2
-					k2 <- aar_ktr_tb(d_full, k)
-					snitt(k2, input$sh, input$aar)
-					},
-           "KI6" =  rnorm)        #  6   del %TWL >= 20
-    # ds(input$n)       # tal trukket fra fordelingen  #  year, hospital
+           "KI3" =  snitt(d_kompl_alv_sjukehus, input$sh, input$aar), #  3 komplikasjonar
+           "KI4" =  {k <- 1                                     #  4  1 årskontrollar i normtid
+					             k1 <- aar_ktr_tb(d_full, k)
+					             snitt(k1, input$sh, input$aar)		},
+           "KI5" =  {k <- 2                                  #  5  2 årskontrollar i normtid
+					            k2 <- aar_ktr_tb(d_full, k)
+					            snitt(k2, input$sh, input$aar)	},
+           "KI6" =  { d_WL <- d_full %>%  dplyr::filter(!is.na(d_full$`ToAar_Vekt`)) %>%
+             dplyr::mutate(pTWL = 100*(d_WL$BR_Vekt - d_WL$`ToAar_Vekt`)/d_WL$BR_Vekt )
+             d_TWL  <- d_WL %>% dplyr::mutate(del20 = d_WL$pTWL >= 20.0)
 
+             d_slv  <- d_TWL %>% dplyr::filter(d_TWL$Operasjonsmetode == 6)
+             d_gbp  <- d_TWL %>% dplyr::filter(d_TWL$Operasjonsmetode == 1,
+                                               d_TWL$Opmetode_GBP == 1)
+             d_oa   <- d_TWL %>% dplyr::filter(d_TWL$Operasjonsmetode == 1,
+                                               d_TWL$Opmetode_GBP == 2)
+             snitt(d_slv, input$sh, input$aar)
+
+    })                                  #  6   del %TWL >= 20
   })
 
   output$DT <-  renderTable({ KI() })
