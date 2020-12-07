@@ -11,7 +11,6 @@ library(lubridate)
 
 server <- function(input, output, session) {
 grafikk()
-  colPrim=c("#000059", "#084594", "#2171b5", "#4292c6")  #skal til graf_innst
 #------------------ lagning av datatabeller     --------------------------   80
 # Faste verdier for applikasjonen
 registry_name <- "soreg"
@@ -76,16 +75,17 @@ d_kompl_alv_sjukehus <- d_kompl %>%
  dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 # kompl <- snitt(d_kompl_alv_sjukehus, sh, yr)
 
-# KI4 Årskontroll 1 år 
+# KI4 Årskontroll 1 år
 # KI5 Årskontroll 2 år
 
- d_aarkrs <- aars_ktrl(d_full)
- ak1 <- k1(sh, yr)
- ak2 <- k2(sh, yr)
+# d_aarkrs <- aar_ktr_tb(d_full, k = 2)
+
+# ak1 <- k1(sh, yr)
+# ak2 <- k2(sh, yr)
 
 # KI6 Del %TWL >= 20
 
- 
+
 ##-----------#-------------------------------------------------------------- 80
 
   # Gjenbrukbar funksjon for å bearbeide Rmd til html
@@ -222,8 +222,16 @@ shiny::dateRangeInput(
            "KI1" =  snitt(d_kortligg_sjuk, input$sh, input$aar), #  1 LiggeDogn
            "KI2" =  snitt(d_innlegg30, input$sh, input$aar),     #  2 REINNLEGGELSE
            "KI3" =  snitt(d_kompl_alv_sjukehus, input$sh, input$aar),    #  3 komplikasjonar
-           "KI4" =  runif,        #  4  1 årskontrollar i normtid
-           "KI5" =  rexp,         #  5  2 årskontrollar i normtid
+           "KI4" =  # runif,        #  4  1 årskontrollar i normtid
+		            {k <- 1
+					k1 <- aar_ktr_tb(df, k)
+					snitt(k1, input$sh, input$aar)
+					},
+           "KI5" =  # rexp,         #  5  2 årskontrollar i normtid
+		            {k <- 2
+					k1 <- aar_ktr_tb(df, k)
+					snitt(k1, input$sh, input$aar)
+					},
            "KI6" =  rnorm)        #  6   del %TWL >= 20
     # ds(input$n)       # tal trukket fra fordelingen  #  year, hospital
 

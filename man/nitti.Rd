@@ -2,7 +2,7 @@
 % Please edit documentation in R/snitt.R
 \name{nitti}
 \alias{nitti}
-\title{slingringsmonn for aarskontrollar, minus}
+\title{slingringsmonn for aarskontrollar, interval}
 \usage{
 nitti(yr = 1, dag = lubridate::today(), l = 90)
 }
@@ -17,5 +17,5 @@ nitti(yr = 1, dag = lubridate::today(), l = 90)
 interval of 'normtid'
 }
 \description{
-slingringsmonn for aarskontrollar, minus
+slingringsmonn for aarskontrollar, interval
 }
