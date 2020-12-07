@@ -224,13 +224,13 @@ shiny::dateRangeInput(
            "KI3" =  snitt(d_kompl_alv_sjukehus, input$sh, input$aar),    #  3 komplikasjonar
            "KI4" =  # runif,        #  4  1 årskontrollar i normtid
 		            {k <- 1
-					k1 <- aar_ktr_tb(df, k)
+					k1 <- aar_ktr_tb(d_full, k)
 					snitt(k1, input$sh, input$aar)
 					},
            "KI5" =  # rexp,         #  5  2 årskontrollar i normtid
 		            {k <- 2
-					k1 <- aar_ktr_tb(df, k)
-					snitt(k1, input$sh, input$aar)
+					k2 <- aar_ktr_tb(d_full, k)
+					snitt(k2, input$sh, input$aar)
 					},
            "KI6" =  rnorm)        #  6   del %TWL >= 20
     # ds(input$n)       # tal trukket fra fordelingen  #  year, hospital
