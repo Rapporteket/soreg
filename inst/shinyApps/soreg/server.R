@@ -26,15 +26,17 @@ d_prim <- d_full %>% dplyr::filter(op_primar)
 d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
 
 # KI1 LIGGEDØGN  ---#----- Kor mange låg mindre enn fire døgn per sjukehus
-d_kortligg_sjuk <- d_prim_6v %>%
- dplyr::group_by(OperererendeSykehus, op_aar) %>%
- dplyr::do(soreg::ki_liggetid(.)) %>%
- dplyr::arrange(desc(ind)) %>% dplyr::ungroup()
-#----------------------------------------------------------------------------80
-kortligg    <- function(sh, yr){
-d_kortligg_sjuk %>%
-dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+# d_kortligg_sjuk <- d_prim_6v %>%
+#  dplyr::group_by(OperererendeSykehus, op_aar) %>%
+#  dplyr::do(soreg::ki_liggetid(.)) %>%
+#  dplyr::arrange(desc(ind)) %>% dplyr::ungroup()
+# #----------------------------------------------------------------------------80
+# kortligg    <- function(sh, yr){
+# d_kortligg_sjuk %>%
+# dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 # kortligg <- snitt(d_kortligg_sjuk, sh, yr)
+
+d_kortligg_sjuk <- lgg_tb(d_prim_6v)
 
 # KI2 REINNLEGGELSE
 # I analysar for reinnlegging ser me berre på dei som har 6-vekesoppfølging
@@ -43,38 +45,38 @@ dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 # indikatoren i årsrapporten). Hentar ut eiga datasett for desse. Men det
 # viser seg at det òg er mogleg å svara «Vet ikke» (verdi 2) på om pasienten
 # vart reinnlagd. Desse gjev ingen informasjon, og vert derfor òg fjerna.
-d_reinn <- d_prim %>% dplyr::filter(((`6U_KontrollType` %in% 1:3) |
-                                     (`6U_Behandling30Dager` == 1)) &
-                                     (`6U_Behandling30Dager` != 2))
+# d_reinn <- d_prim %>% dplyr::filter(((`6U_KontrollType` %in% 1:3) |
+#                                      (`6U_Behandling30Dager` == 1)) &
+#                                      (`6U_Behandling30Dager` != 2))
 
-
+d_innlegg30 <- reinn_tb(d_prim)
 #----------------------------------------------------------------------------80
 # andel pasienter som får innleggelse innen 30 dager etter operasjon
 # per sjukehus
-d_innlegg30 <- d_reinn %>%
- dplyr::group_by(OperererendeSykehus, op_aar) %>%
- dplyr::do(soreg::ki_30dager(.)) %>%
- dplyr::arrange(desc(ind))
+# d_innlegg30 <- d_reinn %>%
+#  dplyr::group_by(OperererendeSykehus, op_aar) %>%
+#  dplyr::do(soreg::ki_30dager(.)) %>%
+#  dplyr::arrange(desc(ind))
 
-innl30 <- function(sh,yr){d_innlegg30 %>%
- dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+#innl30 <- function(sh,yr){d_innlegg30 %>%
+# dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 # innl30 <- snitt(d_innlegg30, sh, yr)
 
 # KI3 KOMPLIKASJONAR
 # Tilsvarande for alvorlege komplikasjonar
-d_kompl <- d_prim %>%
-dplyr::filter((`6U_KontrollType` %in% 1:3) | (!is.na(`6U_KomplAlvorGrad`)))
-
-# andel pasienter som får en alvorlig komplikasjon per sjukehus
-d_kompl_alv_sjukehus <- d_kompl %>%
- dplyr::group_by(OperererendeSykehus, op_aar) %>%
- dplyr::do(soreg::ki_kompl_alv(.)) %>%
- dplyr::arrange(desc(ind))
-
- kompl <- function(sh, yr){d_kompl_alv_sjukehus %>%
- dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
+# d_kompl <- d_prim %>%
+# dplyr::filter((`6U_KontrollType` %in% 1:3) | (!is.na(`6U_KomplAlvorGrad`)))
+# 
+# # andel pasienter som får en alvorlig komplikasjon per sjukehus
+# d_kompl_alv_sjukehus <- d_kompl %>%
+#  dplyr::group_by(OperererendeSykehus, op_aar) %>%
+#  dplyr::do(soreg::ki_kompl_alv(.)) %>%
+#  dplyr::arrange(desc(ind))
+# 
+#  kompl <- function(sh, yr){d_kompl_alv_sjukehus %>%
+#  dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 # kompl <- snitt(d_kompl_alv_sjukehus, sh, yr)
-
+ d_kompl_alv_sjukehus <- kompl_tb(d_prim)
 # KI4 Årskontroll 1 år
 # KI5 Årskontroll 2 år
 
@@ -228,15 +230,7 @@ shiny::dateRangeInput(
            "KI5" =  {k <- 2                                  #  5  2 årskontrollar i normtid
 					            k2 <- aar_ktr_tb(d_full, k)
 					            snitt(k2, input$sh, input$aar)	},
-           "KI6" =  { d_WL <- d_full %>%  dplyr::filter(!is.na(d_full$`ToAar_Vekt`)) %>%
-             dplyr::mutate(pTWL = 100*(d_WL$BR_Vekt - d_WL$`ToAar_Vekt`)/d_WL$BR_Vekt )
-             d_TWL  <- d_WL %>% dplyr::mutate(del20 = d_WL$pTWL >= 20.0)
-
-             d_slv  <- d_TWL %>% dplyr::filter(d_TWL$Operasjonsmetode == 6)
-             d_gbp  <- d_TWL %>% dplyr::filter(d_TWL$Operasjonsmetode == 1,
-                                               d_TWL$Opmetode_GBP == 1)
-             d_oa   <- d_TWL %>% dplyr::filter(d_TWL$Operasjonsmetode == 1,
-                                               d_TWL$Opmetode_GBP == 2)
+           "KI6" =  { TWL_tb(d_full)
              dplyr::bind_rows(
              snitt(d_slv, input$sh, input$aar),
               snitt(d_gbp, input$sh, input$aar),
