@@ -117,8 +117,8 @@ kompl_tb <- function(df) {df <- df %>%
                  (!is.na(.data$`6U_KomplAlvorGrad`)))
 df  %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
- dplyr::do(soreg::ki(., "ki_kompl_alv")) %>%
- dplyr::arrange(desc(ind))
+ dplyr::do(soreg::ki(.data$., "ki_kompl_alv")) %>%
+ dplyr::arrange(dplyr::desc(indicator))
 }
 
 
@@ -189,7 +189,6 @@ df %>%
 #----------------------------------------------------------------------------80
 #' lage vekttaptabell
 #' @param df data frame
-#' @param k which year control
 #' @return df data frame grouped by year and hospital
 #' @export
 
@@ -212,8 +211,7 @@ TWL_tb <- function(df){  # d_full
 }
 
 #' lage vekttapdetaljer
-#' @param df data frame
-#' @param k which year control
+#' @param dm data frame
 #' @return df data frame grouped by year and hospital
 #' @export
 

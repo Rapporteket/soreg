@@ -7,9 +7,7 @@
 detail(dm)
 }
 \arguments{
-\item{df}{data frame}
-
-\item{k}{which year control}
+\item{dm}{data frame}
 }
 \value{
 df data frame grouped by year and hospital
