@@ -10,7 +10,7 @@
 
 ki <- function(df, indicator) {
 
-  stopifnot(indicator %in% c("liggetid", "kompl", "dag30"))
+  stopifnot(indicator %in% c("liggetid", "kompl", "dag30", "TWL20"))
 
   numerator <- switch (indicator,
     liggetid = sum(df$LiggeDogn <= 3),

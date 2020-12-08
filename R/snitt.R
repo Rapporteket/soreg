@@ -54,7 +54,7 @@ snitt <- function(df, sh, yr) {df %>%
 lgg_tb <- function(df) { df %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
  dplyr::do(soreg::ki(., "liggetid")) %>%          # sjekk ki(.,)
- dplyr::arrange(dplyr::desc(ind)) %>% dplyr::ungroup()  # ungroup er bra?
+ dplyr::arrange(dplyr::desc(indicator)) %>% dplyr::ungroup()  # ungroup er bra?
 }
 
   # # KI1 LIGGEDØGN  ---#----- Kor mange låg mindre enn fire døgn per sjukehus
@@ -80,7 +80,7 @@ reinn_tb <- function(df)  {df <- df %>%
                   (.data$`6U_Behandling30Dager` != 2))
 df %>%   dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
   dplyr::do(soreg::ki(., "dag30")) %>%
-  dplyr::arrange(dplyr::desc(ind))
+  dplyr::arrange(dplyr::desc(indicator))
 }
 
 # KI2 REINNLEGGELSE
