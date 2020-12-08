@@ -79,7 +79,7 @@ reinn_tb <- function(df)  {df <- df %>%
                    (.data$`6U_Behandling30Dager` == 1)) &
                   (.data$`6U_Behandling30Dager` != 2))
 df %>%   dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-  dplyr::do(soreg::ki(., "30dager")) %>%
+  dplyr::do(soreg::ki(., "dag30")) %>%
   dplyr::arrange(dplyr::desc(ind))
 }
 
@@ -117,7 +117,7 @@ kompl_tb <- function(df) {df <- df %>%
                  (!is.na(.data$`6U_KomplAlvorGrad`)))
 df  %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
- dplyr::do(soreg::ki(.data$., "ki_kompl_alv")) %>%
+ dplyr::do(soreg::ki(.data$., "kompl")) %>%
  dplyr::arrange(dplyr::desc(indicator))
 }
 
