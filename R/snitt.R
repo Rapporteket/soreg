@@ -53,7 +53,7 @@ snitt <- function(df, sh, yr) {df %>%
 
 lgg_tb <- function(df) { df %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
- dplyr::do(soreg::ki(., "liggetid")) %>%          # sjekk ki(.,)
+ soreg::ki(across(), "liggetid") %>%          # sjekk ki(.,)
  dplyr::arrange(dplyr::desc(indicator)) %>% dplyr::ungroup()  # ungroup er bra?
 }
 
@@ -79,7 +79,7 @@ reinn_tb <- function(df)  {df <- df %>%
                    (.data$`6U_Behandling30Dager` == 1)) &
                   (.data$`6U_Behandling30Dager` != 2))
 df %>%   dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-  dplyr::do(soreg::ki(., "dag30")) %>%
+  soreg::ki(dplyr::across(), "dag30") %>%
   dplyr::arrange(dplyr::desc(indicator))
 }
 
@@ -117,7 +117,7 @@ kompl_tb <- function(df) {df <- df %>%
                  (!is.na(.data$`6U_KomplAlvorGrad`)))
 df  %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
- dplyr::do(soreg::ki(.data$., "kompl")) %>%
+ soreg::ki(dplyr::across(), "kompl")) %>%
  dplyr::arrange(dplyr::desc(indicator))
 }
 

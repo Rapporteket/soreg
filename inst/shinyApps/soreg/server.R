@@ -7,6 +7,7 @@ library(lubridate)
 # library(tibble)
 # library(DT)
 # library(dplyr)
+
 # library(rapbase)
 
 server <- function(input, output, session) {
@@ -66,13 +67,13 @@ d_innlegg30 <- reinn_tb(d_prim)
 # Tilsvarande for alvorlege komplikasjonar
 # d_kompl <- d_prim %>%
 # dplyr::filter((`6U_KontrollType` %in% 1:3) | (!is.na(`6U_KomplAlvorGrad`)))
-# 
+#
 # # andel pasienter som får en alvorlig komplikasjon per sjukehus
 # d_kompl_alv_sjukehus <- d_kompl %>%
 #  dplyr::group_by(OperererendeSykehus, op_aar) %>%
 #  dplyr::do(soreg::ki_kompl_alv(.)) %>%
 #  dplyr::arrange(desc(ind))
-# 
+#
 #  kompl <- function(sh, yr){d_kompl_alv_sjukehus %>%
 #  dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
 # kompl <- snitt(d_kompl_alv_sjukehus, sh, yr)

@@ -2,7 +2,7 @@
 #'
 #' @param df Data frame holding SoReg data
 #' @param indicator Character string defining the indicator to be returned.
-#' One of "liggetid", "kompl" or "dag30"
+#' One of "liggetid", "kompl", "dag30" or "TWL20"
 #'
 #' @return A tibble providing the numerator (cases), denominator (sample size)
 #' and the indicator
