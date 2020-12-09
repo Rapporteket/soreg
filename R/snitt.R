@@ -171,16 +171,3 @@ detail <- function(dm){ dm %>%
                   "minst20" = mean(.data$del20, na.rm = TRUE))
 }
 
-# detail    <-  function(dmx) {dmx %>%
-#     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar)}
-# # shw       <-  function(dmx) {dmx %>% .env$tbl_df %>% rmarkdown::paged_table()}
-#
-# slv20   <-    detail(d_slv) %>%
-#   dplyr::summarise("tyve"= sum(.env$del20, na.rm = TRUE),  "ops" = dplyr::n(),
-#                    "minst20" = mean(.env$del20, na.rm = TRUE))
-# gbp20   <-    detail(d_gbp) %>%
-#   dplyr::summarise("tyve"= sum(.env$del20, na.rm = TRUE),  "ops" = dplyr::n(),
-#                    "minst20" = mean(.env$del20, na.rm = TRUE))
-# oa20   <-    detail(d_oa)  %>%
-#   dplyr::summarise("tyve"= sum(.env$del20, na.rm = TRUE),  "ops" = dplyr::n(),
-#                    "minst20" = mean(.env$del20, na.rm = TRUE))

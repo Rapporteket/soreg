@@ -11,7 +11,8 @@ library(lubridate)
 # library(rapbase)
 
 server <- function(input, output, session) {
-grafikk()
+grafikk()    # virker ikke?
+  colPrim<-c("#000059","#084594","#2171b5")
 #------------------ lagning av datatabeller     --------------------------   80
 # Faste verdier for applikasjonen
 registry_name <- "soreg"
@@ -27,15 +28,6 @@ d_prim <- d_full %>% dplyr::filter(op_primar)
 d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
 
 # KI1 LIGGEDØGN  ---#----- Kor mange låg mindre enn fire døgn per sjukehus
-# d_kortligg_sjuk <- d_prim_6v %>%
-#  dplyr::group_by(OperererendeSykehus, op_aar) %>%
-#  dplyr::do(soreg::ki_liggetid(.)) %>%
-#  dplyr::arrange(desc(ind)) %>% dplyr::ungroup()
-# #----------------------------------------------------------------------------80
-# kortligg    <- function(sh, yr){
-# d_kortligg_sjuk %>%
-# dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
-# kortligg <- snitt(d_kortligg_sjuk, sh, yr)
 
 d_kortligg_sjuk <- lgg_tb(d_prim_6v)
 
@@ -54,37 +46,16 @@ d_innlegg30 <- reinn_tb(d_prim)
 #----------------------------------------------------------------------------80
 # andel pasienter som får innleggelse innen 30 dager etter operasjon
 # per sjukehus
-# d_innlegg30 <- d_reinn %>%
-#  dplyr::group_by(OperererendeSykehus, op_aar) %>%
-#  dplyr::do(soreg::ki_30dager(.)) %>%
-#  dplyr::arrange(desc(ind))
-
-#innl30 <- function(sh,yr){d_innlegg30 %>%
-# dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
-# innl30 <- snitt(d_innlegg30, sh, yr)
 
 # KI3 KOMPLIKASJONAR
 # Tilsvarande for alvorlege komplikasjonar
-# d_kompl <- d_prim %>%
-# dplyr::filter((`6U_KontrollType` %in% 1:3) | (!is.na(`6U_KomplAlvorGrad`)))
+ d_kompl <- d_prim %>%
+ dplyr::filter((`6U_KontrollType` %in% 1:3) | (!is.na(`6U_KomplAlvorGrad`)))
 #
 # # andel pasienter som får en alvorlig komplikasjon per sjukehus
-# d_kompl_alv_sjukehus <- d_kompl %>%
-#  dplyr::group_by(OperererendeSykehus, op_aar) %>%
-#  dplyr::do(soreg::ki_kompl_alv(.)) %>%
-#  dplyr::arrange(desc(ind))
-#
-#  kompl <- function(sh, yr){d_kompl_alv_sjukehus %>%
-#  dplyr::filter(OperererendeSykehus %in% sh, op_aar %in% yr)}
-# kompl <- snitt(d_kompl_alv_sjukehus, sh, yr)
- d_kompl_alv_sjukehus <- kompl_tb(d_prim)
+  d_kompl_alv_sjukehus <- kompl_tb(d_prim)
 # KI4 Årskontroll 1 år
 # KI5 Årskontroll 2 år
-
-# d_aarkrs <- aar_ktr_tb(d_full, k = 2)
-
-# ak1 <- k1(sh, yr)
-# ak2 <- k2(sh, yr)
 
 # KI6 Del %TWL >= 20
 
@@ -197,27 +168,9 @@ shiny::dateRangeInput(
   liggedogn_tekst = liggedogn_breaks
   liggedogn_tekst[length(liggedogn_tekst)] = paste0("\u2265", maksdogn_vis + 1)
   ####### ---------------------------------------------------------------------80
-  KIi  <- shiny::reactive({ input$KIix })
-  output$QI <- shiny::renderText({ KIi() })
+  # KIi  <- shiny::reactive({ input$KIix })
+  # output$QI <- shiny::renderText({ KIi() })
 
-  # output$lggpl <- renderPlot({
-  #   d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
-  #
-  #   ggplot2::ggplot(
-  #     dplyr::filter(d_prim_6v, LiggeDogn >=0), #   !is.na(LiggeDogn)),
-  #     # ?? LiggeDogn[11] = -1455
-  #     ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
-  #     ggplot2::geom_bar(stat="count", show.legend = FALSE)
-  # })
-  #
-  # output$reinnpl <- renderPlot({
-  #   d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
-  #
-  #   ggplot2::ggplot(
-  #     data = d_prim_6v,   #   !is.na(LiggeDogn)),
-  #     ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
-  #     ggplot2::geom_bar(stat="count", show.legend = FALSE)
-  # })
 
   # KI1 - KI6--------- # which KI: f() --------------- # KI user controls------80
   KI <- reactive({
@@ -233,7 +186,7 @@ shiny::dateRangeInput(
 					            snitt(k2, input$sh, input$aar)	},
            "KI6" =  { TWL_tb(d_full)
              dplyr::bind_rows(
-             snitt(d_slv, input$sh, input$aar),
+             snitt(slv20, input$sh, input$aar),
               snitt(d_gbp, input$sh, input$aar),
               snitt(d_oa, input$sh, input$aar))
     })                                  #  6   del %TWL >= 20

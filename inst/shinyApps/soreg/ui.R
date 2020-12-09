@@ -46,7 +46,7 @@ tabPanel("KI",
 	    choices = c(1,2),
 	    selected = 1) ) , # One anastomosis gastric bypass
  	    #  GBP  GS  OAGB
-	shiny::uiOutput("uc_dates"),	
+	shiny::uiOutput("uc_dates"),
           shiny::selectInput(  # optional
             inputId = "vrb",
             label = "Variabel:",
@@ -109,6 +109,7 @@ tabPanel("Samlerapport",
               Ukentlig = "ukentlig-week",
               Daglig = "daglig-DSTday"),
               selected  = "månedlig-month"),
+
         actionButton("subscribe", "Bestill!")),
         mainPanel(uiOutput("subscriptionContent"))
     )),
