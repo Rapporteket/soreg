@@ -184,7 +184,10 @@ shiny::dateRangeInput(
            "KI5" =  {k <- 2                                  #  5  2 årskontrollar i normtid
 					            k2 <- aar_ktr_tb(d_full, k)
 					            snitt(k2, input$sh, input$aar)	},
-           "KI6" =  { opr_tp <- "oa"
+           "KI6" =  { opr_tp <- if (input$op_tech==6) "slv"
+           else if (input$op_tech==1 & input$OA==2) "oa"
+           else if (input$op_tech==1) "gbp"
+
              twl <- TWL_tb(d_full, opr_tp)
              #dplyr::bind_rows(
              snitt(twl, input$sh, input$aar)
