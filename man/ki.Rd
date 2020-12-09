@@ -10,7 +10,7 @@ ki(df, indicator)
 \item{df}{Data frame holding SoReg data}
 
 \item{indicator}{Character string defining the indicator to be returned.
-One of "liggetid", "kompl" or "dag30"}
+One of "liggetid", "kompl", "dag30" or "TWL20"}
 }
 \value{
 A tibble providing the numerator (cases), denominator (sample size)
