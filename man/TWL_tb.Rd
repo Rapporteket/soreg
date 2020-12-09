@@ -4,10 +4,12 @@
 \alias{TWL_tb}
 \title{lage vekttaptabell}
 \usage{
-TWL_tb(df)
+TWL_tb(df, opr_tp)
 }
 \arguments{
-\item{df}{data frame}
+\item{df}{data frame full data}
+
+\item{opr_tp}{operasjonstype sleeve, bypass, oagb}
 }
 \value{
 df data frame grouped by year and hospital

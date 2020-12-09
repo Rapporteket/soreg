@@ -138,11 +138,12 @@ df %>%
 }
 #----------------------------------------------------------------------------80
 #' lage vekttaptabell
-#' @param df data frame
+#' @param df data frame full data
+#' @param opr_tp operasjonstype sleeve, bypass, oagb
 #' @return df data frame grouped by year and hospital
 #' @export
 
-TWL_tb <- function(df){  # d_full
+TWL_tb <- function(df, opr_tp){  # d_full
  d_TWL  <- df %>%
   dplyr::filter(!is.na(.data$`ToAar_Vekt`)) %>%
   dplyr::mutate(
@@ -154,10 +155,11 @@ TWL_tb <- function(df){  # d_full
                                    .data$Opmetode_GBP == 1)
  d_oa   <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
                                    .data$Opmetode_GBP == 2)
- slv20   <-    detail(d_slv)
- gbp20   <-    detail(d_gbp)
- oa20   <-    detail(d_oa)
- slv20  # output only sleeve first
+ switch(opr_tp,
+ "slv"  = {  detail(d_slv)},
+ "gbp"  = { detail(d_gbp)},
+ "oa"   = { detail(d_oa)})
+ # slv20  # output only sleeve first
 }
 
 #' lage vekttapdetaljer

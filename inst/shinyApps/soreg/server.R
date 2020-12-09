@@ -184,11 +184,12 @@ shiny::dateRangeInput(
            "KI5" =  {k <- 2                                  #  5  2 årskontrollar i normtid
 					            k2 <- aar_ktr_tb(d_full, k)
 					            snitt(k2, input$sh, input$aar)	},
-           "KI6" =  { TWL_tb(d_full)
-             dplyr::bind_rows(
-             snitt(slv20, input$sh, input$aar),
-              snitt(d_gbp, input$sh, input$aar),
-              snitt(d_oa, input$sh, input$aar))
+           "KI6" =  { opr_tp <- "oa"
+             twl <- TWL_tb(d_full, opr_tp)
+             #dplyr::bind_rows(
+             snitt(twl, input$sh, input$aar)
+              #snitt(d_gbp, input$sh, input$aar),
+              #snitt(d_oa, input$sh, input$aar))
     })                                  #  6   del %TWL >= 20
   })
 
