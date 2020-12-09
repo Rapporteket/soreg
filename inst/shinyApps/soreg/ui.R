@@ -42,7 +42,7 @@ tabPanel("KI",
 	  condition = "input.op_tech == 1",  # skal bare eksistere omm op_tech==1
 	  shiny::checkboxGroupInput(
 	    inputId = "OA",
-	    label = "OA GBP",
+	    label = "type GBP",
 	    choices = c(1,2),
 	    selected = 1) ) , # One anastomosis gastric bypass
  	    #  GBP  GS  OAGB
