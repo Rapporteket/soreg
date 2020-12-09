@@ -53,8 +53,8 @@ snitt <- function(df, sh, yr) {df %>%
 
 lgg_tb <- function(df) { df %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
- soreg::ki(dplyr::across(), "liggetid") %>%          # sjekk ki(.,)
- dplyr::arrange(dplyr::desc(.env$indicator)) %>% dplyr::ungroup()  # ungroup er bra?
+ dplyr::summarise( soreg::ki(dplyr::across(), "liggetid")) %>%          # sjekk ki(.,)
+ dplyr::arrange(dplyr::desc(.data$indicator)) %>% dplyr::ungroup()  # ungroup er bra?
 }
 
   # # KI1 LIGGEDØGN  ---#----- Kor mange låg mindre enn fire døgn per sjukehus
@@ -79,8 +79,8 @@ reinn_tb <- function(df)  {df <- df %>%
                    (.data$`6U_Behandling30Dager` == 1)) &
                   (.data$`6U_Behandling30Dager` != 2))
 df %>%   dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-  soreg::ki(dplyr::across(), "dag30") %>%
-  dplyr::arrange(dplyr::desc(.env$indicator))
+  dplyr::summarise(  soreg::ki(dplyr::across(), "dag30")) %>%
+  dplyr::arrange(dplyr::desc(.data$indicator))
 }
 
 # KI2 REINNLEGGELSE
@@ -117,8 +117,8 @@ kompl_tb <- function(df) {df <- df %>%
                  (!is.na(.data$`6U_KomplAlvorGrad`)))
 df  %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
- soreg::ki(dplyr::across(), "kompl") %>%
- dplyr::arrange(dplyr::desc(.env$indicator))
+  dplyr::summarise(  soreg::ki(dplyr::across(), "kompl")) %>%
+ dplyr::arrange(dplyr::desc(.data$indicator))
 }
 
 
