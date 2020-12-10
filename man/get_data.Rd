@@ -5,6 +5,7 @@
 \alias{data_years}
 \alias{get_allevarnum}
 \alias{get_arsrp}
+\alias{data_sh}
 \alias{describe_db}
 \title{Get SoReg data}
 \usage{
@@ -14,10 +15,14 @@ get_allevarnum(registry_name)
 
 get_arsrp(registry_name)
 
+data_sh(registry_name, RESH)
+
 describe_db(registry_name, tabs = c())
 }
 \arguments{
 \item{registry_name}{Character string providing the registry name}
+
+\item{RESH}{character vector for choice of hospital}
 
 \item{tabs}{Character vector where each element represents a database
 table}

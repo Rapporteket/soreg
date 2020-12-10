@@ -3,12 +3,13 @@
 #' Functions used to get data from SoReg database
 #'
 #' @param registry_name Character string providing the registry name
+#' @param RESH character vector for choice of hospital
 #' @param tabs Character vector where each element represents a database
 #' table
 #'
 #' @return A data frame of registry data
 #' @name get_data
-#' @aliases data_years get_allevarnum get_arsrp
+#' @aliases data_years get_allevarnum get_arsrp data_sh
 #' @importFrom rapbase loadRegData
 
 
@@ -62,7 +63,7 @@ SELECT
   *
 FROM
   DatadumpArsrapport
-WHERE OpererendeRESH =RESH;"
+WHERE OpererendeRESH = RESH;"
 
   rapbase::loadRegData(registry_name, query)
 }
