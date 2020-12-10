@@ -58,21 +58,12 @@ tabPanel("KI",
           )),
         mainPanel(width = 9,
           shiny::tabsetPanel(
-            shiny::tabPanel("Figur", shiny::plotOutput("graf")),  # lggpl  virker
+            shiny::tabPanel("Figur", shiny::plotOutput("graf")),
             shiny::tabPanel("Tabell", shiny::htmlOutput("DT")) )
             # shiny::tabPanel(" txt",shiny::textOutput("QI")) )
 			)
-      #                tabPanel("graf", plotOutput("lggpl")),
+
       #                tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),
-      #     navbarPage("KI2: Reinnleggelse",
-      #                tabPanel("graf", plotOutput("PlotKI2")),
-      #                tabPanel("tabell", DT::dataTableOutput("reinnl")) ),
-      #     navbarPage("KI3: Komplikasjonar",
-      #                tabPanel("graf", plotOutput("PlotKI3")),
-      #                tabPanel("tabell", DT::dataTableOutput("kompl")) ),
-      #     tabPanel("KI4: 1-årskrl. nt.", plotOutput("dist4")),
-      #     tabPanel("KI5: 2-årskrl. nt.", plotOutput("dist5")),
-      #     tabPanel("KI6: Vekttap >= 20%", plotOutput("dist6")) ),
        ), #sidebarlayout
     ), #KI
 #------------------------------------------------------ KI1 - KI6------------80

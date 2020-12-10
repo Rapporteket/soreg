@@ -53,6 +53,21 @@ FROM
   rapbase::loadRegData(registry_name, query)
 }
 
+#' @rdname get_data
+#' @export
+data_sh <- function(registry_name, RESH) {
+
+  query <- "
+SELECT
+  *
+FROM
+  DatadumpArsrapport
+WHERE OpererendeRESH =RESH;"
+
+  rapbase::loadRegData(registry_name, query)
+}
+
+
 
 #' @rdname get_data
 #' @export

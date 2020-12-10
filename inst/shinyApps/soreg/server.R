@@ -153,14 +153,14 @@ shiny::dateRangeInput(
   # Viss nokon har *veldig* mange liggedøgn, vert
   # grafen uoversiktleg. Avgrensa derfor talet på
   # liggedøgn me viser grafisk.
-  maksdogn_vis = 14
+   maksdogn_vis = 14
   d_prim_6v %<>%
     dplyr::mutate(
       liggedogn_lenge = LiggeDogn > maksdogn_vis,
       liggedogn_trunk = pmin(LiggeDogn, maksdogn_vis + 1))
   n_liggedogn_lenge = sum(d_prim_6v$liggedogn_lenge, na.rm=TRUE)
   liggedogn_maks = max(d_prim_6v$LiggeDogn, na.rm=TRUE)
-
+  #
   #---------------------------- KI1 figur og tabell----------------------------80
 
   liggedogn_breaks = seq(
@@ -184,16 +184,14 @@ shiny::dateRangeInput(
            "KI5" =  {k <- 2                                  #  5  2 årskontrollar i normtid
 					            k2 <- aar_ktr_tb(d_full, k)
 					            snitt(k2, input$sh, input$aar)	},
-           "KI6" =  { opr_tp <- if (input$op_tech==6) "slv"
+           "KI6" =  { opr_tp <- if (input$op_tech==6) "slv" #  6   del %TWL >= 20
            else if (input$op_tech==1 & input$OA==2) "oa"
-           else if (input$op_tech==1) "gbp"
+           else if (input$op_tech==1) "gbp"  # else..
 
              twl <- TWL_tb(d_full, opr_tp)
-             #dplyr::bind_rows(
              snitt(twl, input$sh, input$aar)
-              #snitt(d_gbp, input$sh, input$aar),
-              #snitt(d_oa, input$sh, input$aar))
-    })                                  #  6   del %TWL >= 20
+
+    })
   })
 
   output$DT <-  renderTable({ KI() })
@@ -250,17 +248,6 @@ d_kompl_graf = d_kompl %>%
 
   ##-----------#---------------------------------------------------------------80
 
-  ## Figur
-  output$PlotKI1 <- renderPlot({
-    soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
-  })
-
-  output$PlotKI2 <- renderPlot({
-    soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
-  })
-  output$PlotKI3 <- renderPlot({
-    soreg::makeHist(df = d_full, var = input$vrb, bins = input$bn)
-  })
 
   ## Tabell
   output$TableKI1 <- renderTable({
@@ -271,14 +258,14 @@ d_kompl_graf = d_kompl %>%
       makeTable = TRUE)
   })
 
-  lgg <- reactive({kortligg(input$sh, input$lggar)})
-  output$liggdogn <- DT::renderDataTable({ lgg() })
-
-  innl <- reactive({innl30(input$sh, input$lggar)})
-  output$reinnl <- DT::renderDataTable({ innl() })
-
-  kmpl <- reactive({kompl(input$sh, input$lggar)})
-  output$kompl <- DT::renderDataTable({ kmpl() })
+  # lgg <- reactive({kortligg(input$sh, input$lggar)})
+  # output$liggdogn <- DT::renderDataTable({ lgg() })
+  #
+  # innl <- reactive({innl30(input$sh, input$lggar)})
+  # output$reinnl <- DT::renderDataTable({ innl() })
+  #
+  # kmpl <- reactive({kompl(input$sh, input$lggar)})
+  # output$kompl <- DT::renderDataTable({ kmpl() })
 
   ## DT::dataTableOutput(" ligge" )
   #----------------------------------------------------------------------------80
