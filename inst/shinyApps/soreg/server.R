@@ -360,6 +360,24 @@ d_kompl_graf = d_kompl %>%
     rapbase::deleteAutoReport(selectedRepId)
     rv$subscriptionTab <- rapbase::makeUserSubscriptionTab(session)
   })
+  # Datadump
+  output$dumpTabControl <- renderUI({
+    selectInput("dumpDataSet", "Velg datasett:", names(meta()))
+  })
+
+  output$dumpDataInfo <- renderUI({
+    p(paste("Valgt for nedlasting:", input$dumpDataSet))
+  })
+
+  output$dumpDownload <- downloadHandler(
+    filename = function() {
+      basename(tempfile(pattern = input$dumpDataSet,
+                        fileext = ".csv"))
+    },
+    content = function(file) {
+      contentDump(file, input$dumpFormat)
+    }
+  )
 
   # Metadata
   meta <- reactive({
