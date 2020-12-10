@@ -245,32 +245,10 @@ d_kompl_graf = d_kompl %>%
   output$graf  <- renderPlot( pl())
 
 
-
-  ##-----------#---------------------------------------------------------------80
-
-
-  ## Tabell
-  output$TableKI1 <- renderTable({
-    soreg::makeHist(
-      df = d_full,
-      var = input$vrb,
-      bins = input$bn,
-      makeTable = TRUE)
-  })
-
-  # lgg <- reactive({kortligg(input$sh, input$lggar)})
-  # output$liggdogn <- DT::renderDataTable({ lgg() })
-  #
-  # innl <- reactive({innl30(input$sh, input$lggar)})
-  # output$reinnl <- DT::renderDataTable({ innl() })
-  #
-  # kmpl <- reactive({kompl(input$sh, input$lggar)})
-  # output$kompl <- DT::renderDataTable({ kmpl() })
-
-  ## DT::dataTableOutput(" ligge" )
-  #----------------------------------------------------------------------------80
-  # Samlerapport
-  ## vis
+## DT::dataTableOutput(" ligge" )
+#----------------------------------------------------------------------------80
+# Samlerapport
+## vis
   output$samlerapport <- renderUI({
     htmlRenderRmd(srcFile = "samlerapport.Rmd",
                   params = list(var = input$varS, bins = input$binsS))
