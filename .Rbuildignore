@@ -9,3 +9,5 @@
 ^pkgdown$
 ^.lintr$
 ^CODE_OF_CONDUCT\.md$
+^docker-compose\.yml$
+^\.github$

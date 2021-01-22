@@ -1,88 +1,143 @@
-library(shiny)
+# library(shiny)
 library(shinyalert)
-library(rapbase)
+# library(shinyWidgets)
+# library(rapbase)
+# library(DT)
 
-addResourcePath('rap', system.file('www', package='rapbase'))
+addResourcePath("rap", system.file("www", package="rapbase"))
 regTitle = "SoReg"
 
 ui <- tagList(
   navbarPage(
-    title = div(a(includeHTML(system.file('www/logo.svg', package='rapbase'))),
+    title = div(a(includeHTML(system.file("www/logo.svg", package="rapbase"))),
                 regTitle),
     windowTitle = regTitle,
     theme = "rap/bootstrap.css",
-
+#----------------------------------------------------------------------------80
     tabPanel("Start",
       mainPanel(width = 12,
-        htmlOutput("veiledning", inline = TRUE),
-        shinyalert::useShinyalert(),
-        appNavbarUserWidget(user = uiOutput("appUserName"),
-                            organization = uiOutput("appOrgName"),
-                            addUserInfo = TRUE),
-        tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico"))
+                shinyalert::useShinyalert(),
+                rapbase::appNavbarUserWidget(
+                  user = uiOutput("appUserName"),
+                  organization = uiOutput("appOrgName"),
+                  addUserInfo = TRUE
+                ),
+         tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico")),
+         "Noe om SoReg (foreløpig feil i rendring av Rmd...)"
+                #htmlOutput("veiledning", inline = TRUE)
       )
     ),
-    tabPanel("Figur og tabell"
-      ,
-      sidebarLayout(
-        sidebarPanel(width = 3,
-          selectInput(inputId = "var",
-                      label = "Variabel:",
-                      c("mpg", "disp", "hp", "drat", "wt", "qsec")),
-          sliderInput(inputId = "bins",
-                      label = "Antall grupper:",
-                      min = 1,
-                      max = 10,
-                      value = 5)
-        ),
-        mainPanel(
-          tabsetPanel(
-            tabPanel("Figur", plotOutput("distPlot")),
-            tabPanel("Tabell", tableOutput("distTable"))
-          )
-        )
-      )
-    ),
-    tabPanel("Samlerapport"
-        ,
-        tabPanel("Fordeling av mpg",
-          sidebarLayout(
-            sidebarPanel(width = 3,
-              selectInput(inputId = "varS",
-                          label = "Variabel:",
-                          c("mpg", "disp", "hp", "drat", "wt", "qsec")),
-              sliderInput(inputId = "binsS",
-                          label = "Antall grupper:",
-                          min = 1,
-                          max = 10,
-                          value = 5),
-              downloadButton("downloadSamlerapport", "Last ned!")
-            ),
-            mainPanel(
-              uiOutput("samlerapport")
-            )
-          )
-        )
-      ),
-    tabPanel("Abonnement"
-      ,
-      sidebarLayout(
-        sidebarPanel(width = 3,
-          selectInput("subscriptionRep", "Rapport:", c("Samlerapport1", "Samlerapport2")),
-          selectInput("subscriptionFreq", "Frekvens:",
-                      list('\u00c5rlig'="årlig-year",
-                           Kvartalsvis="kvartalsvis-quarter",
-                           'M\u00e5nedlig'="månedlig-month",
-                           Ukentlig="ukentlig-week",
-                           Daglig="daglig-DSTday"),
-                      selected = "månedlig-month"),
-          actionButton("subscribe", "Bestill!")
-        ),
-        mainPanel(
-          uiOutput("subscriptionContent")
-        )
-      )
-    )
+#------------------------------------------------------ KI1 - KI6------------80
+tabPanel("KI",
+ sidebarLayout(
+  sidebarPanel(width=3,
+   shiny::selectInput(inputId = "KIix",
+      label = "Kvalitetsindikator:",
+    choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6")),
+    shiny::uiOutput("uc_sh"),
+    shiny::uiOutput("uc_years"),
+	shiny::uiOutput("uc_prim"),
+    shiny::uiOutput("uc_opr"),
+	shiny::conditionalPanel(
+	  condition = "input.op_tech == 1",  # skal bare eksistere omm op_tech==1
+	  shiny::checkboxGroupInput(
+	    inputId = "OA",
+	    label = "type GBP",
+	    choices = c(1,2),
+	    selected = 1) ) , # One anastomosis gastric bypass
+ 	    #  GBP  GS  OAGB
+	shiny::uiOutput("uc_dates"),
+          shiny::selectInput(  # optional
+            inputId = "vrb",
+            label = "Variabel:",
+            choices = c("BR_BMI", "PasientAlder")),
+          shiny::sliderInput(  # optional
+            inputId = "bn",
+            label = "Antall grupper:",
+            min = 1, max = 10, value = 5
+          )),
+        mainPanel(width = 9,
+          shiny::tabsetPanel(
+            shiny::tabPanel("Figur", shiny::plotOutput("graf")),
+            shiny::tabPanel("Tabell", shiny::htmlOutput("DT")) )
+            # shiny::tabPanel(" txt",shiny::textOutput("QI")) )
+			)
 
+      #                tabPanel("tabell", DT::dataTableOutput("liggdogn")) ),
+       ), #sidebarlayout
+    ), #KI
+#------------------------------------------------------ KI1 - KI6------------80
+tabPanel("Samlerapport",
+         tabPanel("Fordeling av mpg",
+                  sidebarLayout(
+                    sidebarPanel(width = 3,
+                                 selectInput(
+                                   inputId = "varS",
+                                   label = "Variabel:",
+                                   c("mpg", "disp", "hp", "drat", "wt", "qsec")),
+                                 sliderInput(
+                                   inputId = "binsS",
+                                   label = "Antall grupper:",
+                                   min = 1, max = 10, value = 5),
+                                 downloadButton("downloadSamlerapport", "Last ned!") ),
+                    mainPanel(uiOutput("samlerapport"))))
+),
+tabPanel("Tal operasjonar",
+    tabPanel("Fordeling av mpg",
+    sidebarLayout(
+        sidebarPanel(width = 3,
+        selectInput(
+         inputId = "varS2",
+         label = "Variabel:",
+         c("mpg", "disp", "hp", "drat", "wt", "qsec")),
+        sliderInput(
+         inputId = "binsS2",
+         label = "Antall grupper:",
+         min = 1, max = 10, value = 5),
+    downloadButton("downloadSamlerapport", "Last ned!") ),
+    mainPanel(uiOutput("samlerapport"))))
+    ),
+# navbarPage("soreg-stuff here",
+    tabPanel("Abonnement",
+    sidebarLayout
+	(
+        sidebarPanel(width = 3,
+        selectInput(
+         inputId = "subscriptionRep",
+         label = "Rapport:",
+         c("Samlerapport1", "Samlerapport2")),
+        selectInput(
+         inputId = "subscriptionFreq",
+         label = "Frekvens:",
+         list("\u00c5rlig" = "årlig-year",
+              Kvartalsvis = "kvartalsvis-quarter",
+             "M\u00e5nedlig" = "månedlig-month",
+              Ukentlig = "ukentlig-week",
+              Daglig = "daglig-DSTday"),
+              selected  = "månedlig-month"),
+
+        actionButton("subscribe", "Bestill!")),
+        mainPanel(uiOutput("subscriptionContent"))
+    )),
+tabPanel("Datadump"
+         ,
+         sidebarLayout(
+           sidebarPanel(width = 4,
+                        uiOutput("dumpTabControl"),
+                        dateRangeInput("dumpDateRange", "Velg periode:",
+                                       start = lubridate::ymd(Sys.Date())- lubridate::years(1),
+                                       end = Sys.Date(), separator = "-",
+                                       weekstart = 1),
+                        radioButtons("dumpFormat", "Velg filformat:",
+                                     choices = list(csv = "csv",
+                                                    `csv2 (nordisk format)` = "csv2",
+                                                    `xlsx-csv` = "xlsx-csv",
+                                                    `xlsx-csv2 (nordisk format)` = "xlsx-csv2")),
+                        downloadButton("dumpDownload", "Hent!")
+           ),mainPanel())),
+    tabPanel("Metadata",
+    sidebarLayout(
+     sidebarPanel(uiOutput("meta_control")),
+     mainPanel(htmlOutput("meta_data")) ) ) #Metadata
   ) # navbarPage
 ) # tagList
