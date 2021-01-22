@@ -13,8 +13,8 @@ library(lubridate)
 server <- function(input, output, session) {
 grafikk()    # virker ikke?
   colPrim<-c("#000059","#084594","#2171b5")
-#------------------ lagning av datatabeller     --------------------------   80
-# Faste verdier for applikasjonen
+ 
+# Faste verdier for applikasjonen ----------------------------------------   80
 registry_name <- "soreg"
 # Last inn data
 # Legg til info om operasjonsår og primæroperasjon
@@ -27,11 +27,12 @@ d_prim <- d_full %>% dplyr::filter(op_primar)
 # registrert. Hentar ut eiga datasett for desse
 d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
 
+#  lage datatabellene for KI:er     --------------------------------------   80
 # KI1 LIGGEDØGN  ---#----- Kor mange låg mindre enn fire døgn per sjukehus
 
 d_kortligg_sjuk <- lgg_tb(d_prim_6v)
 
-# KI2 REINNLEGGELSE
+# KI2 REINNLEGGELSE ###############
 # I analysar for reinnlegging ser me berre på dei som har 6-vekesoppfølging
 # registrert eller som er registrert som reinnlagd til trass for at dei
 # ikkje har 6-vekesoppfølging (jf. forklaringstekst for reinnleggings-
@@ -43,17 +44,18 @@ d_kortligg_sjuk <- lgg_tb(d_prim_6v)
 #                                      (`6U_Behandling30Dager` != 2))
 
 d_innlegg30 <- reinn_tb(d_prim)
-#----------------------------------------------------------------------------80
+#--------------------------------------------------------------------------- 80
 # andel pasienter som får innleggelse innen 30 dager etter operasjon
 # per sjukehus
 
-# KI3 KOMPLIKASJONAR
+# KI3 KOMPLIKASJONAR ###############
 # Tilsvarande for alvorlege komplikasjonar
  d_kompl <- d_prim %>%
  dplyr::filter((`6U_KontrollType` %in% 1:3) | (!is.na(`6U_KomplAlvorGrad`)))
 #
 # # andel pasienter som får en alvorlig komplikasjon per sjukehus
   d_kompl_alv_sjukehus <- kompl_tb(d_prim)
+  
 # KI4 Årskontroll 1 år
 # KI5 Årskontroll 2 år
 
@@ -96,7 +98,7 @@ d_innlegg30 <- reinn_tb(d_prim)
     htmlRenderRmd("veiledning.Rmd")
   })
 
-#-----------------------------------------------------# years in data -------80
+#-------- user controls----------  hospital ------ 
 output$uc_sh <- shiny::renderUI({
   shinyWidgets::pickerInput(
     inputId = "sh",
@@ -108,8 +110,8 @@ output$uc_sh <- shiny::renderUI({
                                   title = "Please select a hospital",
                                   header = "This is a list of hospitals"))
   })
-
-  output$uc_years <- renderUI({
+# -------------------------------  operation years
+output$uc_years <- renderUI({
     ## years available, hardcoded if outside known context
     if (rapbase::isRapContext()) {
       years <- soreg::data_years(registry_name)
@@ -124,15 +126,15 @@ output$uc_sh <- shiny::renderUI({
       choices = years,
       selected = 2017:2018)
   })
-
-  output$uc_prim <- renderUI({
+# ------------------------------ primary operation ?
+output$uc_prim <- renderUI({
      shiny::checkboxGroupInput(
       inputId = "prim",
       label = "Primæroperasjon ?",
       choices = unique(d_full$op_primar),
       selected = TRUE)
   })
-
+# ------------------------------  operation tech ?
 output$uc_opr <- renderUI({
 shiny::checkboxGroupInput(
       inputId = "op_tech",
@@ -141,18 +143,18 @@ shiny::checkboxGroupInput(
       selected = 6) # 6 = sleeve
     # conditional buttons?       this should appear iff op_tech == 1
 })
-
+# ------------------------------  date interval ?
 output$uc_dates <- renderUI({
 shiny::dateRangeInput(
      inputId = "dato_iv",
      label = "Operasjonsinterval?",
      start = min(d_full$Operasjonsdato), end = max(d_full$Operasjonsdato))
 })
-
-  # lgdgn stats::
-  # Viss nokon har *veldig* mange liggedøgn, vert
-  # grafen uoversiktleg. Avgrensa derfor talet på
-  # liggedøgn me viser grafisk.
+# ------------------------------ parameters for liggedøgngraf          
+# lgdgn stats::
+# Viss nokon har *veldig* mange liggedøgn, vert
+# grafen uoversiktleg. Avgrensa derfor talet på
+# liggedøgn me viser grafisk.
    maksdogn_vis = 14
   d_prim_6v %<>%
     dplyr::mutate(
@@ -160,60 +162,53 @@ shiny::dateRangeInput(
       liggedogn_trunk = pmin(LiggeDogn, maksdogn_vis + 1))
   n_liggedogn_lenge = sum(d_prim_6v$liggedogn_lenge, na.rm=TRUE)
   liggedogn_maks = max(d_prim_6v$LiggeDogn, na.rm=TRUE)
-  #
-  #---------------------------- KI1 figur og tabell----------------------------80
+#
 
   liggedogn_breaks = seq(
     pmin(1,  min(d_prim_6v$LiggeDogn, na.rm = TRUE)), maksdogn_vis + 1)
   liggedogn_tekst = liggedogn_breaks
   liggedogn_tekst[length(liggedogn_tekst)] = paste0("\u2265", maksdogn_vis + 1)
-  ####### ---------------------------------------------------------------------80
-  # KIi  <- shiny::reactive({ input$KIix })
-  # output$QI <- shiny::renderText({ KIi() })
+  
+#---------------------------- KI  1-6 tabell----------------------------     80
+KI <- reactive({ switch(input$KIix,
+ "KI1" =  snitt(d_kortligg_sjuk, input$sh, input$aar), #  1 LiggeDogn
+ "KI2" =  snitt(d_innlegg30, input$sh, input$aar),     #  2 REINNLEGGELSE
+ "KI3" =  snitt(d_kompl_alv_sjukehus, input$sh, input$aar), #  3 komplikasjonar
+ "KI4" =  {k <- 1                               #  4  1 årskontrollar i normtid
+			          k1 <- aar_ktr_tb(d_full, k)
+			          snitt(k1, input$sh, input$aar)	},
+ "KI5" =  {k <- 2                               #  5  2 årskontrollar i normtid
+					      k2 <- aar_ktr_tb(d_full, k)
+					      snitt(k2, input$sh, input$aar)	},
+ "KI6" =  { opr_tp <- if (input$op_tech==6) "slv" #  6   del %TWL >= 20
+         else if (input$op_tech==1 & input$OA==2) "oa"
+         else if (input$op_tech==1) "gbp"         # else..
 
+        twl <- TWL_tb(d_full, opr_tp)
+        snitt(twl, input$sh, input$aar)
+               })
+})
 
-  # KI1 - KI6--------- # which KI: f() --------------- # KI user controls------80
-  KI <- reactive({
-    switch(input$KIix,
-           "KI1" =  snitt(d_kortligg_sjuk, input$sh, input$aar), #  1 LiggeDogn
-           "KI2" =  snitt(d_innlegg30, input$sh, input$aar),     #  2 REINNLEGGELSE
-           "KI3" =  snitt(d_kompl_alv_sjukehus, input$sh, input$aar), #  3 komplikasjonar
-           "KI4" =  {k <- 1                                     #  4  1 årskontrollar i normtid
-					             k1 <- aar_ktr_tb(d_full, k)
-					             snitt(k1, input$sh, input$aar)		},
-           "KI5" =  {k <- 2                                  #  5  2 årskontrollar i normtid
-					            k2 <- aar_ktr_tb(d_full, k)
-					            snitt(k2, input$sh, input$aar)	},
-           "KI6" =  { opr_tp <- if (input$op_tech==6) "slv" #  6   del %TWL >= 20
-           else if (input$op_tech==1 & input$OA==2) "oa"
-           else if (input$op_tech==1) "gbp"  # else..
+output$DT <-  renderTable({ KI() })
+#---------------------------- KI 1-6 figur  ----------------------           80
 
-             twl <- TWL_tb(d_full, opr_tp)
-             snitt(twl, input$sh, input$aar)
-
-    })
-  })
-
-  output$DT <-  renderTable({ KI() })
-  #---------------------------- KI1 figur og tabell----------------------------80
-
-  pl <- reactive({
-    switch( input$KIix,
-            "KI1" = {
-              d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
-
-              ggplot2::ggplot(data = dplyr::filter(d_prim_6v, LiggeDogn >=0), #
+pl <- reactive({
+  switch( input$KIix,
+"KI1" = {
+d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
+    ggplot2::ggplot(data = dplyr::filter(d_prim_6v, LiggeDogn >=0), #
                               # ?? LiggeDogn[11] = -1455
-              ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
-              ggplot2::geom_bar(stat="count", show.legend = FALSE)
-            }  ,       #  1 LiggeDogn  output$lggpl,
-            "KI2" = {   # bare testgraf;  kanskje skal ikke engang være graf?
-              d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
-              ggplot2::ggplot( data =  dplyr::filter(d_prim_6v, LiggeDogn < 3),   #   !is.na(LiggeDogn)),
-                               ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
-                ggplot2::geom_bar(stat="count", show.legend = FALSE)
-            } ,        #  2 REINNLEGGELSE    output$reinnpl
-      "KI3" =  { #  3 KOMPLIKASJONAR
+    ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
+    ggplot2::geom_bar(stat="count", show.legend = FALSE)
+            } ,       #  1 LiggeDogn  output$lggpl,
+"KI2" = {   # bare testgraf;  kanskje skal ikke engang være graf?
+d_prim_6v <- dplyr::filter(d_prim_6v, Operasjonsmetode == input$op_tech)
+    ggplot2::ggplot( data =  dplyr::filter(d_prim_6v, LiggeDogn < 3),   
+                     #   !is.na(LiggeDogn)),
+    ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
+    ggplot2::geom_bar(stat="count", show.legend = FALSE)
+            } ,      #  2 REINNLEGGELSE    output$reinnpl
+"KI3" =  { #  3 KOMPLIKASJONAR
 d_kompl_graf = d_kompl %>%
  dplyr::filter(!is.na(`6U_KomplAlvorGrad`)) %>%
  dplyr::count(`6U_KomplAlvorGrad`) %>%
@@ -229,8 +224,9 @@ d_kompl_graf = d_kompl %>%
               "Grad V: Død"))))
 
  ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x=kompl_grad_tekst, y=n))+
-   ggplot2::geom_bar(stat="identity", fill=colPrim[3], width = 2/3) +
-   ggplot2::coord_flip()},
+ ggplot2::geom_bar(stat="identity", fill=colPrim[3], width = 2/3) +
+ ggplot2::coord_flip()
+            } ,
   #  scale_y_continuous(breaks=sett_avkutningspunkt_bredde(5),
   #                    expand = expansion(mult = c(0, .05))) +
   # scale_x_discrete(drop = FALSE) +
@@ -240,13 +236,11 @@ d_kompl_graf = d_kompl %>%
             "KI4" =  runif,        #  4  1 årskontrollar i normtid
             "KI5" =  rexp,         #  5  2 årskontrollar i normtid
             "KI6" =  rnorm)        #  6   del %TWL >= 20
-  })
+})
 
-  output$graf  <- renderPlot( pl())
+  output$graf  <- renderPlot(pl())
 
-
-## DT::dataTableOutput(" ligge" )
-#----------------------------------------------------------------------------80
+#-------------------------------------------------------------------------   80
 # Samlerapport
 ## vis
   output$samlerapport <- renderUI({
@@ -254,13 +248,13 @@ d_kompl_graf = d_kompl %>%
                   params = list(var = input$varS, bins = input$binsS))
   })
 
-  ## last ned
+## last ned
   output$downloadSamlerapport <- downloadHandler(
     filename = function() {"samlerapport.html"},
     content = function(file) {
       srcFile <- normalizePath(system.file("samlerapport.Rmd",
                                            package = "soreg"))
-      tmpFile <- "tmpSamlerapport.Rmd"
+    tmpFile <- "tmpSamlerapport.Rmd"
       owd <- setwd(tempdir())
       on.exit(setwd(owd))
       file.copy(srcFile, tmpFile, overwrite = TRUE)
@@ -272,8 +266,8 @@ d_kompl_graf = d_kompl %>%
       file.rename(out, file)
     }
   )
-  #----------------------------------------------------------------------------80
-  # Abonnement
+#  -----------------------------------------------------------------------   80
+# Abonnement
   ## rekative verdier for å holde rede på endringer som skjer mens
   ## applikasjonen kjører
   rv <- reactiveValues(
@@ -300,7 +294,7 @@ d_kompl_graf = d_kompl %>%
     }
   })
 
-  ## nye abonnement
+## nye abonnement
   observeEvent (input$subscribe, {
     package <- "soreg"
     owner <- rapbase::getUserName(session)
@@ -331,8 +325,8 @@ d_kompl_graf = d_kompl %>%
                               interval = interval, intervalName = intervalName)
     rv$subscriptionTab <- rapbase::makeUserSubscriptionTab(session)
   })
-  #----------------------------------------------------------------------------80
-  ## slett eksisterende abonnement
+#-------------------------------------------------------------------------   80
+## slett eksisterende abonnement
   observeEvent(input$del_button, {
     selectedRepId <- strsplit(input$del_button, "_")[[1]][2]
     rapbase::deleteAutoReport(selectedRepId)
@@ -357,7 +351,7 @@ d_kompl_graf = d_kompl %>%
     }
   )
 
-  # Metadata
+# Metadata
   meta <- reactive({
     soreg::describe_db(registry_name)
   })

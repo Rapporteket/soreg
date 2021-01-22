@@ -68,15 +68,30 @@ tabPanel("KI",
     ), #KI
 #------------------------------------------------------ KI1 - KI6------------80
 tabPanel("Samlerapport",
+         tabPanel("Fordeling av mpg",
+                  sidebarLayout(
+                    sidebarPanel(width = 3,
+                                 selectInput(
+                                   inputId = "varS",
+                                   label = "Variabel:",
+                                   c("mpg", "disp", "hp", "drat", "wt", "qsec")),
+                                 sliderInput(
+                                   inputId = "binsS",
+                                   label = "Antall grupper:",
+                                   min = 1, max = 10, value = 5),
+                                 downloadButton("downloadSamlerapport", "Last ned!") ),
+                    mainPanel(uiOutput("samlerapport"))))
+),
+tabPanel("Tal operasjonar",
     tabPanel("Fordeling av mpg",
     sidebarLayout(
         sidebarPanel(width = 3,
         selectInput(
-         inputId = "varS",
+         inputId = "varS2",
          label = "Variabel:",
          c("mpg", "disp", "hp", "drat", "wt", "qsec")),
         sliderInput(
-         inputId = "binsS",
+         inputId = "binsS2",
          label = "Antall grupper:",
          min = 1, max = 10, value = 5),
     downloadButton("downloadSamlerapport", "Last ned!") ),
