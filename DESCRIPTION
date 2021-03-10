@@ -1,6 +1,6 @@
 Package: soreg
 Title: soreg at Rapporteket
-Version: 0.0.1.9001
+Version: 0.2.0.9000
 Authors@R: c(
     person("Hannu",
            "Lyyjynen",
@@ -23,15 +23,13 @@ Imports:
     lubridate,
     magrittr,
     rapbase,
-    raplog,
     rlang,
     shiny,
     shinyalert,
     shinyWidgets,
     tibble
 Remotes:
-    Rapporteket/rapbase@*release,
-    Rapporteket/raplog@*release
+    Rapporteket/rapbase@*release
 Suggests: 
     covr,
     lintr,
