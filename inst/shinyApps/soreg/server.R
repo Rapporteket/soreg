@@ -1,4 +1,9 @@
+library(magrittr)
+
 server <- function(input, output, session) {
+
+  # Faste verdier i sesjonen
+  registryName <- "soreg"
 
   # Gjenbrukbar funksjon for å bearbeide Rmd til html
   htmlRenderRmd <- function(srcFile, params = list()) {
@@ -34,8 +39,26 @@ server <- function(input, output, session) {
   })
 
   # Datadump
+  ## metadata fra registerdatabasen
+  meta <- reactive({
+    rapbase::describeRegistryDb(registryName)
+  })
+
+  ## ta ut innhold i datadump
+  contentDump <- function(file, type) {
+    d <- soreg::getDataDump(registryName,input$dumpDataSet,
+                             fromDate = input$dumpDateRange[1],
+                             toDate = input$dumpDateRange[2],
+                             session = session)
+    if (type == "xlsx-csv") {
+      readr::write_excel_csv2(d, file)
+    } else {
+      readr::write_csv2(d, file)
+    }
+  }
+
   output$dumpTabControl <- renderUI({
-    selectInput("dumpDataSet", "Velg datasett:", c("Tabell A", "Tabell B"))
+    selectInput("dumpDataSet", "Velg datasett:", names(meta()))
   })
 
   output$dumpDataInfo <- renderUI({

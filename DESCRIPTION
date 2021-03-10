@@ -23,6 +23,7 @@ Imports:
     lubridate,
     magrittr,
     rapbase,
+    readr,
     rlang,
     shiny,
     shinyalert,

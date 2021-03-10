@@ -2,15 +2,24 @@
 % Please edit documentation in R/GetRegData.R
 \name{getRegData}
 \alias{getRegData}
+\alias{getRegDataWhat}
+\alias{getDataDump}
 \title{Provide dataframe of registry data}
 \usage{
-getRegData(registryName)
+getRegDataWhat(registryName)
+
+getDataDump(registryName, tableName, fromDate, toDate, ...)
 }
 \arguments{
 \item{registryName}{String providing the current registryName}
-}
-\value{
-regData data frame
+
+\item{tableName}{String providing a table name}
+
+\item{fromDate}{String providing start date}
+
+\item{toDate}{String provideing end date}
+
+\item{...}{Optional arguments to be passed to the function}
 }
 \description{
 Provides a dataframe containing data from a registry
