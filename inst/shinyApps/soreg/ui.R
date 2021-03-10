@@ -37,7 +37,9 @@ ui <- shiny::tagList(
                                       `xlsx-csv2 (nordisk format)` = "xlsx-csv2")),
           downloadButton("dumpDownload", "Hent!")
         ),
-        shiny::mainPanel()
+        shiny::mainPanel(
+          htmlOutput("dumpDataInfo")
+        )
       )
     )
   ) # navbarPage
