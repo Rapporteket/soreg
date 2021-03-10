@@ -27,7 +27,7 @@ ui <- shiny::tagList(
           width = 4,
           uiOutput("dumpTabControl"),
           dateRangeInput("dumpDateRange", "Velg periode:",
-                         start = lubridate::ymd(Sys.Date())- lubridate::years(1),
+                         start = lubridate::ymd(Sys.Date()) - lubridate::years(1),
                          end = Sys.Date(), separator = "-",
                          weekstart = 1),
           radioButtons("dumpFormat", "Velg filformat:",
