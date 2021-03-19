@@ -1,9 +1,10 @@
 ---
-title: 'Veiledning'
-author: 'Rapporteket'
-date: '`r format(Sys.time(), "%d. %B %Y")`'
-output: 
-  html_document: 
+title: "Veiledning"
+author: "Rapporteket"
+date: "`r format(Sys.time(), "%d. %B %Y")`"
+output:
+  pdf_document: default
+  html_document:
     keep_md: yes
 ---
 
