@@ -72,13 +72,19 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">soreg</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0.9000</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
+  <a href="../index.html">
+    <span class="fas fa-home fa-lg"></span>
+     
+  </a>
+</li>
+<li>
   <a href="../reference/index.html">Reference</a>
 </li>
 <li>
@@ -88,7 +94,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="http://github.com/Rapporteket/soreg/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -114,7 +120,9 @@
     <p>Provides a dataframe containing data from a registry</p>
     </div>
 
-    <pre class="usage"><span class='fu'>getRegData</span><span class='op'>(</span><span class='va'>registryName</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>getRegDataWhat</span><span class='op'>(</span><span class='va'>registryName</span><span class='op'>)</span>
+
+<span class='fu'>getDataDump</span><span class='op'>(</span><span class='va'>registryName</span>, <span class='va'>tableName</span>, <span class='va'>fromDate</span>, <span class='va'>toDate</span>, <span class='va'>...</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -123,11 +131,24 @@
       <th>registryName</th>
       <td><p>String providing the current registryName</p></td>
     </tr>
+    <tr>
+      <th>tableName</th>
+      <td><p>String providing a table name</p></td>
+    </tr>
+    <tr>
+      <th>fromDate</th>
+      <td><p>String providing start date</p></td>
+    </tr>
+    <tr>
+      <th>toDate</th>
+      <td><p>String provideing end date</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Optional arguments to be passed to the function</p></td>
+    </tr>
     </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    <p>regData data frame</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -140,11 +161,11 @@
 
       <footer>
       <div class="copyright">
-  <p>Developed by First Last, Are Edvardsen.</p>
+  <p>Developed by Hannu Lyyjynen, Are Edvardsen.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
