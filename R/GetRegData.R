@@ -3,10 +3,17 @@
 #' Provides a dataframe containing data from a registry
 #'
 #' @param registryName String providing the current registryName
-#' @return regData data frame
-#' @export
+#' @param tableName String providing a table name
+#' @param fromDate String providing start date
+#' @param toDate String provideing end date
+#' @param ... Optional arguments to be passed to the function
+#' @name getRegData
+#' @aliases getRegDataWhat getDataDump
+NULL
 
-getRegData <- function(registryName) {
+#' @rdname getRegData
+#' @export
+getRegDataWhat <- function(registryName) {
 
   # nocov start
   dbType <- "mysql"
@@ -26,3 +33,59 @@ GROUP BY
   return(regData)
   # nocov end
   }
+
+
+#' @rdname getRegData
+#' @export
+getDataDump <- function(registryName, tableName, fromDate, toDate, ...) {
+
+  # dummy query returning empty data set
+  query <- "SELECT * FROM AlleVar WHERE 1=0;"
+
+  if (tableName %in% c("friendlynamestable", "change_log_variables",
+                       "avdelingsoversikt", "Brukerliste")) {
+    query <- paste0("
+SELECT
+  *
+FROM
+  ", tableName, ";
+  ")
+  }
+
+  if (tableName %in% c("SkjemaOversikt", "AlleVar", "AlleVarNum")) {
+    query <- paste0("
+SELECT
+  fo.HovedDato,
+  d.*
+FROM
+  ", tableName, " AS d
+LEFT JOIN
+  ForlopsOversikt fo
+ON
+  d.ForlopsID = fo.ForlopsID
+WHERE
+  fo.HovedDato BETWEEN
+    CAST('", fromDate, "' AS DATE) AND
+    CAST('", toDate, "' AS DATE);
+")
+  }
+
+  if (tableName %in% c("ForlopsOversikt")) {
+    query <- paste0("
+SELECT
+  *
+FROM
+  ", tableName, "
+WHERE
+  HovedDato BETWEEN
+    CAST('", fromDate, "' AS DATE) AND
+    CAST('", toDate, "' AS DATE);
+")
+  }
+
+  if ("session" %in% names(list(...))) {
+    rapbase::repLogger(session = list(...)[["session"]],
+                       msg = paste("Soreg data dump:\n", query))
+  }
+  rapbase::loadRegData(registryName, query)
+}

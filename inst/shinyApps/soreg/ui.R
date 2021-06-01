@@ -1,88 +1,46 @@
-library(shiny)
-library(shinyalert)
-library(rapbase)
-
-addResourcePath('rap', system.file('www', package='rapbase'))
+addResourcePath("rap", system.file("www", package="rapbase"))
 regTitle = "SoReg"
 
-ui <- tagList(
-  navbarPage(
-    title = div(a(includeHTML(system.file('www/logo.svg', package='rapbase'))),
+ui <- shiny::tagList(
+  shiny::navbarPage(
+    title = shiny::div(a(includeHTML(system.file("www/logo.svg", package="rapbase"))),
                 regTitle),
     windowTitle = regTitle,
     theme = "rap/bootstrap.css",
-
-    tabPanel("Start",
-      mainPanel(width = 12,
-        htmlOutput("veiledning", inline = TRUE),
+    id = "tabs",
+    shiny::tabPanel("Start",
+      mainPanel(
+        width = 12,
+        shiny::htmlOutput("veiledning", inline = TRUE),
         shinyalert::useShinyalert(),
-        appNavbarUserWidget(user = uiOutput("appUserName"),
-                            organization = uiOutput("appOrgName"),
-                            addUserInfo = TRUE),
-        tags$head(tags$link(rel="shortcut icon", href="rap/favicon.ico"))
-      )
-    ),
-    tabPanel("Figur og tabell"
-      ,
-      sidebarLayout(
-        sidebarPanel(width = 3,
-          selectInput(inputId = "var",
-                      label = "Variabel:",
-                      c("mpg", "disp", "hp", "drat", "wt", "qsec")),
-          sliderInput(inputId = "bins",
-                      label = "Antall grupper:",
-                      min = 1,
-                      max = 10,
-                      value = 5)
-        ),
-        mainPanel(
-          tabsetPanel(
-            tabPanel("Figur", plotOutput("distPlot")),
-            tabPanel("Tabell", tableOutput("distTable"))
-          )
+        rapbase::appNavbarUserWidget(
+          user = uiOutput("appUserName"),
+          organization = uiOutput("appOrgName"),
+          addUserInfo = TRUE
         )
       )
     ),
-    tabPanel("Samlerapport"
-        ,
-        tabPanel("Fordeling av mpg",
-          sidebarLayout(
-            sidebarPanel(width = 3,
-              selectInput(inputId = "varS",
-                          label = "Variabel:",
-                          c("mpg", "disp", "hp", "drat", "wt", "qsec")),
-              sliderInput(inputId = "binsS",
-                          label = "Antall grupper:",
-                          min = 1,
-                          max = 10,
-                          value = 5),
-              downloadButton("downloadSamlerapport", "Last ned!")
-            ),
-            mainPanel(
-              uiOutput("samlerapport")
-            )
-          )
-        )
-      ),
-    tabPanel("Abonnement"
-      ,
-      sidebarLayout(
-        sidebarPanel(width = 3,
-          selectInput("subscriptionRep", "Rapport:", c("Samlerapport1", "Samlerapport2")),
-          selectInput("subscriptionFreq", "Frekvens:",
-                      list('\u00c5rlig'="årlig-year",
-                           Kvartalsvis="kvartalsvis-quarter",
-                           'M\u00e5nedlig'="månedlig-month",
-                           Ukentlig="ukentlig-week",
-                           Daglig="daglig-DSTday"),
-                      selected = "månedlig-month"),
-          actionButton("subscribe", "Bestill!")
+
+    shiny::tabPanel("Datadump",
+      shiny::sidebarLayout(
+        shiny::sidebarPanel(
+          width = 4,
+          uiOutput("dumpTabControl"),
+          dateRangeInput("dumpDateRange", "Velg periode:",
+                         start = lubridate::ymd(Sys.Date()) - lubridate::years(1),
+                         end = Sys.Date(), separator = "-",
+                         weekstart = 1),
+          radioButtons("dumpFormat", "Velg filformat:",
+                       choices = list(csv = "csv",
+                                      `csv2 (nordisk format)` = "csv2",
+                                      `xlsx-csv` = "xlsx-csv",
+                                      `xlsx-csv2 (nordisk format)` = "xlsx-csv2")),
+          downloadButton("dumpDownload", "Hent!")
         ),
-        mainPanel(
-          uiOutput("subscriptionContent")
+        shiny::mainPanel(
+          htmlOutput("dumpDataInfo")
         )
       )
     )
-
   ) # navbarPage
 ) # tagList
