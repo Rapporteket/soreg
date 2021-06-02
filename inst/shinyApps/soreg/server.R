@@ -44,9 +44,9 @@ server <- function(input, output, session) {
     op_aar = lubridate::year(Operasjonsdato),
     op_primar = (TidlFedmeOp == 0))
   d_prim <- d_full %>% dplyr::filter(op_primar)
-  
+
   d_innlegg30 <-  reinn_tb(d_prim)
-#-------- user controls----------  hospital ------ 
+#-------- user controls----------  hospital ------
   output$uc_sh <- shiny::renderUI({
     shinyWidgets::pickerInput(
       inputId = "sh",
@@ -73,20 +73,25 @@ server <- function(input, output, session) {
       label ="År:",
       choices = years,
       selected = 2017:2018)
-  })  
-#-----------  
+  })
+#-----------
 KI <- reactive({ switch(input$KI_ix,
       "KI2" = snitt(d_innlegg30, input$sh, input$aar)
       )
-  
-output$DT <- renderTable({KI()})
-  
-})  
-  
-#  pl <- reactive({ same switch})  
+  })
+
+  output$DT <- renderTable({
+    KI(shiny::selectInput(
+    inputId = KI_ix,
+    label = "Kvalitetsindikator:",
+    choices = c("KI1","KI2","KI3","KI4","KI5","KI6")
+    ))
+    })
+
+#  pl <- reactive({ same switch})
 # output$graf <- renderPlot({pl()})
-#------------------  
-  
+#------------------
+
   # Datadump
   ## metadata fra registerdatabasen
   meta <- reactive({

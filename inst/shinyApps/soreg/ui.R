@@ -23,18 +23,13 @@ ui <- shiny::tagList(
     shiny::tabPanel("Kvalitetsindikatorer",
       shiny::sidebarLayout(
         shiny::sidebarPanel(width = 3,
-          shiny::selectInput(
-            inputId = KI_ix,
-            label = "Kvalitetsindikator:",
-            choices = c("KI1","KI2","KI3","KI4","KI5","KI6")
-          ),
           shiny::uiOutput("uc_sh")
         ),
         shiny::mainPanel(width = 9,
         shiny::tabsetPanel(
-          shiny::tabPanel("Figur",shiny::plotOutput("graf")),
-          shiny::tabPanel("Tabell",shiny::htmlOutput("DT"))
-        )                 
+    #     shiny::tabPanel("Figur", shiny::plotOutput("graf")),
+          shiny::tabPanel("Tabell", shiny::htmlOutput("DT"))
+        )
                          )
       )
 	  ),
