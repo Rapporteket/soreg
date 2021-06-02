@@ -37,7 +37,56 @@ server <- function(input, output, session) {
   output$veiledning <- renderUI({
     htmlRenderRmd("veiledning.Rmd")
   })
-
+#------------------ KI
+  # read in data
+  d_full <- soreg::get_arsrp("soreg")
+  d_full %<>% dplyr::mutate(
+    op_aar = lubridate::year(Operasjonsdato),
+    op_primar = (TidlFedmeOp == 0))
+  d_prim <- d_full %>% dplyr::filter(op_primar)
+  
+  d_innlegg30 <-  reinn_tb(d_prim)
+#-------- user controls----------  hospital ------ 
+  output$uc_sh <- shiny::renderUI({
+    shinyWidgets::pickerInput(
+      inputId = "sh",
+      label = "velg sjukehus",
+      choices = (unique(d_full$OperererendeSykehus)),
+      selected = "Testsjukhus Norge",
+      multiple = TRUE,
+      options = shinyWidgets::pickerOptions(actionsBox = TRUE,
+                                            title = "Please select a hospital",
+                                            header = "This is a list of hospitals"))
+  })
+# -------------------------------  operation years
+  output$uc_years <- renderUI({
+    ## years available, hardcoded if outside known context
+    if (rapbase::isRapContext()) {
+      years <- soreg::data_years(registry_name)
+      # remove NAs if they exist (bad registry)
+      years <- years[!is.na(years)]
+    } else {
+      years <- c("2016", "2017", "2018", "2019", "2020")
+    }
+    shiny::checkboxGroupInput(
+      inputId = "aar",
+      label ="År:",
+      choices = years,
+      selected = 2017:2018)
+  })  
+#-----------  
+KI <- reactive({ switch(input$KI_ix,
+      "KI2" = snitt(d_innlegg30, input$sh, input$aar)
+      )
+  
+output$DT <- renderTable({KI()})
+  
+})  
+  
+#  pl <- reactive({ same switch})  
+# output$graf <- renderPlot({pl()})
+#------------------  
+  
   # Datadump
   ## metadata fra registerdatabasen
   meta <- reactive({
