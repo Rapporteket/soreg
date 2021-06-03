@@ -55,8 +55,8 @@ server <- function(input, output, session) {
       selected = "Testsjukhus Norge",
       multiple = TRUE,
       options = shinyWidgets::pickerOptions(actionsBox = TRUE,
-                                            title = "Please select a hospital",
-                                            header = "This is a list of hospitals"))
+                                    title = "Please select a hospital",
+                                    header = "This is a list of hospitals"))
   })
 # -------------------------------  operation years
   output$uc_years <- renderUI({
@@ -70,21 +70,22 @@ server <- function(input, output, session) {
     }
     shiny::checkboxGroupInput(
       inputId = "aar",
-      label ="År:",
+      label = "År:",
       choices = years,
       selected = 2017:2018)
   })
 #-----------
-KI <- reactive({ switch(input$KI_ix,
-      "KI2" = snitt(d_innlegg30, input$sh, input$aar)
+kI <- reactive({
+  switch(input$KI_ix,
+  "KI2" = snitt(d_innlegg30, input$sh, input$aar)
       )
   })
 
-  output$DT <- renderTable({
-    KI(shiny::selectInput(
-    inputId = KI_ix,
+  output$dT <- renderTable({
+    kI(shiny::selectInput(
+    inputId = "KI_ix",
     label = "Kvalitetsindikator:",
-    choices = c("KI1","KI2","KI3","KI4","KI5","KI6")
+    choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6")
     ))
     })
 
@@ -100,7 +101,7 @@ KI <- reactive({ switch(input$KI_ix,
 
   ## ta ut innhold i datadump
   contentDump <- function(file, type) {
-    d <- soreg::getDataDump(registryName,input$dumpDataSet,
+    d <- soreg::getDataDump(registryName, input$dumpDataSet,
                              fromDate = input$dumpDateRange[1],
                              toDate = input$dumpDateRange[2],
                              session = session)
