@@ -1,10 +1,10 @@
-addResourcePath("rap", system.file("www", package="rapbase"))
+addResourcePath("rap", system.file("www", package = "rapbase"))
 regTitle <- "SoReg"
 
 ui <- shiny::tagList(
 shiny::navbarPage(
 title = shiny::div(a(includeHTML(system.file("www/logo.svg",
-                                             package="rapbase"))),
+                                             package = "rapbase"))),
                 regTitle),
     windowTitle = regTitle,
     theme = "rap/bootstrap.css",
