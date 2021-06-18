@@ -37,6 +37,61 @@ server <- function(input, output, session) {
   output$veiledning <- renderUI({
     htmlRenderRmd("veiledning.Rmd")
   })
+#------------------ KI
+  # read in data
+  d_full <- soreg::get_arsrp("soreg")
+  d_full %<>% dplyr::mutate(
+    op_aar = lubridate::year(Operasjonsdato),
+    op_primar = (TidlFedmeOp == 0))
+  d_prim <- d_full %>% dplyr::filter(op_primar)
+
+  d_innlegg30 <-  reinn_tb(d_prim)
+#-------- user controls----------  hospital ------
+  output$uc_sh <- shiny::renderUI({
+    shinyWidgets::pickerInput(
+      inputId = "sh",
+      label = "velg sjukehus",
+      choices = (unique(d_full$OperererendeSykehus)),
+      selected = "Testsjukhus Norge",
+      multiple = TRUE,
+      options = shinyWidgets::pickerOptions(actionsBox = TRUE,
+                                    title = "Please select a hospital",
+                                    header = "This is a list of hospitals"))
+  })
+# -------------------------------  operation years
+  output$uc_years <- renderUI({
+    ## years available, hardcoded if outside known context
+    if (rapbase::isRapContext()) {
+      years <- soreg::data_years(registryName)
+      # remove NAs if they exist (bad registry)
+      years <- years[!is.na(years)]
+    } else {
+      years <- c("2016", "2017", "2018", "2019", "2020")
+    }
+    shiny::checkboxGroupInput(
+      inputId = "aar",
+      label = "År:",
+      choices = years,
+      selected = 2017:2018)
+  })
+#-----------
+kI <- reactive({
+  switch(input$KI_ix,
+  "KI2" = snitt(d_innlegg30, input$sh, input$aar)
+      )
+  })
+
+  output$dT <- renderTable({
+    kI(shiny::selectInput(
+    inputId = "KI_ix",
+    label = "Kvalitetsindikator:",
+    choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6")
+    ))
+    })
+
+#  pl <- reactive({ same switch})
+# output$graf <- renderPlot({pl()})
+#------------------
 
   # Datadump
   ## metadata fra registerdatabasen
@@ -46,7 +101,7 @@ server <- function(input, output, session) {
 
   ## ta ut innhold i datadump
   contentDump <- function(file, type) {
-    d <- soreg::getDataDump(registryName,input$dumpDataSet,
+    d <- soreg::getDataDump(registryName, input$dumpDataSet,
                              fromDate = input$dumpDateRange[1],
                              toDate = input$dumpDateRange[2],
                              session = session)

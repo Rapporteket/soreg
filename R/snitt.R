@@ -8,8 +8,11 @@
 #'
 #' @export
 
-snitt <- function(df, sh, yr) {df %>%
-  dplyr::filter(.data$OperererendeSykehus %in% .env$sh, .data$op_aar %in% .env$yr)}
+snitt <- function(df, sh, yr) {
+  df %>%
+  dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
+                .data$op_aar %in% .env$yr)
+  }
 
 #' slingringsmonn for aarskontrollar, minus
 #'
@@ -52,10 +55,12 @@ snitt <- function(df, sh, yr) {df %>%
 #' @return df data frame grouped by year and hospital
 #' @export
 
-lgg_tb <- function(df) { df %>%
+lgg_tb <- function(df) {
+  df %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
- dplyr::summarise( soreg::ki(dplyr::across(), "liggetid")) %>%          # sjekk ki(.,)
- dplyr::arrange(dplyr::desc(.data$indicator)) %>% dplyr::ungroup()  # ungroup er bra?
+ dplyr::summarise(soreg::ki(dplyr::across(), "liggetid")) %>%
+ dplyr::arrange(dplyr::desc(.data$indicator)) %>%
+ dplyr::ungroup()
 }
 
 #' lage reinnleggningtabell
@@ -63,12 +68,14 @@ lgg_tb <- function(df) { df %>%
 #' @return df data frame grouped by year and hospital
 #' @export
 
-reinn_tb <- function(df)  {df <- df %>%
+reinn_tb <- function(df)  {
+  df <- df %>%
   dplyr::filter(((.data$`6U_KontrollType` %in% 1:3) |
                    (.data$`6U_Behandling30Dager` == 1)) &
                   (.data$`6U_Behandling30Dager` != 2))
-df %>%   dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-  dplyr::summarise(  soreg::ki(dplyr::across(), "dag30")) %>%
+df %>%
+  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+  dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
   dplyr::arrange(dplyr::desc(.data$indicator))
 }
 
@@ -77,12 +84,13 @@ df %>%   dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
 #' @return df data frame grouped by year and hospital
 #' @export
 
-kompl_tb <- function(df) {df <- df %>%
+kompl_tb <- function(df) {
+  df <- df %>%
  dplyr::filter((.data$`6U_KontrollType` %in% 1:3) |
                  (!is.na(.data$`6U_KomplAlvorGrad`)))
 df  %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-  dplyr::summarise(  soreg::ki(dplyr::across(), "kompl")) %>%
+  dplyr::summarise(soreg::ki(dplyr::across(), "kompl")) %>%
  dplyr::arrange(dplyr::desc(.data$indicator))
 }
 
@@ -92,35 +100,39 @@ df  %>%
 #' @return df data frame grouped by year and hospital
 #' @export
 
-aar_ktr_tb <- function(df, k = 2){
+aar_ktr_tb <- function(df, k = 2) {
 
 last_opday <- max(df$Operasjonsdato)
 
    switch(k,
-           "1" = {last_op =  last_opday - months(15) #?lubridate::month
-                     nt = .data$et_nt},
-           "2" = {last_op =  last_opday - months(27)
-                     nt = .data$to_nt}
+           "1" <- {
+             last_op <-  last_opday - months(15)
+                  nt <- .data$et_nt},
+           "2" <- {
+             last_op <-  last_opday - months(27)
+                  nt <- .data$to_nt
+                  }
 )
 
 df <- df %>%
 dplyr::mutate(et_nor_m = nitti_m(dag = .data$Operasjonsdato),
-		 	        et_nor_p = nitti_p(dag = .data$Operasjonsdato),
-              to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato),
-			        to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato),
-              pTWL = 100*(.data$BR_Vekt - .data$`ToAar_Vekt`)/.data$BR_Vekt )
+et_nor_p = nitti_p(dag = .data$Operasjonsdato),
+to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato),
+to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato),
+pTWL = 100 * (.data$BR_Vekt - .data$`ToAar_Vekt`) / .data$BR_Vekt)
 
-df <- df %>% dplyr::mutate(
- et_nt = .data$EttAar_Oppfolgingsdato %within%
-   lubridate::interval( .data$et_nor_m, .data$et_nor_p ),
- to_nt = .data$ToAar_Oppfolgingsdato %within%
-   lubridate::interval( .data$to_nor_m, .data$to_nor_p ),
- et_b4 = .data$EttAar_Oppfolgingsdato %within%
-         lubridate::interval( .data$Operasjonsdato+1, .data$et_nor_m-1 ),
- et_lt = .data$EttAar_Oppfolgingsdato > .data$et_nor_p,
- to_b4 = .data$ToAar_Oppfolgingsdato %within%
-         lubridate::interval( .data$Operasjonsdato+1, .data$to_nor_m-1 ),
- to_lt = .data$ToAar_Oppfolgingsdato > .data$to_nor_p)
+df <- df %>%
+  dplyr::mutate(
+ et_nt <- .data$EttAar_Oppfolgingsdato %within%
+   lubridate::interval(.data$et_nor_m, .data$et_nor_p),
+ to_nt <- .data$ToAar_Oppfolgingsdato %within%
+   lubridate::interval(.data$to_nor_m, .data$to_nor_p),
+ et_b4 <- .data$EttAar_Oppfolgingsdato %within%
+   lubridate::interval(.data$Operasjonsdato + 1, .data$et_nor_m - 1),
+ et_lt <- .data$EttAar_Oppfolgingsdato > .data$et_nor_p,
+ to_b4 <- .data$ToAar_Oppfolgingsdato %within%
+         lubridate::interval(.data$Operasjonsdato + 1, .data$to_nor_m - 1),
+ to_lt <- .data$ToAar_Oppfolgingsdato > .data$to_nor_p)
 
 df <- df %>% dplyr::select(
  c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar",
@@ -133,7 +145,7 @@ df %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
  dplyr::mutate(ops = dplyr::n()) %>%
  dplyr::summarise(ktrl = sum(nt, na.rm = T), oprs = .data$ops[1],
-                   ktl = sum(nt, na.rm = T)/ .data$ops[1])
+                   ktl = sum(nt, na.rm = T) / .data$ops[1])
 
 }
 #----------------------------------------------------------------------------80
@@ -143,11 +155,11 @@ df %>%
 #' @return df data frame grouped by year and hospital
 #' @export
 
-TWL_tb <- function(df, opr_tp){  # d_full
+TWL_tb <- function(df, opr_tp) {
  d_TWL  <- df %>%
   dplyr::filter(!is.na(.data$`ToAar_Vekt`)) %>%
   dplyr::mutate(
-    pTWL = 100*(.data$BR_Vekt - .data$`ToAar_Vekt`)/.data$BR_Vekt ) %>%
+    pTWL = 100 * (.data$BR_Vekt - .data$`ToAar_Vekt`) / .data$BR_Vekt) %>%
   dplyr::mutate(del20 = .data$pTWL >= 20.0)
  # pTWL at 2 year must exist!
  d_slv  <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 6)
@@ -156,10 +168,12 @@ TWL_tb <- function(df, opr_tp){  # d_full
  d_oa   <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
                                    .data$Opmetode_GBP == 2)
  switch(opr_tp,
- "slv"  = {  detail(d_slv)},
- "gbp"  = { detail(d_gbp)},
- "oa"   = { detail(d_oa)})
- # slv20  # output only sleeve first
+ "slv"  = {
+   detail(d_slv)},
+ "gbp"  = {
+   detail(d_gbp)},
+ "oa"   = {
+   detail(d_oa)})
 }
 
 #' lage vekttapdetaljer
@@ -167,9 +181,10 @@ TWL_tb <- function(df, opr_tp){  # d_full
 #' @return df data frame grouped by year and hospital
 #' @export
 
-detail <- function(dm){ dm %>%
+detail <- function(dm) {
+  dm %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
- dplyr::summarise("tyve"= sum(.data$del20, na.rm = TRUE),  "ops" = dplyr::n(),
+ dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
+                  "ops" = dplyr::n(),
                   "minst20" = mean(.data$del20, na.rm = TRUE))
 }
-
