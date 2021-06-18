@@ -62,7 +62,7 @@ server <- function(input, output, session) {
   output$uc_years <- renderUI({
     ## years available, hardcoded if outside known context
     if (rapbase::isRapContext()) {
-      years <- soreg::data_years(registry_name)
+      years <- soreg::data_years(registryName)
       # remove NAs if they exist (bad registry)
       years <- years[!is.na(years)]
     } else {
