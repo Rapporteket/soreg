@@ -24,17 +24,15 @@ title = shiny::div(a(includeHTML(system.file("www/logo.svg",
     shiny::tabPanel("Kvalitetsindikatorer",
       shiny::sidebarLayout(
         shiny::sidebarPanel(width = 3,
+           shiny::uiOutput("kI_ix"),
           shiny::uiOutput("uc_sh"),
           shiny::uiOutput("uc_years")
         ),
         shiny::mainPanel(width = 9,
         shiny::tabsetPanel(
-    #     shiny::tabPanel("Figur", shiny::plotOutput("graf")),
-          shiny::tabPanel("Tabell", shiny::htmlOutput("DT"))
-        )
-                         )
-      )
-),
+          shiny::tabPanel("Tabell", shiny::uiOutput("dT")),
+          shiny::tabPanel("Figur", shiny::plotOutput("graf"))
+        )))),
 shiny::tabPanel("Datadump",
     shiny::sidebarLayout(
     shiny::sidebarPanel(

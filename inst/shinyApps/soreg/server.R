@@ -1,4 +1,6 @@
 library(magrittr)
+library(DT)
+library(shinyWidgets)
 
 server <- function(input, output, session) {
 
@@ -47,6 +49,12 @@ server <- function(input, output, session) {
 
   d_innlegg30 <-  reinn_tb(d_prim)
 #-------- user controls----------  hospital ------
+  output$kI_ix <- shiny::renderUI({
+    shiny::selectInput(
+      inputId = "kIix",
+      label = "Kvalitetsindikator:",
+      choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6"))
+  })
   output$uc_sh <- shiny::renderUI({
     shinyWidgets::pickerInput(
       inputId = "sh",
@@ -72,21 +80,17 @@ server <- function(input, output, session) {
       inputId = "aar",
       label = "År:",
       choices = years,
-      selected = 2017:2018)
+      selected = 2015:2018)
   })
 #-----------
 kI <- reactive({
-  switch(input$KI_ix,
-  "KI2" = snitt(d_innlegg30, input$sh, input$aar)
-      )
+  snitt(d_innlegg30, input$sh, input$aar)
+  # switch(input$kIix,         "KI2" =   )
   })
 
   output$dT <- renderTable({
-    kI(shiny::selectInput(
-    inputId = "KI_ix",
-    label = "Kvalitetsindikator:",
-    choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6")
-    ))
+
+    kI()
     })
 
 #  pl <- reactive({ same switch})
