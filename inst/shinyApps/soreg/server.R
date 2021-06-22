@@ -81,7 +81,7 @@ server <- function(input, output, session) {
       years <- c("2016", "2017", "2018", "2019", "2020")
     }
     shiny::checkboxGroupInput(
-      inputId = "aar",
+      inputId = "op_aar",
       label = "År:",
       choices = years,
       selected = 2015:2018)
@@ -116,14 +116,16 @@ server <- function(input, output, session) {
 # liggedøgn
 # .................
 kI <- reactive({
-  snitt(d_innlegg30, input$sh, input$aar)
+  # snitt(d_innlegg30, input$sh, input$op_aar)
+  slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)
   # switch(input$kIix,         "KI2" =   )
   })
 
   output$dT <- renderTable({  kI() })
 
   pl <- reactive({
-    lgg_gr(snitt(d_full, input$sh, input$aar))
+    lgg_gr(snitt(d_full, input$sh, input$op_aar ))
+   # lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech))
     })
   output$graf <- renderPlot({ pl() })
 #------------------

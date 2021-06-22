@@ -14,6 +14,28 @@ snitt <- function(df, sh, yr) {
                 .data$op_aar %in% .env$yr)
   }
 
+#' Pick particular hospitals and years from a data frame
+#'
+#' @param df Data frame holding SoReg data
+#' @param sh hospital(s)
+#' @param yr year(s)
+#' @param prm primary operation
+#' @param opr operation type
+#'
+#' @return A data frame for choice of hospitals, years and opr.type
+#'
+#' @export
+
+slice <- function(df, sh, yr, prm, opr) {
+  df %>%
+    dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
+                  .data$op_aar %in% .env$yr,
+                  .data$op_primar %in% .env$prm,
+                  .data$Operasjonsmetode %in% .env$opr )
+}
+
+
+
 #' slingringsmonn for aarskontrollar, minus
 #'
 #' +-90
