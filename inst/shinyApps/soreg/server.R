@@ -46,8 +46,12 @@ server <- function(input, output, session) {
     op_aar = lubridate::year(Operasjonsdato),
     op_primar = (TidlFedmeOp == 0))
   d_prim <- d_full %>% dplyr::filter(op_primar)
-
+  d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
+  d_ligg <- lgg_tb(d_prim_6v)
   d_innlegg30 <-  reinn_tb(d_prim)
+  d_kompl <- kompl_tb(d_prim)
+  # d_k1 <- aar_ktr_tb(d_prim, k=1)  # Column `et_b4` doesn't exist.
+  # d_k2 <- aar_ktr_tb(d_prim, k=2)  #
 #-------- user controls----------  hospital ------
   output$kI_ix <- shiny::renderUI({
     shiny::selectInput(
@@ -82,19 +86,47 @@ server <- function(input, output, session) {
       choices = years,
       selected = 2015:2018)
   })
-#-----------
+#--------- primæroperasjon?
+  output$uc_prim <- renderUI({
+    shiny::checkboxGroupInput(
+      inputId = "prim",
+      label = "Primæaroperasjon ?",
+      choices = unique(d_full$op_primar),
+      selected = TRUE
+    )
+  })
+#----------- operasjonsteknikk
+  output$uc_opr <- renderUI({
+    shiny::checkboxGroupInput(
+      inputId = "op_tech",
+      label = "Operasjonsteknikk",
+      choices = unique(d_full$Operasjonsmetode),
+      selected = 6
+    )
+  })
+#------------- opr date interval
+  output$uc_dates <- renderUI({
+    shiny::dateRangeInput(
+      inputId = "dato_iv",
+      label = "Operasjonsinterval ?",
+      start = min(d_full$Operasjonsdato),
+      end = max(d_full$Operasjonsdato)
+    )
+  })
 kI <- reactive({
   snitt(d_innlegg30, input$sh, input$aar)
   # switch(input$kIix,         "KI2" =   )
   })
 
-  output$dT <- renderTable({
+  output$dT <- renderTable({  kI() })
 
-    kI()
+  pl <- reactive({
+ #   d_innlegg30 %>% dplyr::filter(!)
+ #     dplyr::filter( input$sh,  input$aar) %>%
+ #   ggplot2::ggplot(aes())
+
     })
-
-#  pl <- reactive({ same switch})
-# output$graf <- renderPlot({pl()})
+  output$graf <- renderPlot({ pl() })
 #------------------
 
   # Datadump

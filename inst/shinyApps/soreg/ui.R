@@ -26,7 +26,10 @@ title = shiny::div(a(includeHTML(system.file("www/logo.svg",
         shiny::sidebarPanel(width = 3,
            shiny::uiOutput("kI_ix"),
           shiny::uiOutput("uc_sh"),
-          shiny::uiOutput("uc_years")
+          shiny::uiOutput("uc_years"),
+          shiny::uiOutput("uc_prim"),
+          shiny::uiOutput("uc_opr"),
+          shiny::uiOutput("uc_dates")
         ),
         shiny::mainPanel(width = 9,
         shiny::tabsetPanel(
