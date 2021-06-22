@@ -63,6 +63,39 @@ lgg_tb <- function(df) {
  dplyr::ungroup()
 }
 
+#' lage liggedogngraf
+#' @param df data frame
+#' @return df data frame grouped by year and hospital
+#' @export
+
+lgg_gr <- function(df){
+  maksdogn_vis = 14
+  LiggeDogn <- liggedogn_trunk <- liggedogn_lenge <- NULL
+  # r-bloggers.com/2019/08/no-visible-binding-for-global-variable
+  df %<>%
+    dplyr::mutate(
+      liggedogn_lenge = LiggeDogn > maksdogn_vis,
+      liggedogn_trunk = pmin(LiggeDogn, maksdogn_vis + 1))
+
+      # n_liggedogn_lenge = sum(df$LiggeDogn_lenge, na.rm = TRUE)
+      liggedogn_maks = max(df$LiggeDogn, na.rm = TRUE)
+
+      liggedogn_breaks = seq(
+        pmin(1, min(df$LiggeDogn, na.rm = TRUE)), maksdogn_vis + 1)
+      liggedogn_tekst = liggedogn_breaks
+      liggedogn_tekst[length(liggedogn_tekst)] = paste0("\u2265", maksdogn_vis + 1 )
+
+
+   df %>% dplyr::filter(!is.na(LiggeDogn) & !(LiggeDogn<0)) %>%
+    ggplot2::ggplot( ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
+     ggplot2::geom_bar(stat="count", show.legend = FALSE)+
+     ggplot2::scale_fill_manual(values = c("FALSE"= "blue","TRUE"= "red"))+
+     ggplot2::scale_x_continuous(breaks = liggedogn_breaks, labels = liggedogn_tekst, expand = c(0, .6))+
+     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.0, .05), add = 0) )+
+     ggplot2::xlab("Liggedogn") + ggplot2::ylab("Talet paa pasienter")
+}
+
+
 #' lage reinnleggningtabell
 #' @param df data frame
 #' @return df data frame grouped by year and hospital

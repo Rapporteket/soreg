@@ -1,5 +1,5 @@
 library(magrittr)
-library(DT)
+# library(DT)
 library(shinyWidgets)
 
 server <- function(input, output, session) {
@@ -113,6 +113,8 @@ server <- function(input, output, session) {
       end = max(d_full$Operasjonsdato)
     )
   })
+# liggedøgn
+# .................
 kI <- reactive({
   snitt(d_innlegg30, input$sh, input$aar)
   # switch(input$kIix,         "KI2" =   )
@@ -121,10 +123,7 @@ kI <- reactive({
   output$dT <- renderTable({  kI() })
 
   pl <- reactive({
- #   d_innlegg30 %>% dplyr::filter(!)
- #     dplyr::filter( input$sh,  input$aar) %>%
- #   ggplot2::ggplot(aes())
-
+    lgg_gr(snitt(d_full, input$sh, input$aar))
     })
   output$graf <- renderPlot({ pl() })
 #------------------
