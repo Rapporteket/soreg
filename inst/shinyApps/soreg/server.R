@@ -117,7 +117,11 @@ server <- function(input, output, session) {
 # .................
 kI <- reactive({
   # snitt(d_innlegg30, input$sh, input$op_aar)
-  slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)
+  base::switch(input$kI_ix,
+               "KI1" = lgg_tb(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)),
+               "KI3" = kompl_tb(snitt(d_full, input$sh, input$op_aar )) )
+
+  #  slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)
   # switch(input$kIix,         "KI2" =   )
   })
 
