@@ -55,7 +55,7 @@ server <- function(input, output, session) {
 #-------- user controls----------  hospital ------
   output$kI_ix <- shiny::renderUI({
     shiny::selectInput(
-      inputId = "kIix",
+      inputId = "kI_ix",
       label = "Kvalitetsindikator:",
       choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6"))
   })
@@ -124,7 +124,9 @@ kI <- reactive({
   output$dT <- renderTable({  kI() })
 
   pl <- reactive({
-    kompl_gr(snitt(d_full, input$sh, input$op_aar ))
+    base::switch(input$kI_ix,
+           "KI1" = lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)),
+           "KI3" = kompl_gr(snitt(d_full, input$sh, input$op_aar )) )
    # lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech))
     })
   output$graf <- renderPlot({ pl() })
