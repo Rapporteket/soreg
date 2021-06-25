@@ -124,7 +124,7 @@ kI <- reactive({
   output$dT <- renderTable({  kI() })
 
   pl <- reactive({
-    lgg_gr(snitt(d_full, input$sh, input$op_aar ))
+    kompl_gr(snitt(d_full, input$sh, input$op_aar ))
    # lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech))
     })
   output$graf <- renderPlot({ pl() })

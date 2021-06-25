@@ -114,7 +114,7 @@ lgg_gr <- function(df){
      ggplot2::scale_fill_manual(values = c("FALSE"= "blue","TRUE"= "red"))+
      ggplot2::scale_x_continuous(breaks = liggedogn_breaks, labels = liggedogn_tekst, expand = c(0, .6))+
      ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.0, .05), add = 0) )+
-     ggplot2::xlab("Liggedogn") + ggplot2::ylab("Talet paa pasienter")
+     ggplot2::xlab("Ligged\u00F8gn") + ggplot2::ylab("Talet p\u00E5 pasienter")
 }
 
 
@@ -148,6 +148,50 @@ df  %>%
   dplyr::summarise(soreg::ki(dplyr::across(), "kompl")) %>%
  dplyr::arrange(dplyr::desc(.data$indicator))
 }
+
+#' lage komplikasjonsgraf
+#' @param df data frame
+#' @return df data frame grouped by year and hospital
+#' @export
+
+kompl_gr <- function(df){
+  `6U_KomplAlvorGrad` <- kompl_grad_tekst <- n <- NULL
+  # Fjern vannrette eller loddrette rutenett
+  fjern_x = ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(),
+                  panel.grid.minor.x = ggplot2::element_blank())
+  fjern_y = ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(),
+                  panel.grid.minor.y = ggplot2::element_blank())
+  fjern_x_ticks = ggplot2::theme(axis.ticks.x = ggplot2::element_blank())
+  fjern_y_ticks = ggplot2::theme(axis.ticks.y = ggplot2::element_blank())
+  colPrim = c("#000059", "#084594", "#2171b5", "#4292c6", "#6baed6", "#c6dbef")
+
+  d_kompl_graf <- df %>%
+    dplyr::filter(!is.na(`6U_KomplAlvorGrad`)) %>%
+    dplyr::count(`6U_KomplAlvorGrad`) %>%
+    dplyr::mutate(kompl_grad_tekst =
+      factor(`6U_KomplAlvorGrad`,
+             levels = rev(c(1:4, 6:7, 5)),
+             labels = rev(c("Grad I: Ingen tiltak",
+                            "Grad II: Farmakologiske tiltak",
+                            "Grad IIIa: Intervensjon uten narkose",
+                            "Grad IIIb: Intervensjon i narkose",
+                            "Grad IVa: Intensivbehandling med eitt sviktande organ",
+                            "Grad IVb: Intensivbehandling med meir enn eitt sviktande organ",
+                            "Grad V: D\u00F8d"))))
+
+  ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
+    ggplot2::geom_bar(stat = "identity", fill = colPrim[3], width = 2/3) +
+    ggplot2::scale_y_continuous(breaks = 5,
+                                expand = ggplot2::expansion(mult = c(0.0, .05), add = 0) ) +
+    ggplot2::scale_x_discrete(drop = FALSE) +
+    ggplot2::xlab(NULL) + ggplot2::ylab("Talet p\u00E5 pasienter") +
+    ggplot2::coord_flip() + fjern_y +  fjern_y_ticks +
+    ggplot2::theme(panel.grid.minor.x =  ggplot2::element_blank())
+
+
+}
+
+
 
 #' lage aarskontrolltabell
 #' @param df data frame
