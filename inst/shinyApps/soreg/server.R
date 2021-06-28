@@ -119,7 +119,10 @@ kI <- reactive({
   # snitt(d_innlegg30, input$sh, input$op_aar)
   base::switch(input$kI_ix,
                "KI1" = lgg_tb(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)),
-               "KI3" = kompl_tb(snitt(d_full, input$sh, input$op_aar )) )
+               "KI3" = kompl_tb(snitt(d_full, input$sh, input$op_aar )),
+               "KI4" = aar_ktr_tb(snitt(d_full, input$sh, input$op_aar ), k = 1),
+               "KI4" = aar_ktr_tb(snitt(d_full, input$sh, input$op_aar ), k = 2)
+               )
 
   #  slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)
   # switch(input$kIix,         "KI2" =   )
@@ -130,7 +133,9 @@ kI <- reactive({
   pl <- reactive({
     base::switch(input$kI_ix,
            "KI1" = lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)),
-           "KI3" = kompl_gr(snitt(d_full, input$sh, input$op_aar )) )
+           "KI3" = kompl_gr(snitt(d_full, input$sh, input$op_aar )),
+           "KI4" = aar_ktr_tb(snitt(d_full, input$sh, input$op_aar ), k = 1)
+           )
    # lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech))
     })
   output$graf <- renderPlot({ pl() })
