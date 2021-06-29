@@ -189,11 +189,18 @@ kompl_gr <- function(df){
     ggplot2::theme(panel.grid.minor.x =  ggplot2::element_blank())
 }
 
+#' lage aarskontrolltabell
+#' @param df data frame
+#' @param k which year control
+#' @return df data frame grouped by year and hospital
+#' @export
+
 aarKtrl <- function(df, k){
+  nt <- et_nt <- to_nt <- NULL
   last_opday <- max(df$Operasjonsdato)
   switch(k,
-  "1", {last_op <-  last_opday - months(15)},
-  "2", {last_op <-  last_opday - months(27)})
+  "1" = {last_op <-  last_opday - months(15)},
+  "2" = {last_op <-  last_opday - months(27)})
   df <- df %>%
     dplyr::mutate(
       et_nor_m = nitti_m(dag = .data$Operasjonsdato),
@@ -221,19 +228,20 @@ df <- df %>% dplyr::select(
       "to_b4",  "to_nt", "to_lt", "pTWL"))
 
 switch(k,
-"1",       {df %>%
+"1"=      {df %>%
     dplyr::filter(.data$Operasjonsdato < last_op) %>%
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
     dplyr::mutate(ops = dplyr::n()) %>%
     dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = .data$ops[1],
                      ktl = sum(et_nt, na.rm = T) / .data$ops[1])},
-"2",       {df %>%
+"2"=  {df %>%
     dplyr::filter(.data$Operasjonsdato < last_op) %>%
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
     dplyr::mutate(ops = dplyr::n()) %>%
     dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = .data$ops[1],
                      ktl = sum(to_nt, na.rm = T) / .data$ops[1])}
 )
+# df
 }
 
 
@@ -288,8 +296,8 @@ df %>%
  dplyr::filter(.data$Operasjonsdato < last_op) %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
  dplyr::mutate(ops = dplyr::n()) %>%
- dplyr::summarise(ktrl = sum(nt, na.rm = T), oprs = .data$ops[1],
-                   ktl = sum(nt, na.rm = T) / .data$ops[1])
+ dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = .data$ops[1],
+                   ktl = sum(et_nt, na.rm = T) / .data$ops[1])
 
 }
 #----------------------------------------------------------------------------80
