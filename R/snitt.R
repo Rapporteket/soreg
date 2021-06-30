@@ -320,9 +320,9 @@ TWL_tb <- function(df, opr_tp) {
  d_oa   <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
                                    .data$Opmetode_GBP == 2)
  switch(opr_tp,
- "slv"  = {
+ "6"  = {
    detail(d_slv)},
- "gbp"  = {
+ "1"  = {
    detail(d_gbp)},
  "oa"   = {
    detail(d_oa)})

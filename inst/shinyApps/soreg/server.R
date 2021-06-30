@@ -119,9 +119,11 @@ kI <- reactive({
   # snitt(d_innlegg30, input$sh, input$op_aar)
   base::switch(input$kI_ix,
                "KI1" = lgg_tb(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)),
+               "KI2" = reinn_tb(snitt(d_full, input$sh, input$op_aar )),
                "KI3" = kompl_tb(snitt(d_full, input$sh, input$op_aar )),
-               "KI4" = aar_ktr_tb(snitt(d_full, input$sh, input$op_aar ), k = 1),
-               "KI4" = aar_ktr_tb(snitt(d_full, input$sh, input$op_aar ), k = 2)
+               "KI4" = aarKtrl(snitt(d_full, input$sh, input$op_aar ), k = 1),
+               "KI5" = aarKtrl(snitt(d_full, input$sh, input$op_aar ), k = 2),
+               "KI6" = TWL_tb(snitt(d_full, input$sh, input$op_aar ), opr_tp = input$op_tech)
                )
 
   #  slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)
