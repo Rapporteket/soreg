@@ -31,7 +31,8 @@ slice <- function(df, sh, yr, prm, opr) {
     dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
                   .data$op_aar %in% .env$yr,
                   .data$op_primar %in% .env$prm,
-                  .data$Operasjonsmetode %in% .env$opr )
+                  .data$Operasjonsmetode %in% .env$opr)
+              #    .data$Opmetode_GBP %in% .env$oa)
 }
 
 
@@ -303,29 +304,32 @@ df %>%
 #----------------------------------------------------------------------------80
 #' lage vekttaptabell
 #' @param df data frame full data
-#' @param opr_tp operasjonstype sleeve, bypass, oagb
+#' @param opr_tp operasjonstype sleeve, bypass
+#' @param opr_oa oagb
 #' @return df data frame grouped by year and hospital
 #' @export
 
-TWL_tb <- function(df, opr_tp) {
- d_TWL  <- df %>%
-  dplyr::filter(!is.na(.data$`ToAar_Vekt`)) %>%
-  dplyr::mutate(
-    pTWL = 100 * (.data$BR_Vekt - .data$`ToAar_Vekt`) / .data$BR_Vekt) %>%
-  dplyr::mutate(del20 = .data$pTWL >= 20.0)
- # pTWL at 2 year must exist!
- d_slv  <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 6)
- d_gbp  <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
-                                   .data$Opmetode_GBP == 1)
- d_oa   <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
-                                   .data$Opmetode_GBP == 2)
+TWL_tb <- function(df, opr_tp, opr_oa = 2) {
+  d_slv <- d_gbp <- d_oa <- NULL
+ # d_TWL  <- df %>%
+ #  dplyr::filter(!is.na(.data$`ToAar_Vekt`)) %>%
+ #  dplyr::mutate(
+ #    pTWL = 100 * (.data$BR_Vekt - .data$`ToAar_Vekt`) / .data$BR_Vekt) %>%
+ #  dplyr::mutate(del20 = .data$pTWL >= 20.0)
+ # # pTWL at 2 year must exist!
+ # d_slv  <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 6)
+ # d_gbp  <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
+ #                                   .data$Opmetode_GBP == 1)
+ # d_oa   <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
+ #                                   .data$Opmetode_GBP == 2)
  switch(opr_tp,
- "6"  = {
-   detail(d_slv)},
+ "6"  = { detail(d_slv)},
  "1"  = {
-   detail(d_gbp)},
- "oa"   = {
-   detail(d_oa)})
+   switch(opr_oa,
+    "1" = detail(d_oa),
+    "2" = detail(d_gbp)
+    )}
+ )
 }
 
 #' lage vekttapdetaljer
@@ -339,4 +343,22 @@ detail <- function(dm) {
  dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
                   "ops" = dplyr::n(),
                   "minst20" = mean(.data$del20, na.rm = TRUE))
+}
+
+#----------------------------------------------------------------------------80
+#' lage vekttaptabell
+#' @param df data frame full data
+#' @param opr_tp operasjonstype sleeve, bypass,
+#' @param opr_oa oagb
+#' @return df data frame grouped by year and hospital
+#' @export
+
+TWL_gr <- function(df, opr_tp, opr_oa = 2) {
+   pTWL <- OperererendeSykehus <- NULL
+  ggplot2::ggplot(df, ggplot2::aes(stat = 'identity',
+                                   x = pTWL,
+                                   color = OperererendeSykehus)) +
+    ggplot2::geom_density() + ggplot2::geom_vline(xintercept = 20,
+                                                  linetype = "dashed",
+                                                  color = "red")
 }

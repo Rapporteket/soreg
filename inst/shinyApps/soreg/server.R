@@ -50,6 +50,19 @@ server <- function(input, output, session) {
   d_ligg <- lgg_tb(d_prim_6v)
   d_innlegg30 <-  reinn_tb(d_prim)
   d_kompl <- kompl_tb(d_prim)
+
+  d_TWL  <- d_full %>%
+    dplyr::filter(!is.na(`ToAar_Vekt`)) %>%
+    dplyr::mutate(
+      pTWL = 100 * (BR_Vekt - `ToAar_Vekt`) / BR_Vekt) %>%
+    dplyr::mutate(del20 = pTWL >= 20.0)
+  # pTWL at 2 year must exist!
+  d_slv  <- d_TWL %>% dplyr::filter(Operasjonsmetode == 6)
+  d_gbp  <- d_TWL %>% dplyr::filter(Operasjonsmetode == 1,
+                                    Opmetode_GBP == 1)
+  d_oa   <- d_TWL %>% dplyr::filter(Operasjonsmetode == 1,
+                                    Opmetode_GBP == 2)
+
   # d_k1 <- aar_ktr_tb(d_prim, k=1)  # Column `et_b4` doesn't exist.
   # d_k2 <- aar_ktr_tb(d_prim, k=2)  #
 #-------- user controls----------  hospital ------
@@ -134,7 +147,9 @@ kI <- reactive({
                "KI3" = kompl_tb(snitt(d_full, input$sh, input$op_aar )),
                "KI4" = aarKtrl(snitt(d_full, input$sh, input$op_aar ), k = 1),
                "KI5" = aarKtrl(snitt(d_full, input$sh, input$op_aar ), k = 2),
-               "KI6" = TWL_tb(snitt(d_full, input$sh, input$op_aar ), opr_tp = input$op_tech)
+               "KI6" = TWL_tb(snitt(d_full, input$sh, input$op_aar ),
+                              opr_tp = input$op_tech,
+                              opr_oa = input$oagb)
                )
 
   #  slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)
@@ -145,9 +160,11 @@ kI <- reactive({
 
   pl <- reactive({
     base::switch(input$kI_ix,
-           "KI1" = lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)),
-           "KI3" = kompl_gr(snitt(d_full, input$sh, input$op_aar )),
-           "KI4" = aar_ktr_tb(snitt(d_full, input$sh, input$op_aar ), k = 1)
+  "KI1" = lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)),
+  "KI3" = kompl_gr(snitt(d_full, input$sh, input$op_aar )),
+  "KI4" = aar_ktr_tb(snitt(d_full, input$sh, input$op_aar ), k = 1),
+  "KI6" = {TWL_gr( snitt(d_full, input$sh, input$op_aar), input$op_tech, input$oagb)
+           }
            )
    # lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech))
     })
