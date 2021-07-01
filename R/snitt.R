@@ -246,61 +246,7 @@ switch(k,
 }
 
 
-#' lage aarskontrolltabell
-#' @param df data frame
-#' @param k which year control
-#' @return df data frame grouped by year and hospital
-#' @export
 
-aar_ktr_tb <- function(df, k = 2) {
-
-last_opday <- max(df$Operasjonsdato)
-
-   switch(k,
-           "1" <- {
-             last_op <-  last_opday - months(15)},
-            # nt <- .data$et_nt},
-           "2" <- {
-             last_op <-  last_opday - months(27)
-             #     nt <- .data$to_nt
-                  }
-)
-
-df <- df %>%
-dplyr::mutate(
-et_nor_m = nitti_m(dag = .data$Operasjonsdato),
-et_nor_p = nitti_p(dag = .data$Operasjonsdato),
-to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato),
-to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato),
-pTWL = 100 * (.data$BR_Vekt - .data$`ToAar_Vekt`) / .data$BR_Vekt)
-
-df <- df %>%
-  dplyr::mutate(
- et_nt <- .data$EttAar_Oppfolgingsdato %within%
-   lubridate::interval(.data$et_nor_m, .data$et_nor_p),
- to_nt <- .data$ToAar_Oppfolgingsdato %within%
-   lubridate::interval(.data$to_nor_m, .data$to_nor_p),
- et_b4 <- .data$EttAar_Oppfolgingsdato %within%
-   lubridate::interval(.data$Operasjonsdato + 1, .data$et_nor_m - 1),
- et_lt <- .data$EttAar_Oppfolgingsdato > .data$et_nor_p,
- to_b4 <- .data$ToAar_Oppfolgingsdato %within%
-         lubridate::interval(.data$Operasjonsdato + 1, .data$to_nor_m - 1),
- to_lt <- .data$ToAar_Oppfolgingsdato > .data$to_nor_p)
-
-df <- df %>% dplyr::select(
- c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar",
- "Operasjonsmetode", "Opmetode_GBP", "et_b4", "et_nt", "et_lt",
- "to_b4",  "to_nt", "to_lt", "pTWL"))
-
-
-df %>%
- dplyr::filter(.data$Operasjonsdato < last_op) %>%
- dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
- dplyr::mutate(ops = dplyr::n()) %>%
- dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = .data$ops[1],
-                   ktl = sum(et_nt, na.rm = T) / .data$ops[1])
-
-}
 #----------------------------------------------------------------------------80
 #' lage vekttaptabell
 #' @param df data frame full data
@@ -310,18 +256,18 @@ df %>%
 #' @export
 
 TWL_tb <- function(df, opr_tp, opr_oa = 2) {
-  d_slv <- d_gbp <- d_oa <- NULL
- # d_TWL  <- df %>%
- #  dplyr::filter(!is.na(.data$`ToAar_Vekt`)) %>%
- #  dplyr::mutate(
- #    pTWL = 100 * (.data$BR_Vekt - .data$`ToAar_Vekt`) / .data$BR_Vekt) %>%
- #  dplyr::mutate(del20 = .data$pTWL >= 20.0)
- # # pTWL at 2 year must exist!
- # d_slv  <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 6)
- # d_gbp  <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
- #                                   .data$Opmetode_GBP == 1)
- # d_oa   <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
- #                                   .data$Opmetode_GBP == 2)
+ # d_slv <- d_gbp <- d_oa <- NULL
+ d_TWL  <- df %>%
+  dplyr::filter(!is.na(.data$`ToAar_Vekt`)) %>%
+  dplyr::mutate(
+    pTWL = 100 * (.data$BR_Vekt - .data$`ToAar_Vekt`) / .data$BR_Vekt) %>%
+  dplyr::mutate(del20 = .data$pTWL >= 20.0)
+ # pTWL at 2 year must exist!
+ d_slv  <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 6)
+ d_gbp  <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
+                                   .data$Opmetode_GBP == 1)
+ d_oa   <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
+                                   .data$Opmetode_GBP == 2)
  switch(opr_tp,
  "6"  = { detail(d_slv)},
  "1"  = {
@@ -354,10 +300,10 @@ detail <- function(dm) {
 #' @export
 
 TWL_gr <- function(df, opr_tp, opr_oa = 2) {
-   pTWL <- OperererendeSykehus <- NULL
+  # pTWL <- OperererendeSykehus <- NULL
   ggplot2::ggplot(df, ggplot2::aes(stat = 'identity',
-                                   x = pTWL,
-                                   color = OperererendeSykehus)) +
+                                   x = .data$pTWL,
+                                   color = .data$OperererendeSykehus)) +
     ggplot2::geom_density() + ggplot2::geom_vline(xintercept = 20,
                                                   linetype = "dashed",
                                                   color = "red")

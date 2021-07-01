@@ -51,20 +51,19 @@ server <- function(input, output, session) {
   d_innlegg30 <-  reinn_tb(d_prim)
   d_kompl <- kompl_tb(d_prim)
 
-  d_TWL  <- d_full %>%
-    dplyr::filter(!is.na(`ToAar_Vekt`)) %>%
-    dplyr::mutate(
-      pTWL = 100 * (BR_Vekt - `ToAar_Vekt`) / BR_Vekt) %>%
-    dplyr::mutate(del20 = pTWL >= 20.0)
-  # pTWL at 2 year must exist!
-  d_slv  <- d_TWL %>% dplyr::filter(Operasjonsmetode == 6)
-  d_gbp  <- d_TWL %>% dplyr::filter(Operasjonsmetode == 1,
-                                    Opmetode_GBP == 1)
-  d_oa   <- d_TWL %>% dplyr::filter(Operasjonsmetode == 1,
-                                    Opmetode_GBP == 2)
+  # d_TWL  <- d_full %>%
+  #   dplyr::filter(!is.na(`ToAar_Vekt`)) %>%# pTWL at 2 year must exist!
+  #   dplyr::mutate(
+  #     pTWL = 100 * (BR_Vekt - `ToAar_Vekt`) / BR_Vekt) %>%
+  #   dplyr::mutate(del20 = pTWL >= 20.0)
+  #
+  # d_slv  <- d_TWL %>% dplyr::filter(Operasjonsmetode == 6)
+  # d_gbp  <- d_TWL %>% dplyr::filter(Operasjonsmetode == 1,
+  #                                   Opmetode_GBP == 1)
+  # d_oa   <- d_TWL %>% dplyr::filter(Operasjonsmetode == 1,
+  #                                   Opmetode_GBP == 2)
 
-  # d_k1 <- aar_ktr_tb(d_prim, k=1)  # Column `et_b4` doesn't exist.
-  # d_k2 <- aar_ktr_tb(d_prim, k=2)  #
+
 #-------- user controls----------  hospital ------
   output$kI_ix <- shiny::renderUI({
     shiny::selectInput(
@@ -163,7 +162,7 @@ kI <- reactive({
   "KI1" = lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)),
   "KI3" = kompl_gr(snitt(d_full, input$sh, input$op_aar )),
   "KI4" = aar_ktr_tb(snitt(d_full, input$sh, input$op_aar ), k = 1),
-  "KI6" = {TWL_gr( snitt(d_full, input$sh, input$op_aar), input$op_tech, input$oagb)
+  "KI6" = {TWL_gr( snitt(d_TWL, input$sh, input$op_aar), input$op_tech, input$oagb)
            }
            )
    # lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech))
