@@ -104,6 +104,17 @@ server <- function(input, output, session) {
       selected = 6
     )
   })
+# -------------  OAGB
+  output$uc_oagb <- renderUI({
+     shiny::conditionalPanel(
+       condition = "input.op_tech == 1", #  "`1` %in% input.op_tech",
+       shiny::checkboxGroupInput(
+         inputId = "oagb",
+         label = "OAGB GBP",
+         choices = c(1, 2),
+         selected = 2)
+      )
+  })
 #------------- opr date interval
   output$uc_dates <- renderUI({
     shiny::dateRangeInput(

@@ -29,6 +29,7 @@ title = shiny::div(a(includeHTML(system.file("www/logo.svg",
           shiny::uiOutput("uc_years"),
           shiny::uiOutput("uc_prim"),
           shiny::uiOutput("uc_opr"),
+          shiny::uiOutput("uc_oagb"), #
           shiny::uiOutput("uc_dates")
         ),
         shiny::mainPanel(width = 9,
