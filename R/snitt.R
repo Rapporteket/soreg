@@ -301,10 +301,16 @@ detail <- function(dm) {
 
 TWL_gr <- function(df, opr_tp, opr_oa = 2) {
   # pTWL <- OperererendeSykehus <- NULL
-  ggplot2::ggplot(df, ggplot2::aes(stat = 'identity',
+  # d_TWL  <- df %>%
+  #   dplyr::filter(!is.na(.data$ToAar_Vekt)) %>%
+  #   dplyr::mutate(
+  #     pTWL = 100 * (.data$BR_Vekt - .data$ToAar_Vekt) / .data$BR_Vekt) %>%
+  #   dplyr::mutate(del20 = .data$pTWL >= 20.0)
+
+  ggplot2::ggplot(data = df, ggplot2::aes(stat = 'identity',
                                    x = .data$pTWL,
                                    color = .data$OperererendeSykehus)) +
-    ggplot2::geom_density() + ggplot2::geom_vline(xintercept = 20,
+  ggplot2::geom_density() + ggplot2::geom_vline(xintercept = 20,
                                                   linetype = "dashed",
                                                   color = "red")
 }

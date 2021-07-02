@@ -51,17 +51,17 @@ server <- function(input, output, session) {
   d_innlegg30 <-  reinn_tb(d_prim)
   d_kompl <- kompl_tb(d_prim)
 
-  # d_TWL  <- d_full %>%
-  #   dplyr::filter(!is.na(`ToAar_Vekt`)) %>%# pTWL at 2 year must exist!
-  #   dplyr::mutate(
-  #     pTWL = 100 * (BR_Vekt - `ToAar_Vekt`) / BR_Vekt) %>%
-  #   dplyr::mutate(del20 = pTWL >= 20.0)
-  #
-  # d_slv  <- d_TWL %>% dplyr::filter(Operasjonsmetode == 6)
-  # d_gbp  <- d_TWL %>% dplyr::filter(Operasjonsmetode == 1,
-  #                                   Opmetode_GBP == 1)
-  # d_oa   <- d_TWL %>% dplyr::filter(Operasjonsmetode == 1,
-  #                                   Opmetode_GBP == 2)
+  d_TWL  <- d_full %>%
+    dplyr::filter(!is.na(`ToAar_Vekt`)) %>%# pTWL at 2 year must exist!
+    dplyr::mutate(
+      pTWL = 100 * (BR_Vekt - `ToAar_Vekt`) / BR_Vekt) %>%
+    dplyr::mutate(del20 = pTWL >= 20.0)
+
+  d_slv  <- d_TWL %>% dplyr::filter(Operasjonsmetode == 6)
+  d_gbp  <- d_TWL %>% dplyr::filter(Operasjonsmetode == 1,
+                                    Opmetode_GBP == 1)
+  d_oa   <- d_TWL %>% dplyr::filter(Operasjonsmetode == 1,
+                                    Opmetode_GBP == 2)
 
 
 #-------- user controls----------  hospital ------
