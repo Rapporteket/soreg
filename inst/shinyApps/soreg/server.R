@@ -139,8 +139,7 @@ server <- function(input, output, session) {
 # liggedøgn
 # .................
 kI <- reactive({
-  # snitt(d_innlegg30, input$sh, input$op_aar)
-  base::switch(input$kI_ix,
+  base::switch(if (is.null(input$kI_ix)) "KI1" else input$kI_ix,
                "KI1" = lgg_tb(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)),
                "KI2" = reinn_tb(snitt(d_full, input$sh, input$op_aar )),
                "KI3" = kompl_tb(snitt(d_full, input$sh, input$op_aar )),
