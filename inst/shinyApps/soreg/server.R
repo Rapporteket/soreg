@@ -88,7 +88,7 @@ server <- function(input, output, session) {
     )
   })
   # -------------------------------  operation years
-  output$uc_years <- renderUI({
+  output$uc_years <- shiny::renderUI({
     ## years available, hardcoded if outside known context
     if (rapbase::isRapContext()) {
       years <- soreg::data_years(registryName)
@@ -104,7 +104,7 @@ server <- function(input, output, session) {
       selected = 2015:2018)
   })
   #--------- primæroperasjon?
-  output$uc_prim <- renderUI({
+  output$uc_prim <- shiny::renderUI({
     shiny::checkboxGroupInput(
       inputId = "prim",
       label = "Primæaroperasjon ?",
@@ -113,7 +113,7 @@ server <- function(input, output, session) {
     )
   })
   #----------- operasjonsteknikk
-  output$uc_opr <- renderUI({
+  output$uc_opr <- shiny::renderUI({
     shiny::checkboxGroupInput(
       inputId = "op_tech",
       label = "Operasjonsteknikk",
@@ -122,7 +122,7 @@ server <- function(input, output, session) {
     )
   })
   # -------------  OAGB
-  output$uc_oagb <- renderUI({
+  output$uc_oagb <- shiny::renderUI({
      shiny::conditionalPanel(
        condition = "input.op_tech == 1", #  "`1` %in% input.op_tech",
        shiny::checkboxGroupInput(
@@ -133,7 +133,7 @@ server <- function(input, output, session) {
       )
   })
   #------------- opr date interval
-  output$uc_dates <- renderUI({
+  output$uc_dates <- shiny::renderUI({
     shiny::dateRangeInput(
       inputId = "dato_iv",
       label = "Operasjonsinterval ?",
@@ -143,35 +143,43 @@ server <- function(input, output, session) {
   })
   # liggedøgn
   # .................
-  kI <- reactive({
+  kI <- shiny::reactive({
     switch(if (is.null(input$kI_ix)) "KI1" else input$kI_ix,
-           "KI1" = lgg_tb(slice(d_full, input$sh, input$op_aar, input$prim,
-                                input$op_tech)),
-           "KI2" = reinn_tb(snitt(d_full, input$sh, input$op_aar )),
-           "KI3" = kompl_tb(snitt(d_full, input$sh, input$op_aar )),
-           "KI4" = aarKtrl(snitt(d_full, input$sh, input$op_aar ), k = 1),
-           "KI5" = aarKtrl(snitt(d_full, input$sh, input$op_aar ), k = 2),
-           "KI6" = TWL_tb(snitt(d_full, input$sh, input$op_aar ),
-                          opr_tp = input$op_tech,
-                          opr_oa = input$oagb)
-    )
-
-  })
-
-  output$dT <- renderTable({  kI() })
-
-  pl <- reactive({
-    switch(input$kI_ix,
-           "KI1" = lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim,
-                                input$op_tech)),
-           "KI3" = kompl_gr(snitt(d_full, input$sh, input$op_aar )),
-           "KI4" = aar_ktr_tb(snitt(d_full, input$sh, input$op_aar ), k = 1),
-           "KI6" = {TWL_gr( snitt(d_TWL, input$sh, input$op_aar),
-                            input$op_tech, input$oagb)
-           }
+           "KI1" = soreg::lgg_tb(
+             soreg::slice(d_full, input$sh, input$op_aar, input$prim,
+                          input$op_tech)),
+           "KI2" = soreg::reinn_tb(
+             soreg::snitt(d_full, input$sh, input$op_aar)),
+           "KI3" = soreg::kompl_tb(
+             soreg::snitt(d_full, input$sh, input$op_aar)),
+           "KI4" = soreg::aarKtrl(
+             soreg::snitt(d_full, input$sh, input$op_aar), k = 1),
+           "KI5" = soreg::aarKtrl(
+             soreg::snitt(d_full, input$sh, input$op_aar), k = 2),
+           "KI6" = soreg::TWL_tb(
+             soreg::snitt(d_full, input$sh, input$op_aar),
+             opr_tp = input$op_tech,
+             opr_oa = input$oagb)
     )
   })
-  output$graf <- renderPlot({ pl() })
+
+  output$dT <- shiny::renderTable(kI())
+
+  pl <- shiny::reactive({
+    switch(if (is.null(input$kI_ix)) "KI1" else input$kI_ix,
+           "KI1" = soreg::lgg_gr(
+             soreg::slice(d_full, input$sh, input$op_aar, input$prim,
+                          input$op_tech)),
+           "KI3" = soreg::kompl_gr(
+             soreg::snitt(d_full, input$sh, input$op_aar)),
+           "KI4" = soreg::aar_ktr_tb(
+             soreg::snitt(d_full, input$sh, input$op_aar ), k = 1),
+           "KI6" = soreg::TWL_gr(
+             soreg::snitt(d_TWL, input$sh, input$op_aar),
+             input$op_tech, input$oagb)
+    )
+  })
+  output$graf <- shiny::renderPlot(pl())
   #------------------
 
   # Datadump
