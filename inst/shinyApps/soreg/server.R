@@ -138,36 +138,36 @@ server <- function(input, output, session) {
   })
 # liggedøgn
 # .................
-kI <- reactive({
-  base::switch(if (is.null(input$kI_ix)) "KI1" else input$kI_ix,
-               "KI1" = lgg_tb(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)),
-               "KI2" = reinn_tb(snitt(d_full, input$sh, input$op_aar )),
-               "KI3" = kompl_tb(snitt(d_full, input$sh, input$op_aar )),
-               "KI4" = aarKtrl(snitt(d_full, input$sh, input$op_aar ), k = 1),
-               "KI5" = aarKtrl(snitt(d_full, input$sh, input$op_aar ), k = 2),
-               "KI6" = TWL_tb(snitt(d_full, input$sh, input$op_aar ),
-                              opr_tp = input$op_tech,
-                              opr_oa = input$oagb)
-               )
+  kI <- reactive({
+    switch(if (is.null(input$kI_ix)) "KI1" else input$kI_ix,
+           "KI1" = lgg_tb(slice(d_full, input$sh, input$op_aar, input$prim,
+                                input$op_tech)),
+           "KI2" = reinn_tb(snitt(d_full, input$sh, input$op_aar )),
+           "KI3" = kompl_tb(snitt(d_full, input$sh, input$op_aar )),
+           "KI4" = aarKtrl(snitt(d_full, input$sh, input$op_aar ), k = 1),
+           "KI5" = aarKtrl(snitt(d_full, input$sh, input$op_aar ), k = 2),
+           "KI6" = TWL_tb(snitt(d_full, input$sh, input$op_aar ),
+                          opr_tp = input$op_tech,
+                          opr_oa = input$oagb)
+    )
 
-  #  slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)
-  # switch(input$kIix,         "KI2" =   )
   })
 
   output$dT <- renderTable({  kI() })
 
   pl <- reactive({
-    base::switch(input$kI_ix,
-  "KI1" = lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech)),
-  "KI3" = kompl_gr(snitt(d_full, input$sh, input$op_aar )),
-  "KI4" = aar_ktr_tb(snitt(d_full, input$sh, input$op_aar ), k = 1),
-  "KI6" = {TWL_gr( snitt(d_TWL, input$sh, input$op_aar), input$op_tech, input$oagb)
+    switch(input$kI_ix,
+           "KI1" = lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim,
+                                input$op_tech)),
+           "KI3" = kompl_gr(snitt(d_full, input$sh, input$op_aar )),
+           "KI4" = aar_ktr_tb(snitt(d_full, input$sh, input$op_aar ), k = 1),
+           "KI6" = {TWL_gr( snitt(d_TWL, input$sh, input$op_aar),
+                            input$op_tech, input$oagb)
            }
-           )
-   # lgg_gr(slice(d_full, input$sh, input$op_aar, input$prim, input$op_tech))
-    })
+    )
+  })
   output$graf <- renderPlot({ pl() })
-#------------------
+  #------------------
 
   # Datadump
   ## metadata fra registerdatabasen
