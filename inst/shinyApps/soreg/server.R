@@ -1,5 +1,4 @@
 library(magrittr)
-# library(DT)
 library(shinyWidgets)
 
 server <- function(input, output, session) {
@@ -39,16 +38,19 @@ server <- function(input, output, session) {
   output$veiledning <- renderUI({
     htmlRenderRmd("veiledning.Rmd")
   })
-#------------------ KI
+  #------------------ KI
   # read in data
   d_full <- soreg::get_arsrp("soreg")
-  d_full %<>% dplyr::mutate(
-    op_aar = lubridate::year(Operasjonsdato),
-    op_primar = (TidlFedmeOp == 0))
-  d_prim <- d_full %>% dplyr::filter(op_primar)
-  d_prim_6v <- d_prim %>% dplyr::filter(`6U_KontrollType` %in% 1:3)
+  d_full %<>%
+    dplyr::mutate(
+      op_aar = lubridate::year(Operasjonsdato),
+      op_primar = (TidlFedmeOp == 0))
+  d_prim <- d_full %>%
+    dplyr::filter(op_primar)
+  d_prim_6v <- d_prim %>%
+    dplyr::filter(`6U_KontrollType` %in% 1:3)
   d_ligg <- lgg_tb(d_prim_6v)
-  d_innlegg30 <-  reinn_tb(d_prim)
+  d_innlegg30 <- reinn_tb(d_prim)
   d_kompl <- kompl_tb(d_prim)
 
   d_TWL  <- d_full %>%
@@ -57,14 +59,15 @@ server <- function(input, output, session) {
       pTWL = 100 * (BR_Vekt - `ToAar_Vekt`) / BR_Vekt) %>%
     dplyr::mutate(del20 = pTWL >= 20.0)
 
-  d_slv  <- d_TWL %>% dplyr::filter(Operasjonsmetode == 6)
-  d_gbp  <- d_TWL %>% dplyr::filter(Operasjonsmetode == 1,
-                                    Opmetode_GBP == 1)
-  d_oa   <- d_TWL %>% dplyr::filter(Operasjonsmetode == 1,
-                                    Opmetode_GBP == 2)
+  d_slv <- d_TWL %>%
+    dplyr::filter(Operasjonsmetode == 6)
+  d_gbp <- d_TWL %>%
+    dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 1)
+  d_oa <- d_TWL %>%
+    dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 2)
 
 
-#-------- user controls----------  hospital ------
+  #-------- user controls----------  hospital ------
   output$kI_ix <- shiny::renderUI({
     shiny::selectInput(
       inputId = "kI_ix",
@@ -78,11 +81,13 @@ server <- function(input, output, session) {
       choices = (unique(d_full$OperererendeSykehus)),
       selected = "Testsjukhus Norge",
       multiple = TRUE,
-      options = shinyWidgets::pickerOptions(actionsBox = TRUE,
-                                    title = "Please select a hospital",
-                                    header = "This is a list of hospitals"))
+      options = shinyWidgets::pickerOptions(
+        actionsBox = TRUE,
+        title = "Please select a hospital",
+        header = "This is a list of hospitals")
+    )
   })
-# -------------------------------  operation years
+  # -------------------------------  operation years
   output$uc_years <- renderUI({
     ## years available, hardcoded if outside known context
     if (rapbase::isRapContext()) {
@@ -98,7 +103,7 @@ server <- function(input, output, session) {
       choices = years,
       selected = 2015:2018)
   })
-#--------- primæroperasjon?
+  #--------- primæroperasjon?
   output$uc_prim <- renderUI({
     shiny::checkboxGroupInput(
       inputId = "prim",
@@ -107,7 +112,7 @@ server <- function(input, output, session) {
       selected = TRUE
     )
   })
-#----------- operasjonsteknikk
+  #----------- operasjonsteknikk
   output$uc_opr <- renderUI({
     shiny::checkboxGroupInput(
       inputId = "op_tech",
@@ -116,7 +121,7 @@ server <- function(input, output, session) {
       selected = 6
     )
   })
-# -------------  OAGB
+  # -------------  OAGB
   output$uc_oagb <- renderUI({
      shiny::conditionalPanel(
        condition = "input.op_tech == 1", #  "`1` %in% input.op_tech",
@@ -127,7 +132,7 @@ server <- function(input, output, session) {
          selected = 2)
       )
   })
-#------------- opr date interval
+  #------------- opr date interval
   output$uc_dates <- renderUI({
     shiny::dateRangeInput(
       inputId = "dato_iv",
@@ -136,8 +141,8 @@ server <- function(input, output, session) {
       end = max(d_full$Operasjonsdato)
     )
   })
-# liggedøgn
-# .................
+  # liggedøgn
+  # .................
   kI <- reactive({
     switch(if (is.null(input$kI_ix)) "KI1" else input$kI_ix,
            "KI1" = lgg_tb(slice(d_full, input$sh, input$op_aar, input$prim,
