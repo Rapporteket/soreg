@@ -78,7 +78,7 @@ server <- function(input, output, session) {
     shinyWidgets::pickerInput(
       inputId = "sh",
       label = "velg sjukehus",
-      choices = (unique(d_full$OperererendeSykehus)),
+      choices = (unique(dFull$OperererendeSykehus)),
       selected = "Testsjukhus Norge",
       multiple = TRUE,
       options = shinyWidgets::pickerOptions(
@@ -108,7 +108,7 @@ server <- function(input, output, session) {
     shiny::checkboxGroupInput(
       inputId = "prim",
       label = "Primæaroperasjon ?",
-      choices = unique(d_full$op_primar),
+      choices = unique(dFull$op_primar),
       selected = TRUE
     )
   })
@@ -117,7 +117,7 @@ server <- function(input, output, session) {
     shiny::checkboxGroupInput(
       inputId = "op_tech",
       label = "Operasjonsteknikk",
-      choices = unique(d_full$Operasjonsmetode),
+      choices = unique(dFull$Operasjonsmetode),
       selected = 6
     )
   })
@@ -137,8 +137,8 @@ server <- function(input, output, session) {
     shiny::dateRangeInput(
       inputId = "dato_iv",
       label = "Operasjonsinterval ?",
-      start = min(d_full$Operasjonsdato),
-      end = max(d_full$Operasjonsdato)
+      start = min(dFull$Operasjonsdato),
+      end = max(dFull$Operasjonsdato)
     )
   })
   # liggedøgn
@@ -146,18 +146,18 @@ server <- function(input, output, session) {
   kI <- shiny::reactive({
     switch(if (is.null(input$kI_ix)) "KI1" else input$kI_ix,
            "KI1" = soreg::lgg_tb(
-             soreg::slice(d_full, input$sh, input$op_aar, input$prim,
+             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
                           input$op_tech)),
            "KI2" = soreg::reinn_tb(
-             soreg::snitt(d_full, input$sh, input$op_aar)),
+             soreg::snitt(dFull, input$sh, input$op_aar)),
            "KI3" = soreg::kompl_tb(
-             soreg::snitt(d_full, input$sh, input$op_aar)),
+             soreg::snitt(dFull, input$sh, input$op_aar)),
            "KI4" = soreg::aarKtrl(
-             soreg::snitt(d_full, input$sh, input$op_aar), k = 1),
+             soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
            "KI5" = soreg::aarKtrl(
-             soreg::snitt(d_full, input$sh, input$op_aar), k = 2),
+             soreg::snitt(dFull, input$sh, input$op_aar), k = 2),
            "KI6" = soreg::TWL_tb(
-             soreg::snitt(d_full, input$sh, input$op_aar),
+             soreg::snitt(dFull, input$sh, input$op_aar),
              opr_tp = input$op_tech,
              opr_oa = input$oagb)
     )
@@ -168,14 +168,14 @@ server <- function(input, output, session) {
   pl <- shiny::reactive({
     switch(if (is.null(input$kI_ix)) "KI1" else input$kI_ix,
            "KI1" = soreg::lgg_gr(
-             soreg::slice(d_full, input$sh, input$op_aar, input$prim,
+             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
                           input$op_tech)),
            "KI3" = soreg::kompl_gr(
-             soreg::snitt(d_full, input$sh, input$op_aar)),
+             soreg::snitt(dFull, input$sh, input$op_aar)),
            "KI4" = soreg::aar_ktr_tb(
-             soreg::snitt(d_full, input$sh, input$op_aar), k = 1),
+             soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
            "KI6" = soreg::TWL_gr(
-             soreg::snitt(d_TWL, input$sh, input$op_aar),
+             soreg::snitt(dTwl, input$sh, input$op_aar),
              input$op_tech, input$oagb)
     )
   })
