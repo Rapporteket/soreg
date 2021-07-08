@@ -91,31 +91,39 @@ lgg_tb <- function(df) {
 #' @return df data frame grouped by year and hospital
 #' @export
 
-lgg_gr <- function(df){
-  maksdogn_vis = 14
-  LiggeDogn <- liggedogn_trunk <- liggedogn_lenge <- NULL
+lgg_gr <- function(df) {
+  maksdogn_vis <- 14
+  liggeDogn <- liggedognTrunk <- liggedognLenge <- NULL
   # r-bloggers.com/2019/08/no-visible-binding-for-global-variable
-  df %<>%
-    dplyr::mutate(
-      liggedogn_lenge = LiggeDogn > maksdogn_vis,
-      liggedogn_trunk = pmin(LiggeDogn, maksdogn_vis + 1))
+df %<>%
+  dplyr::mutate(
+    liggedognLenge = liggeDogn > maksdogn_vis,
+    liggedognTrunk = pmin(liggeDogn, maksdogn_vis + 1))
 
-      # n_liggedogn_lenge = sum(df$LiggeDogn_lenge, na.rm = TRUE)
-      liggedogn_maks = max(df$LiggeDogn, na.rm = TRUE)
+    liggedognMaks <- max(df$liggeDogn, na.rm = TRUE)
+    liggedognBreaks <- seq(
+        pmin(1, min(df$LiggeDogn, na.rm = TRUE)),
+        maksdogn_vis + 1)
+    liggedognTekst <- liggedognBreaks
+    liggedognTekst[length(liggedognTekst)] <-
+      paste0("\u2265", maksdogn_vis + 1)
 
-      liggedogn_breaks = seq(
-        pmin(1, min(df$LiggeDogn, na.rm = TRUE)), maksdogn_vis + 1)
-      liggedogn_tekst = liggedogn_breaks
-      liggedogn_tekst[length(liggedogn_tekst)] = paste0("\u2265", maksdogn_vis + 1 )
 
-
-   df %>% dplyr::filter(!is.na(LiggeDogn) & !(LiggeDogn<0)) %>%
-    ggplot2::ggplot( ggplot2::aes(x = liggedogn_trunk, fill = liggedogn_lenge)) +
-     ggplot2::geom_bar(stat="count", show.legend = FALSE)+
-     ggplot2::scale_fill_manual(values = c("FALSE"= "blue","TRUE"= "red"))+
-     ggplot2::scale_x_continuous(breaks = liggedogn_breaks, labels = liggedogn_tekst, expand = c(0, .6))+
-     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.0, .05), add = 0) )+
-     ggplot2::xlab("Ligged\u00F8gn") + ggplot2::ylab("Talet p\u00E5 pasienter")
+df %>%
+  dplyr::filter(!is.na(LiggeDogn) & !(LiggeDogn < 0)) %>%
+  ggplot2::ggplot(ggplot2::aes(x = liggedognTrunk,
+                               fill = liggedognLenge)) +
+  ggplot2::geom_bar(stat = "count",
+                    show.legend = FALSE) +
+  ggplot2::scale_fill_manual(values = c("FALSE" = "blue",
+                                        "TRUE" = "red")) +
+  ggplot2::scale_x_continuous(breaks = liggedognBreaks,
+                              labels = liggedognTekst,
+                              expand = c(0, .6)) +
+  ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.0, .05),
+                                                          add = 0)) +
+  ggplot2::xlab("Ligged\u00F8gn") +
+  ggplot2::ylab("Talet p\u00E5 pasienter")
 }
 
 
@@ -155,39 +163,39 @@ df  %>%
 #' @return df data frame grouped by year and hospital
 #' @export
 
-kompl_gr <- function(df){
-  `6U_KomplAlvorGrad` <- kompl_grad_tekst <- n <- NULL
-  # Fjern vannrette eller loddrette rutenett
-  fjern_x = ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(),
-                  panel.grid.minor.x = ggplot2::element_blank())
-  fjern_y = ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(),
-                  panel.grid.minor.y = ggplot2::element_blank())
-  fjern_x_ticks = ggplot2::theme(axis.ticks.x = ggplot2::element_blank())
-  fjern_y_ticks = ggplot2::theme(axis.ticks.y = ggplot2::element_blank())
-  colPrim = c("#000059", "#084594", "#2171b5", "#4292c6", "#6baed6", "#c6dbef")
+kompl_gr <- function(df) {
+  fjern_x <- ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(),
+                            panel.grid.minor.x = ggplot2::element_blank())
+  fjern_y <- ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(),
+                            panel.grid.minor.y = ggplot2::element_blank())
+  fjern_x_ticks <- ggplot2::theme(axis.ticks.x = ggplot2::element_blank())
+  fjern_y_ticks <- ggplot2::theme(axis.ticks.y = ggplot2::element_blank())
+  colPrim <- c("#000059", "#084594", "#2171b5", "#4292c6", "#6baed6",
+               "#c6dbef")
 
   d_kompl_graf <- df %>%
     dplyr::filter(!is.na(`6U_KomplAlvorGrad`)) %>%
     dplyr::count(`6U_KomplAlvorGrad`) %>%
     dplyr::mutate(kompl_grad_tekst =
-      factor(`6U_KomplAlvorGrad`,
-             levels = rev(c(1:4, 6:7, 5)),
-             labels = rev(c("Grad I: Ingen tiltak",
-                            "Grad II: Farmakologiske tiltak",
-                            "Grad IIIa: Intervensjon uten narkose",
-                            "Grad IIIb: Intervensjon i narkose",
-                            "Grad IVa: Intensivbehandling med eitt sviktande organ",
-                            "Grad IVb: Intensivbehandling med meir enn eitt sviktande organ",
-                            "Grad V: D\u00F8d"))))
+                    factor(`6U_KomplAlvorGrad`,
+                           levels = rev(c(1:4, 6:7, 5)),
+                           labels = rev(c("Grad I: Ingen tiltak",
+                                          "Grad II: Farmakologiske tiltak",
+                                      "Grad IIIa: Intervensjon uten narkose",
+                                      "Grad IIIb: Intervensjon i narkose",
+          "Grad IVa: Intensivbehandling med eitt sviktande organ",
+          "Grad IVb: Intensivbehandling med meir enn eitt sviktande organ",
+                                          "Grad V: D\u00F8d"))))
 
-  ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
-    ggplot2::geom_bar(stat = "identity", fill = colPrim[3], width = 2/3) +
-    ggplot2::scale_y_continuous(breaks = 5,
-                                expand = ggplot2::expansion(mult = c(0.0, .05), add = 0) ) +
-    ggplot2::scale_x_discrete(drop = FALSE) +
-    ggplot2::xlab(NULL) + ggplot2::ylab("Talet p\u00E5 pasienter") +
-    ggplot2::coord_flip() + fjern_y +  fjern_y_ticks +
-    ggplot2::theme(panel.grid.minor.x =  ggplot2::element_blank())
+ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
+  ggplot2::geom_bar(stat = "identity", fill = colPrim[3], width = 2 / 3) +
+  ggplot2::scale_y_continuous(breaks = 5,
+                              expand = ggplot2::expansion(mult = c(0.0, .05),
+                                                          add = 0)) +
+  ggplot2::scale_x_discrete(drop = FALSE) +
+  ggplot2::xlab(NULL) + ggplot2::ylab("Talet p\u00E5 pasienter") +
+  ggplot2::coord_flip() + fjern_y +  fjern_y_ticks +
+  ggplot2::theme(panel.grid.minor.x =  ggplot2::element_blank())
 }
 
 #' lage aarskontrolltabell
@@ -196,12 +204,14 @@ kompl_gr <- function(df){
 #' @return df data frame grouped by year and hospital
 #' @export
 
-aarKtrl <- function(df, k){
+aarKtrl <- function(df, k) {
   nt <- et_nt <- to_nt <- NULL
   last_opday <- max(df$Operasjonsdato)
   switch(k,
-  "1" = {last_op <-  last_opday - months(15)},
-  "2" = {last_op <-  last_opday - months(27)})
+  "1" = {
+    last_op <-  last_opday - months(15)},
+  "2" = {
+    last_op <-  last_opday - months(27)})
   df <- df %>%
     dplyr::mutate(
       et_nor_m = nitti_m(dag = .data$Operasjonsdato),
@@ -229,20 +239,22 @@ df <- df %>% dplyr::select(
       "to_b4",  "to_nt", "to_lt", "pTWL"))
 
 switch(k,
-"1"=      {df %>%
+"1" = {
+  df %>%
     dplyr::filter(.data$Operasjonsdato < last_op) %>%
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
     dplyr::mutate(ops = dplyr::n()) %>%
     dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = .data$ops[1],
                      ktl = sum(et_nt, na.rm = T) / .data$ops[1])},
-"2"=  {df %>%
+"2" = {
+  df %>%
     dplyr::filter(.data$Operasjonsdato < last_op) %>%
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
     dplyr::mutate(ops = dplyr::n()) %>%
     dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = .data$ops[1],
-                     ktl = sum(to_nt, na.rm = T) / .data$ops[1])}
+                     ktl = sum(to_nt, na.rm = T) / .data$ops[1])
+  }
 )
-# df
 }
 
 
@@ -255,9 +267,9 @@ switch(k,
 #' @return df data frame grouped by year and hospital
 #' @export
 
-TWL_tb <- function(df, opr_tp, opr_oa = 2) {
- # d_slv <- d_gbp <- d_oa <- NULL
- d_TWL  <- df %>%
+twlTb <- function(df, opr_tp, opr_oa = 2) {
+
+ dTwl  <- df %>%
   dplyr::filter(!is.na(.data$`ToAar_Vekt`)) %>%
   dplyr::mutate(
     pTWL = 100 * (.data$BR_Vekt - .data$`ToAar_Vekt`) / .data$BR_Vekt) %>%
@@ -269,7 +281,8 @@ TWL_tb <- function(df, opr_tp, opr_oa = 2) {
  d_oa   <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
                                    .data$Opmetode_GBP == 2)
  switch(opr_tp,
- "6"  = { detail(d_slv)},
+ "6"  = {
+   detail(d_slv)},
  "1"  = {
    switch(opr_oa,
     "1" = detail(d_oa),
@@ -299,15 +312,9 @@ detail <- function(dm) {
 #' @return df data frame grouped by year and hospital
 #' @export
 
-TWL_gr <- function(df, opr_tp, opr_oa = 2) {
-  # pTWL <- OperererendeSykehus <- NULL
-  # d_TWL  <- df %>%
-  #   dplyr::filter(!is.na(.data$ToAar_Vekt)) %>%
-  #   dplyr::mutate(
-  #     pTWL = 100 * (.data$BR_Vekt - .data$ToAar_Vekt) / .data$BR_Vekt) %>%
-  #   dplyr::mutate(del20 = .data$pTWL >= 20.0)
+twlGr <- function(df, opr_tp, opr_oa = 2) {
 
-  ggplot2::ggplot(data = df, ggplot2::aes(stat = 'identity',
+  ggplot2::ggplot(data = df, ggplot2::aes(stat = "identity",
                                    x = .data$pTWL,
                                    color = .data$OperererendeSykehus)) +
   ggplot2::geom_density() + ggplot2::geom_vline(xintercept = 20,

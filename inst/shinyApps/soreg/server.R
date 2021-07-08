@@ -40,12 +40,12 @@ server <- function(input, output, session) {
   })
   #------------------ KI
   # read in data
-  d_full <- soreg::get_arsrp("soreg")
-  d_full %<>%
+  dFull <- soreg::get_arsrp("soreg")
+  dFull %<>%
     dplyr::mutate(
       op_aar = lubridate::year(Operasjonsdato),
       op_primar = (TidlFedmeOp == 0))
-  d_prim <- d_full %>%
+  d_prim <- dFull %>%
     dplyr::filter(op_primar)
   d_prim_6v <- d_prim %>%
     dplyr::filter(`6U_KontrollType` %in% 1:3)
@@ -53,22 +53,22 @@ server <- function(input, output, session) {
   d_innlegg30 <- reinn_tb(d_prim)
   d_kompl <- kompl_tb(d_prim)
 
-  d_TWL  <- d_full %>%
-    dplyr::filter(!is.na(`ToAar_Vekt`)) %>%# pTWL at 2 year must exist!
+  dTwl  <- dFull %>%
+    dplyr::filter(!is.na(`ToAar_Vekt`)) %>% # pTWL at 2 year must exist!
     dplyr::mutate(
       pTWL = 100 * (BR_Vekt - `ToAar_Vekt`) / BR_Vekt) %>%
     dplyr::mutate(del20 = pTWL >= 20.0)
 
-  d_slv <- d_TWL %>%
+  d_slv <- dTwl %>%
     dplyr::filter(Operasjonsmetode == 6)
-  d_gbp <- d_TWL %>%
+  d_gbp <- dTwl %>%
     dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 1)
-  d_oa <- d_TWL %>%
+  d_oa <- dTwl %>%
     dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 2)
 
 
   #-------- user controls----------  hospital ------
-  output$kI_ix <- shiny::renderUI({
+  output$kIix <- shiny::renderUI({
     shiny::selectInput(
       inputId = "kI_ix",
       label = "Kvalitetsindikator:",
@@ -173,7 +173,7 @@ server <- function(input, output, session) {
            "KI3" = soreg::kompl_gr(
              soreg::snitt(d_full, input$sh, input$op_aar)),
            "KI4" = soreg::aar_ktr_tb(
-             soreg::snitt(d_full, input$sh, input$op_aar ), k = 1),
+             soreg::snitt(d_full, input$sh, input$op_aar), k = 1),
            "KI6" = soreg::TWL_gr(
              soreg::snitt(d_TWL, input$sh, input$op_aar),
              input$op_tech, input$oagb)
