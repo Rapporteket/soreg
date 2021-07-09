@@ -43,8 +43,8 @@ slice <- function(df, sh, yr, prm, opr) {
 #' @param prm primary operation
 #' @param opr operasjonstype
 #' @param oa one anastomosis GB
+#' @param dayIv dato interval
 #' @param opr operation type
-#' @param dato-interval
 #'
 #' @return A data frame for choice of hospitals, years and opr.type
 #'
@@ -68,7 +68,6 @@ siivu <- function(df, sh, yr, prm, opr, oa, dayIv) {
                   .data$Operasjonsmetode %in% .env$opr,
                   .data$Opmetode_GBP %in% .env$oa,
                   .data$dato_iv %in% .env$dayIv)
-
 }
 
 #' slingringsmonn for aarskontrollar, minus

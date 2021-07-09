@@ -146,8 +146,8 @@ server <- function(input, output, session) {
   kI <- shiny::reactive({
     switch(if (is.null(input$kIix)) "KI1" else input$kIix,
            "KI1" = soreg::lgg_tb(
-             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
-                          input$op_tech)),
+             soreg::siivu(dFull, input$sh, input$op_aar, input$prim,
+                          input$op_tech, input$dato_iv)),
            "KI2" = soreg::reinn_tb(
              soreg::snitt(dFull, input$sh, input$op_aar)),
            "KI3" = soreg::kompl_tb(
