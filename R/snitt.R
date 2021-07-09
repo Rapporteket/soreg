@@ -135,7 +135,7 @@ df %<>%
 
     liggedognMaks <- max(df$liggeDogn, na.rm = TRUE)
     liggedognBreaks <- seq(
-        pmin(1, min(df$LiggeDogn, na.rm = TRUE)),
+        pmin(1, min(df$liggeDogn, na.rm = TRUE)),
         maksdogn_vis + 1)
     liggedognTekst <- liggedognBreaks
     liggedognTekst[length(liggedognTekst)] <-
@@ -143,7 +143,7 @@ df %<>%
 
 
 df %>%
-  dplyr::filter(!is.na(LiggeDogn) & !(LiggeDogn < 0)) %>%
+  dplyr::filter(!is.na(liggeDogn) & !(liggeDogn < 0)) %>%
   ggplot2::ggplot(ggplot2::aes(x = liggedognTrunk,
                                fill = liggedognLenge)) +
   ggplot2::geom_bar(stat = "count",
@@ -197,6 +197,7 @@ df  %>%
 #' @export
 
 kompl_gr <- function(df) {
+  `6U_KomplAlvorGrad` <- kompl_grad_tekst <- n <- NULL
   fjern_x <- ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(),
                             panel.grid.minor.x = ggplot2::element_blank())
   fjern_y <- ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(),
@@ -308,10 +309,10 @@ twlTb <- function(df, opr_tp, opr_oa = 2) {
     pTWL = 100 * (.data$BR_Vekt - .data$`ToAar_Vekt`) / .data$BR_Vekt) %>%
   dplyr::mutate(del20 = .data$pTWL >= 20.0)
  # pTWL at 2 year must exist!
- d_slv  <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 6)
- d_gbp  <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
+ d_slv  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 6)
+ d_gbp  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 1,
                                    .data$Opmetode_GBP == 1)
- d_oa   <- d_TWL %>% dplyr::filter(.data$Operasjonsmetode == 1,
+ d_oa   <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 1,
                                    .data$Opmetode_GBP == 2)
  switch(opr_tp,
  "6"  = {
