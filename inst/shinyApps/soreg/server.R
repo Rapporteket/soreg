@@ -146,8 +146,8 @@ server <- function(input, output, session) {
   kI <- shiny::reactive({
     switch(if (is.null(input$kIix)) "KI1" else input$kIix,
            "KI1" = soreg::lgg_tb(
-             soreg::siivu(dFull, input$sh, input$op_aar, input$prim,
-                          input$op_tech, input$dato_iv)),
+             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
+                          input$op_tech)), # input$dato_iv
            "KI2" = soreg::reinn_tb(
              soreg::snitt(dFull, input$sh, input$op_aar)),
            "KI3" = soreg::kompl_tb(
@@ -156,7 +156,7 @@ server <- function(input, output, session) {
              soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
            "KI5" = soreg::aarKtrl(
              soreg::snitt(dFull, input$sh, input$op_aar), k = 2),
-           "KI6" = soreg::TWL_tb(
+           "KI6" = soreg::twlTb(
              soreg::snitt(dFull, input$sh, input$op_aar),
              opr_tp = input$op_tech,
              opr_oa = input$oagb)
@@ -174,7 +174,7 @@ server <- function(input, output, session) {
              soreg::snitt(dFull, input$sh, input$op_aar)),
            "KI4" = soreg::aar_ktr_tb(
              soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
-           "KI6" = soreg::TWL_gr(
+           "KI6" = soreg::twlGr(
              soreg::snitt(dTwl, input$sh, input$op_aar),
              input$op_tech, input$oagb)
     )

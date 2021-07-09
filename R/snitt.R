@@ -141,7 +141,6 @@ df %<>%
     liggedognTekst[length(liggedognTekst)] <-
       paste0("\u2265", maksdogn_vis + 1)
 
-
 df %>%
   dplyr::filter(!is.na(liggeDogn) & !(liggeDogn < 0)) %>%
   ggplot2::ggplot(ggplot2::aes(x = liggedognTrunk,
