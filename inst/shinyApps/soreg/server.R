@@ -70,7 +70,7 @@ server <- function(input, output, session) {
   #-------- user controls----------  hospital ------
   output$kIix <- shiny::renderUI({
     shiny::selectInput(
-      inputId = "kI_ix",
+      inputId = "kIix",
       label = "Kvalitetsindikator:",
       choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6"))
   })
@@ -144,7 +144,7 @@ server <- function(input, output, session) {
   # liggedøgn
   # .................
   kI <- shiny::reactive({
-    switch(if (is.null(input$kI_ix)) "KI1" else input$kI_ix,
+    switch(if (is.null(input$kIix)) "KI1" else input$kIix,
            "KI1" = soreg::lgg_tb(
              soreg::slice(dFull, input$sh, input$op_aar, input$prim,
                           input$op_tech)),
@@ -166,7 +166,7 @@ server <- function(input, output, session) {
   output$dT <- shiny::renderTable(kI())
 
   pl <- shiny::reactive({
-    switch(if (is.null(input$kI_ix)) "KI1" else input$kI_ix,
+    switch(if (is.null(input$kIix)) "KI1" else input$kIix,
            "KI1" = soreg::lgg_gr(
              soreg::slice(dFull, input$sh, input$op_aar, input$prim,
                           input$op_tech)),

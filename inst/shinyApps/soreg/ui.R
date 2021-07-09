@@ -24,7 +24,7 @@ title = shiny::div(a(includeHTML(system.file("www/logo.svg",
     shiny::tabPanel("Kvalitetsindikatorer",
       shiny::sidebarLayout(
         shiny::sidebarPanel(width = 3,
-           shiny::uiOutput("kI_ix"),
+           shiny::uiOutput("kIix"),
           shiny::uiOutput("uc_sh"),
           shiny::uiOutput("uc_years"),
           shiny::uiOutput("uc_prim"),

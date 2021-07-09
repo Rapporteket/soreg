@@ -35,7 +35,41 @@ slice <- function(df, sh, yr, prm, opr) {
               #    .data$Opmetode_GBP %in% .env$oa)
 }
 
+#' Pick particular hospitals and years from a data frame
+#'
+#' @param df Data frame holding SoReg data
+#' @param sh hospital(s)
+#' @param yr year(s)
+#' @param prm primary operation
+#' @param opr operasjonstype
+#' @param oa one anastomosis GB
+#' @param opr operation type
+#' @param dato-interval
+#'
+#' @return A data frame for choice of hospitals, years and opr.type
+#'
+#' @export
 
+
+siivu <- function(df, sh, yr, prm, opr, oa, dayIv) {
+  # if dato_iv exists()
+  # df %>%
+  #   dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
+  #                 # .data$op_aar %in% .env$yr,
+  #                 .data$op_primar %in% .env$prm,
+  #                 .data$Operasjonsmetode %in% .env$opr,
+  #                 .data$Opmetode_GBP %in% .env$oa,
+  #                 .data$dato_iv %in% .env$dayIv)
+  # else
+    df %>%
+    dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
+                  .data$op_aar %in% .env$yr,
+                  .data$op_primar %in% .env$prm,
+                  .data$Operasjonsmetode %in% .env$opr,
+                  .data$Opmetode_GBP %in% .env$oa,
+                  .data$dato_iv %in% .env$dayIv)
+
+}
 
 #' slingringsmonn for aarskontrollar, minus
 #'
