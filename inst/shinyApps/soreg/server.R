@@ -168,7 +168,8 @@ server <- function(input, output, session) {
   pl <- shiny::reactive({
     switch(if (is.null(input$kIix)) "KI1" else input$kIix,
            "KI1" = soreg::lgg_gr(
-             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
+         #    soreg::snitt(dFull, input$sh, input$op_aar)),
+            soreg::slice(dFull, input$sh, input$op_aar, input$prim,
                           input$op_tech)),
            "KI3" = soreg::kompl_gr(
              soreg::snitt(dFull, input$sh, input$op_aar)),

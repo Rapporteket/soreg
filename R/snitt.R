@@ -126,23 +126,23 @@ lgg_tb <- function(df) {
 
 lgg_gr <- function(df) {
   maksdogn_vis <- 14
-  liggeDogn <- liggedognTrunk <- liggedognLenge <- NULL
+  LiggeDogn <- liggedognTrunk <- liggedognLenge <- NULL
   # r-bloggers.com/2019/08/no-visible-binding-for-global-variable
 df %<>%
   dplyr::mutate(
-    liggedognLenge = liggeDogn > maksdogn_vis,
-    liggedognTrunk = pmin(liggeDogn, maksdogn_vis + 1))
+    liggedognLenge = LiggeDogn > maksdogn_vis,
+    liggedognTrunk = pmin(LiggeDogn, maksdogn_vis + 1))
 
-    liggedognMaks <- max(df$liggeDogn, na.rm = TRUE)
+    liggedognMaks <- max(df$LiggeDogn, na.rm = TRUE)
     liggedognBreaks <- seq(
-        pmin(1, min(df$liggeDogn, na.rm = TRUE)),
+        pmin(1, min(df$LiggeDogn, na.rm = TRUE)),
         maksdogn_vis + 1)
     liggedognTekst <- liggedognBreaks
     liggedognTekst[length(liggedognTekst)] <-
       paste0("\u2265", maksdogn_vis + 1)
 
 df %>%
-  dplyr::filter(!is.na(liggeDogn) & !(liggeDogn < 0)) %>%
+  dplyr::filter(!is.na(LiggeDogn) & !(LiggeDogn < 0)) %>%
   ggplot2::ggplot(ggplot2::aes(x = liggedognTrunk,
                                fill = liggedognLenge)) +
   ggplot2::geom_bar(stat = "count",
