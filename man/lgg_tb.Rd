@@ -2,7 +2,7 @@
 % Please edit documentation in R/snitt.R
 \name{lgg_tb}
 \alias{lgg_tb}
-\title{lage ligged?gntabell}
+\title{lage liggedogntabell}
 \usage{
 lgg_tb(df)
 }
@@ -13,5 +13,5 @@ lgg_tb(df)
 df data frame grouped by year and hospital
 }
 \description{
-lage ligged?gntabell
+lage liggedogntabell
 }

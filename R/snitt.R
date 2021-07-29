@@ -106,7 +106,7 @@ siivu <- function(df, sh, yr, prm, opr, oa, dayIv) {
       dag + lubridate::ddays(l) + lubridate::years(yr))
   }
 
-#' lage ligged?gntabell
+#' lage liggedogntabell
 #' @param df data frame
 #' @return df data frame grouped by year and hospital
 #' @export
