@@ -37,10 +37,10 @@ GROUP BY
 #' @rdname getRegData
 #' @export
 lagDDump <- function(registryName, tableName, fromDate, toDate, ...) {
-  
+
   # dummy query returning empty data set
   query <- "SELECT * FROM AlleVar WHERE 1=0;"
-  
+
   if (tableName %in% c("friendlynamestable", "change_log_variables",
                        "avdelingsoversikt", "Brukerliste")) {
     query <- paste0("
@@ -50,14 +50,14 @@ FROM
   ", tableName, ";
   ")
   }
-  
-  if (tableName %in% c("SkjemaOversikt", "AlleVar", 
-                       "AlleVarNum", 
-                       "Arskontrollar", 
+
+  if (tableName %in% c("SkjemaOversikt", "AlleVar",
+                       "AlleVarNum",
+                       "Arskontrollar",
                        "Arskontrollar1", "Arskontrollar2",
                        "Arskontrollar5", "Arskontrollar10",
                        "Arskontrollar1Num", "Arskontrollar2Num",
-                       "Arskontrollar5Num", "Arskontrollar10Num",)) {
+                       "Arskontrollar5Num", "Arskontrollar10Num")) {
     query <- paste0("
 SELECT
   fo.HovedDato,
@@ -74,7 +74,7 @@ WHERE
     CAST('", toDate, "' AS DATE);
 ")
   }
-  
+
   if (tableName %in% c("ForlopsOversikt")) {
     query <- paste0("
 SELECT
@@ -100,11 +100,10 @@ WHERE
     CAST('", toDate, "' AS DATE);
 ")
   }
-  
+
   if ("session" %in% names(list(...))) {
     rapbase::repLogger(session = list(...)[["session"]],
                        msg = paste("Soreg data dump:\n", query))
   }
   rapbase::loadRegData(registryName, query)
 }
- 
