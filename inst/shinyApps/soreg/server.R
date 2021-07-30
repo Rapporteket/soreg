@@ -191,10 +191,10 @@ server <- function(input, output, session) {
 
   ## ta ut innhold i datadump
   contentDump <- function(file, type) {
-    d <- lagDDump(registryName, input$dumpDataSet,
-                  fromDate = input$dumpDateRange[1],
-                  toDate = input$dumpDateRange[2],
-                  session = session)
+    d <- soreg::lagDDump(registryName, input$dumpDataSet,
+                         fromDate = input$dumpDateRange[1],
+                         toDate = input$dumpDateRange[2],
+                         session = session)
     if (type == "xlsx-csv") {
       readr::write_excel_csv2(d, file)
     } else {
