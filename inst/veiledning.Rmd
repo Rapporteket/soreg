@@ -1,23 +1,7 @@
-<<<<<<< HEAD
 ---
 title: "Veiledning"
 author: "Rapporteket"
 date: "`r format(Sys.time(), "%d. %B %Y")`"
-output:
-  pdf_document: default
-  html_document:
-    keep_md: yes
----
-
-# SoReg på Rapporteket
-Første utgave av SoReg på Rapporteket. Inneholder startside og mulighet for nedlasting av data.
-=======
-title: 'Veiledning'
-author: 'Rapporteket'
-date: '`r format(Sys.time(), "%d. %B %Y")`'
-output: 
-  html_document: 
-    keep_md: yes
 ---
 
 # SoReg på Rapporteket
@@ -48,11 +32,11 @@ Denne rapporten gir en oversikt over opptellinger relatert til utførte prosedyr
 
 
 ### Datadump
-_ Berre tilgjengeleg for bruakarar som har rolla "Systemkoordinator" (SC) i Rapporteket._
+_Berre tilgjengeleg for bruakarar som har rolla "Systemkoordinator" (SC) i Rapporteket._
 
 
 ### Metadata
-_ Berre tilgjengeleg for brukarar som har rolla "Systemkoordinator" (SC) i Rapporteket._
+_Berre tilgjengeleg for brukarar som har rolla "Systemkoordinator" (SC) i Rapporteket._
 
 Denne sida inneheld metadata ("data om data") om dei ulike tabellane som som utgjer datagrunnlaget for Rapporteket (AndreProsedyrerVar, AngioPCIVar osv.). Viss du til dømes lurer på om datadumpen *Segmentstent* har ein variabel som heiter "Okklusjon", så kan du bruka søkeordet "okklusjon" i søkeboksen i høgre hjørne.
  
@@ -67,15 +51,3 @@ Du kan sjølv velja kor ofte du får dei tilsendt (frekvens) og ønska format (h
 
 ### Kontakinformasjon
 Ta gjerne kontakt ved spørsmål eller innspel til rapportar eller anna innhald på rapporteket. E-post: soreg-norge@helse-bergen.no
-
-
-
-
-
-
-
-
-
-
-
->>>>>>> 93724799c2215d925f1046869eed1d0b84af6dc2
