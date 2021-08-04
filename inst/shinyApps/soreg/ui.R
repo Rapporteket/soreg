@@ -67,6 +67,13 @@ ui <- shiny::tagList(
           htmlOutput("dumpDataInfo")
         )
       )
+    ),
+    shiny::tabPanel(
+      "Eksport",
+      shiny::sidebarLayout(
+        shiny::sidebarPanel(rapbase::exportUCInput("soregExport")),
+        shiny::mainPanel(rapbase::exportGuideUI("soregExportGuide"))
+      )
     )
   ) # navbarPage
 ) # tagList

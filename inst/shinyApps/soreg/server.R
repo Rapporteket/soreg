@@ -221,4 +221,8 @@ server <- function(input, output, session) {
       contentDump(file, input$dumpFormat)
     }
   )
+
+  # Eksport
+  rapbase::exportUCServer("soregExport", registryName)
+  rapbase::exportGuideServer("soregExportGuide", registryName)
 }
