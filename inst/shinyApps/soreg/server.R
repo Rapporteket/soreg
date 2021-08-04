@@ -3,6 +3,8 @@ library(shinyWidgets)
 
 server <- function(input, output, session) {
 
+  rapbase::appLogger(session = session, msg = "Starting Soreg application")
+
   # Faste verdier i sesjonen
   registryName <- "soreg"
 
