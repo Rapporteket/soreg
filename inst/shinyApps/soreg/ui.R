@@ -68,6 +68,13 @@ ui <- shiny::tagList(
         )
       )
     ),
+    tabPanel(
+      "Metadata",
+      sidebarLayout(
+        sidebarPanel(uiOutput("metaControl")),
+        mainPanel(htmlOutput("metaData"))
+      )
+    ),
     shiny::tabPanel(
       "Eksport",
       shiny::sidebarLayout(

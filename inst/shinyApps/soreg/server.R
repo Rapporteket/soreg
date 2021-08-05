@@ -222,6 +222,29 @@ server <- function(input, output, session) {
     }
   )
 
+  # Metadata
+  output$metaControl <- renderUI({
+    tabs <- names(meta())
+    selectInput("metaTab", "Velg tabell:", tabs)
+  })
+
+  output$metaDataTable <- DT::renderDataTable(
+    meta()[[input$metaTab]], rownames = FALSE,
+    options = list(
+      lengthMenu = c(25, 50, 100, 200, 400),
+      language = list(
+        lengthMenu = "Vis _MENU_ rader per side",
+        search = "S\u00f8k:",
+        info = "Rad _START_ til _END_ av totalt _TOTAL_",
+        paginate = list(previous = "Forrige", `next` = "Neste")
+      ))
+  )
+
+  output$metaData <- renderUI({
+    DT::dataTableOutput("metaDataTable")
+  })
+
+
   # Eksport
   rapbase::exportUCServer("soregExport", registryName)
   rapbase::exportGuideServer("soregExportGuide", registryName)
