@@ -1,6 +1,6 @@
 Package: soreg
 Title: soreg at Rapporteket
-Version: 0.2.0.9000
+Version: 0.4.0.9000
 Authors@R: c(
     person("Hannu",
            "Lyyjynen",
@@ -19,6 +19,7 @@ LazyData: true
 Imports:
     DT,
     dplyr,
+    ggplot2,
     kableExtra,
     lubridate,
     magrittr,

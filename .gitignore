@@ -3,4 +3,11 @@
 .RData
 docs/
 inst/shinyApps/soreg/figure*
-inst/shinyApps/soreg/*.md
+inst/*.docx
+inst/*.html
+inst/*.log
+inst/*.md
+inst/*.tex
+inst/shinyApps/soreg/samlerapport.md
+inst/shinyApps/soreg/veiledning.md
+

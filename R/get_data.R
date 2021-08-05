@@ -11,7 +11,7 @@
 #' @name get_data
 #' @aliases data_years get_allevarnum get_arsrp data_sh
 #' @importFrom rapbase loadRegData
-
+NULL
 
 #' @rdname get_data
 #' @export
