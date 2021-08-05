@@ -11,7 +11,7 @@ services:
   dev:
     depends_on:
       - db
-    image: rapporteket/soreg-dev:latest
+    image: rapporteket/soreg-dev:main
     volumes:
       - ~/.ssh:/home/rstudio/.ssh
       - ~/.gitconfig:/home/rstudio/.gitconfig
