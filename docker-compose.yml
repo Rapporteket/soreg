@@ -11,9 +11,9 @@ services:
   dev:
     depends_on:
       - db
-    image: rapporteket/rap-dev-data:nodata
+    image: rapporteket/soreg-dev:latest
     volumes:
-      - ~/.ssh:/tmp/.ssh
+      - ~/.ssh:/home/rstudio/.ssh
       - ~/.gitconfig:/home/rstudio/.gitconfig
     ports:
       - "8787:8787"
@@ -23,6 +23,9 @@ services:
     restart: "no"
     environment:
       PASSWORD: password
+      DB_HOST: db
+      DB_USER: root
+      DB_PASS: root
 
   adminer:
     depends_on:
