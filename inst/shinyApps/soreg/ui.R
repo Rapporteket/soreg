@@ -22,8 +22,8 @@ ui <- shiny::tagList(
         )
       )
     ),
-    # shiny::tabPanel(
-    #   "Kvalitetsindikatorer",
+     shiny::tabPanel(
+       "Kvalitetsindikatorer",
     #   shiny::sidebarLayout(
     #     shiny::sidebarPanel(
     #       width = 3,
@@ -43,7 +43,7 @@ ui <- shiny::tagList(
     #       )
     #     )
     #   )
-    # ),
+     ),
     shiny::tabPanel(
       "Datadump",
       shiny::sidebarLayout(
