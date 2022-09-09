@@ -35,13 +35,13 @@ ui <- shiny::tagList(
     #       shiny::uiOutput("uc_oagb"), #
     #       shiny::uiOutput("uc_dates")
     #     ),
-    #     shiny::mainPanel(
-    #       width = 9,
-    #       shiny::tabsetPanel(
-    #         shiny::tabPanel("Tabell", shiny::uiOutput("dT")),
-    #         shiny::tabPanel("Figur", shiny::plotOutput("graf"))
-    #       )
-    #     )
+         shiny::mainPanel(
+           width = 9,
+           shiny::tabsetPanel(
+             shiny::tabPanel("Tabell", shiny::uiOutput("dT")),
+             shiny::tabPanel("Figur", shiny::plotOutput("graf"))
+           )
+         )
     #   )
      ),
     shiny::tabPanel(
