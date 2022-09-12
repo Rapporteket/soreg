@@ -42,7 +42,7 @@ server <- function(input, output, session) {
   })
   # #------------------ KI
   # # read in data
-  # dFull <- soreg::get_arsrp("soreg")
+   dFull <- soreg::get_arsrp("soreg")
   # dFull %<>%
   #   dplyr::mutate(
   #     op_aar = lubridate::year(Operasjonsdato),
@@ -70,12 +70,12 @@ server <- function(input, output, session) {
   #
   #
   # #-------- user controls----------  hospital ------
-  # output$kIix <- shiny::renderUI({
-  #   shiny::selectInput(
-  #     inputId = "kIix",
-  #     label = "Kvalitetsindikator:",
-  #     choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6"))
-  # })
+  output$kIix <- shiny::renderUI({
+    shiny::selectInput(
+      inputId = "kIix",
+      label = "Kvalitetsindikator:",
+      choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6"))
+  })
   # output$uc_sh <- shiny::renderUI({
   #   shinyWidgets::pickerInput(
   #     inputId = "sh",
