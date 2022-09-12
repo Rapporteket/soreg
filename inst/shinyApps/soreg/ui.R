@@ -28,8 +28,8 @@ ui <- shiny::tagList(
     #     shiny::sidebarPanel(
     #       width = 3,
            shiny::uiOutput("kIix"),
-    #       shiny::uiOutput("uc_sh"),
-    #       shiny::uiOutput("uc_years"),
+           shiny::uiOutput("uc_sh"),
+           shiny::uiOutput("uc_years"),
     #       shiny::uiOutput("uc_prim"),
     #       shiny::uiOutput("uc_opr"),
     #       shiny::uiOutput("uc_oagb"), #

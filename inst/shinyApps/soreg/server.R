@@ -76,35 +76,35 @@ server <- function(input, output, session) {
       label = "Kvalitetsindikator:",
       choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6"))
   })
-  # output$uc_sh <- shiny::renderUI({
-  #   shinyWidgets::pickerInput(
-  #     inputId = "sh",
-  #     label = "velg sjukehus",
-  #     choices = (unique(dFull$OperererendeSykehus)),
-  #     selected = "Testsjukhus Norge",
-  #     multiple = TRUE,
-  #     options = shinyWidgets::pickerOptions(
-  #       actionsBox = TRUE,
-  #       title = "Please select a hospital",
-  #       header = "This is a list of hospitals")
-  #   )
-  # })
+  output$uc_sh <- shiny::renderUI({
+    shinyWidgets::pickerInput(
+      inputId = "sh",
+      label = "velg sjukehus",
+      choices = (unique(dFull$OperererendeSykehus)),
+      selected = "Testsjukhus Norge",
+      multiple = TRUE,
+      options = shinyWidgets::pickerOptions(
+        actionsBox = TRUE,
+        title = "Please select a hospital",
+        header = "This is a list of hospitals")
+    )
+  })
   # # -------------------------------  operation years
-  # output$uc_years <- shiny::renderUI({
-  #   ## years available, hardcoded if outside known context
-  #   if (rapbase::isRapContext()) {
-  #     years <- soreg::data_years(registryName)
-  #     # remove NAs if they exist (bad registry)
-  #     years <- years[!is.na(years)]
-  #   } else {
-  #     years <- c("2016", "2017", "2018", "2019", "2020")
-  #   }
-  #   shiny::checkboxGroupInput(
-  #     inputId = "op_aar",
-  #     label = "År:",
-  #     choices = years,
-  #     selected = 2015:2018)
-  # })
+  output$uc_years <- shiny::renderUI({
+    ## years available, hardcoded if outside known context
+    if (rapbase::isRapContext()) {
+      years <- soreg::data_years(registryName)
+      # remove NAs if they exist (bad registry)
+      years <- years[!is.na(years)]
+    } else {
+      years <- c("2016", "2017", "2018", "2019", "2020")
+    }
+    shiny::checkboxGroupInput(
+      inputId = "op_aar",
+      label = "År:",
+      choices = years,
+      selected = 2015:2018)
+  })
   # #--------- primæroperasjon?
   # output$uc_prim <- shiny::renderUI({
   #   shiny::checkboxGroupInput(
