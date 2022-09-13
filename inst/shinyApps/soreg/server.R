@@ -135,54 +135,54 @@ server <- function(input, output, session) {
       )
   })
   # #------------- opr date interval
-  # output$uc_dates <- shiny::renderUI({
-  #   shiny::dateRangeInput(
-  #     inputId = "dato_iv",
-  #     label = "Operasjonsinterval ?",
-  #     start = min(dFull$Operasjonsdato),
-  #     end = max(dFull$Operasjonsdato)
-  #   )
-  # })
+  output$uc_dates <- shiny::renderUI({
+    shiny::dateRangeInput(
+      inputId = "dato_iv",
+      label = "Operasjonsinterval ?",
+      start = min(dFull$Operasjonsdato),
+      end = max(dFull$Operasjonsdato)
+    )
+  })
   # # liggedøgn
   # # .................
-  # kI <- shiny::reactive({
-  #   switch(if (is.null(input$kIix)) "KI1" else input$kIix,
-  #          "KI1" = soreg::lgg_tb(
-  #            soreg::slice(dFull, input$sh, input$op_aar, input$prim,
-  #                         input$op_tech)), # input$dato_iv
-  #          "KI2" = soreg::reinn_tb(
-  #            soreg::snitt(dFull, input$sh, input$op_aar)),
-  #          "KI3" = soreg::kompl_tb(
-  #            soreg::snitt(dFull, input$sh, input$op_aar)),
-  #          "KI4" = soreg::aarKtrl(
-  #            soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
-  #          "KI5" = soreg::aarKtrl(
-  #            soreg::snitt(dFull, input$sh, input$op_aar), k = 2),
-  #          "KI6" = soreg::twlTb(
-  #            soreg::snitt(dFull, input$sh, input$op_aar),
-  #            opr_tp = input$op_tech,
-  #            opr_oa = input$oagb)
-  #   )
-  # })
+  kI <- shiny::reactive({
+    switch(if (is.null(input$kIix)) "KI1" else input$kIix,
+           "KI1" = soreg::lgg_tb(
+             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
+                          input$op_tech)), # input$dato_iv
+           "KI2" = soreg::reinn_tb(
+             soreg::snitt(dFull, input$sh, input$op_aar)),
+           "KI3" = soreg::kompl_tb(
+             soreg::snitt(dFull, input$sh, input$op_aar)),
+           "KI4" = soreg::aarKtrl(
+             soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
+           "KI5" = soreg::aarKtrl(
+             soreg::snitt(dFull, input$sh, input$op_aar), k = 2),
+           "KI6" = soreg::twlTb(
+             soreg::snitt(dFull, input$sh, input$op_aar),
+             opr_tp = input$op_tech,
+             opr_oa = input$oagb)
+    )
+  })
+
+  output$dT <- shiny::renderTable(kI())
   #
-  # output$dT <- shiny::renderTable(kI())
-  #
-  # pl <- shiny::reactive({
-  #   switch(if (is.null(input$kIix)) "KI1" else input$kIix,
-  #          "KI1" = soreg::lgg_gr(
-  #        #    soreg::snitt(dFull, input$sh, input$op_aar)),
-  #           soreg::slice(dFull, input$sh, input$op_aar, input$prim,
-  #                         input$op_tech)),
-  #          "KI3" = soreg::kompl_gr(
-  #            soreg::snitt(dFull, input$sh, input$op_aar)),
-  #          "KI4" = soreg::aar_ktr_tb(
-  #            soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
-  #          "KI6" = soreg::twlGr(
-  #            soreg::snitt(dTwl, input$sh, input$op_aar),
-  #            input$op_tech, input$oagb)
-  #   )
-  # })
-  # output$graf <- shiny::renderPlot(pl())
+  pl <- shiny::reactive({
+    switch(if (is.null(input$kIix)) "KI1" else input$kIix,
+           "KI1" = soreg::lgg_gr(
+         #    soreg::snitt(dFull, input$sh, input$op_aar)),
+            soreg::slice(dFull, input$sh, input$op_aar, input$prim,
+                          input$op_tech)),
+           "KI3" = soreg::kompl_gr(
+             soreg::snitt(dFull, input$sh, input$op_aar)),
+           "KI4" = soreg::aar_ktr_tb(
+             soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
+           "KI6" = soreg::twlGr(
+             soreg::snitt(dTwl, input$sh, input$op_aar),
+             input$op_tech, input$oagb)
+    )
+  })
+  output$graf <- shiny::renderPlot(pl())
   # #------------------
 
   # Datadump
