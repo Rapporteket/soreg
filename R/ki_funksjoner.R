@@ -27,7 +27,7 @@ ki_liggetid <- function(df) {
 #' @export
 ki_30dager <- function(df) {
 
-  teljar <- sum(df$`6U_Behandling30Dager` == 1)
+  teljar <- sum(df$u6_Behandling30Dager == 1)
   nemnar <- nrow(df)
 
   ind <- teljar / nemnar
@@ -42,7 +42,7 @@ ki_30dager <- function(df) {
 ki_kompl_alv <- function(df) {
 
   # Alvorlege komplikasjonar
-  teljar <- sum(df$`6U_KomplAlvorGrad` >= 4, na.rm = TRUE)
+  teljar <- sum(df$u6_KomplAlvorGrad >= 4, na.rm = TRUE)
   nemnar <- nrow(df)
 
   ind <- teljar / nemnar

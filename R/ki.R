@@ -14,8 +14,8 @@ ki <- function(df, indicator) {
 
   numerator <- switch(indicator,
     liggetid = sum(df$LiggeDogn <= 3),
-    kompl = sum(df$`6U_KomplAlvorGrad` >= 4, na.rm = TRUE),
-    dag30 = sum(df$`6U_Behandling30Dager` == 1)
+    kompl = sum(df$u6_KomplAlvorGrad >= 4, na.rm = TRUE),
+    dag30 = sum(df$u6_Behandling30Dager == 1)
   )
 
   denominator <- nrow(df)

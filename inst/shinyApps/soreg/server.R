@@ -49,24 +49,24 @@ server <- function(input, output, session) {
       op_primar = (TidlFedmeOp == 0))
   d_prim <- dFull %>%
     dplyr::filter(op_primar)
-#  d_prim_6v <- d_prim %>%
-#    dplyr::filter(`6U_KontrollType` %in% 1:3)   # not found??
-#  d_ligg <- lgg_tb(d_prim_6v)
-#  d_innlegg30 <- reinn_tb(d_prim)
-#  d_kompl <- kompl_tb(d_prim)
+ d_prim_6v <- d_prim %>%
+   dplyr::filter(u6_KontrollType %in% 1:3)   # not found??
+ d_ligg <- lgg_tb(d_prim_6v)
+ d_innlegg30 <- reinn_tb(d_prim)
+ d_kompl <- kompl_tb(d_prim)
 
-  # dTwl  <- dFull %>%
-  #   dplyr::filter(!is.na(`ToAar_Vekt`)) %>% # pTWL at 2 year must exist!
-  #   dplyr::mutate(
-  #     pTWL = 100 * (BR_Vekt - `ToAar_Vekt`) / BR_Vekt) %>%
-  #   dplyr::mutate(del20 = pTWL >= 20.0)
-  #
-  # d_slv <- dTwl %>%
-  #   dplyr::filter(Operasjonsmetode == 6)
-  # d_gbp <- dTwl %>%
-  #   dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 1)
-  # d_oa <- dTwl %>%
-  #   dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 2)
+  dTwl  <- dFull %>%
+    dplyr::filter(!is.na(`ToAar_Vekt`)) %>% # pTWL at 2 year must exist!
+    dplyr::mutate(
+      pTWL = 100 * (BR_Vekt - `ToAar_Vekt`) / BR_Vekt) %>%
+    dplyr::mutate(del20 = pTWL >= 20.0)
+
+  d_slv <- dTwl %>%
+    dplyr::filter(Operasjonsmetode == 6)
+  d_gbp <- dTwl %>%
+    dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 1)
+  d_oa <- dTwl %>%
+    dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 2)
   #
   #
   # #-------- user controls----------  hospital ------

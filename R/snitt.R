@@ -166,9 +166,9 @@ df %>%
 
 reinn_tb <- function(df)  {
   df <- df %>%
-  dplyr::filter(((.data$`6U_KontrollType` %in% 1:3) |
-                   (.data$`6U_Behandling30Dager` == 1)) &
-                  (.data$`6U_Behandling30Dager` != 2))
+  dplyr::filter(((.data$u6_KontrollType %in% 1:3) |
+                   (.data$u6_Behandling30Dager == 1)) &
+                  (.data$u6_Behandling30Dager != 2))
 df %>%
   dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
   dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
@@ -182,8 +182,8 @@ df %>%
 
 kompl_tb <- function(df) {
   df <- df %>%
- dplyr::filter((.data$`6U_KontrollType` %in% 1:3) |
-                 (!is.na(.data$`6U_KomplAlvorGrad`)))
+ dplyr::filter((.data$u6_KontrollType %in% 1:3) |
+                 (!is.na(.data$u6_KomplAlvorGrad)))
 df  %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
   dplyr::summarise(soreg::ki(dplyr::across(), "kompl")) %>%
@@ -196,7 +196,7 @@ df  %>%
 #' @export
 
 kompl_gr <- function(df) {
-  `6U_KomplAlvorGrad` <- kompl_grad_tekst <- n <- NULL
+  u6_KomplAlvorGrad <- kompl_grad_tekst <- n <- NULL
   fjern_x <- ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(),
                             panel.grid.minor.x = ggplot2::element_blank())
   fjern_y <- ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(),
@@ -207,10 +207,10 @@ kompl_gr <- function(df) {
                "#c6dbef")
 
   d_kompl_graf <- df %>%
-    dplyr::filter(!is.na(`6U_KomplAlvorGrad`)) %>%
-    dplyr::count(`6U_KomplAlvorGrad`) %>%
+    dplyr::filter(!is.na(u6_KomplAlvorGrad)) %>%
+    dplyr::count(u6_KomplAlvorGrad) %>%
     dplyr::mutate(kompl_grad_tekst =
-                    factor(`6U_KomplAlvorGrad`,
+                    factor(u6_KomplAlvorGrad,
                            levels = rev(c(1:4, 6:7, 5)),
                            labels = rev(c("Grad I: Ingen tiltak",
                                           "Grad II: Farmakologiske tiltak",
