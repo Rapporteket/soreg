@@ -56,9 +56,9 @@ server <- function(input, output, session) {
  d_kompl <- kompl_tb(d_prim)
 
   dTwl  <- dFull %>%
-    dplyr::filter(!is.na(`ToAar_Vekt`)) %>% # pTWL at 2 year must exist!
+    dplyr::filter(!is.na(a2_Vekt)) %>% # pTWL at 2 year must exist!
     dplyr::mutate(
-      pTWL = 100 * (BR_Vekt - `ToAar_Vekt`) / BR_Vekt) %>%
+      pTWL = 100 * (BR_Vekt - a2_Vekt) / BR_Vekt) %>%
     dplyr::mutate(del20 = pTWL >= 20.0)
 
   d_slv <- dTwl %>%
