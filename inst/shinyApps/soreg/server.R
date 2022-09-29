@@ -103,7 +103,8 @@ server <- function(input, output, session) {
       inputId = "op_aar",
       label = "År:",
       choices = years,
-      selected = 2015:2018)
+      selected = 2015:2018,
+      inline = TRUE)
   })
   # #--------- primæroperasjon?
   output$uc_prim <- shiny::renderUI({
@@ -111,7 +112,8 @@ server <- function(input, output, session) {
       inputId = "prim",
       label = "Primæaroperasjon ?",
       choices = unique(dFull$op_primar),
-      selected = TRUE
+      selected = TRUE,
+      inline = TRUE
     )
   })
   # #----------- operasjonsteknikk
@@ -120,7 +122,8 @@ server <- function(input, output, session) {
       inputId = "op_tech",
       label = "Operasjonsteknikk",
       choices = unique(dFull$Operasjonsmetode),
-      selected = 6
+      selected = 6,
+      inline = TRUE
     )
   })
   # # -------------  OAGB
@@ -131,7 +134,8 @@ server <- function(input, output, session) {
          inputId = "oagb",
          label = "OAGB GBP",
          choices = c(1, 2),
-         selected = 2)
+         selected = 2,
+         inline = TRUE)
       )
   })
   # #------------- opr date interval
