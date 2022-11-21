@@ -81,7 +81,7 @@ server <- function(input, output, session) {
       inputId = "sh",
       label = "velg sjukehus",
       choices = (unique(dFull$OperererendeSykehus)),
-      selected = "Testsjukhus Norge",
+      selected = "Helse Bergen",
       multiple = TRUE,
       options = shinyWidgets::pickerOptions(
         actionsBox = TRUE,
