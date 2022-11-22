@@ -175,6 +175,18 @@ df %>%
   dplyr::arrange(dplyr::desc(.data$indicator))
 }
 
+#' lage reinnleggninggraf
+#' @param df data frame
+#' @return df data frame grouped by year and hospital
+#' @export
+
+reinn_gr <- function(df) {
+  d_reinn_graf <- df %>%
+    ggplot2::ggplot() +
+    ggplot2::aes(x=op_aar, y = indicator, group = OperererendeSykehus) +
+    ggplot2::geom_line()
+}
+
 #' lage komplikasjontabell
 #' @param df data frame
 #' @return df data frame grouped by year and hospital

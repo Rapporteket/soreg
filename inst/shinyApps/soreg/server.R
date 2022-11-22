@@ -177,6 +177,9 @@ server <- function(input, output, session) {
          #    soreg::snitt(dFull, input$sh, input$op_aar)),
             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
                           input$op_tech)),
+           "KI2" = soreg::reinn_gr(
+            soreg::slice(dFull, input$sh, input$op_aar, input$prim,
+                          input$op_tech)),
            "KI3" = soreg::kompl_gr(
              soreg::snitt(dFull, input$sh, input$op_aar)),
            "KI4" = soreg::aar_ktr_tb(
