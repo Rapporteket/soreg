@@ -34,6 +34,16 @@ NULL
 #' @usage lhs \%$\% rhs
 NULL
 
+#' Inclusion operator
+#'
+#' @name %in%
+#' @rdname in
+#' @keywords internal
+#' @export
+#' @importFrom
+#' @usage a \%in\% b
+NULL
+
 #' Interval inclusion operator
 #'
 #' @name %within%

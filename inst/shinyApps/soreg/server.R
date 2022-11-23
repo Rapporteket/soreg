@@ -83,7 +83,7 @@ server <- function(input, output, session) {
       inputId = "sh",
       label = "Vel sjukehus",
       choices = (unique(dFull$OperererendeSykehus)),
-      selected = "Helse Bergen",
+      selected = "Helse Bergen",  # eget sjukehus
       multiple = TRUE,
       options = shinyWidgets::pickerOptions(
         actionsBox = TRUE,
@@ -112,10 +112,10 @@ server <- function(input, output, session) {
   output$uc_prim <- shiny::renderUI({
     shiny::checkboxGroupInput(
       inputId = "prim",
-      label = "Primæroperasjon ?",
-      choices = unique(dFull$op_primar),
-       choiceNames = list("Ja", "Nei"),
-       choiceValues = list("Ja", "Nei"),
+      label = "Operasjonstype:",
+       choices = unique(dFull$op_primar),
+     #  choiceNames  = list("Primæroperasjon", "Revisjonsoperasjon"),
+     #  choiceValues = list("Primæroperasjon", "Revisjonsoperasjon"),
       selected = TRUE,
       inline = TRUE
     )
@@ -124,7 +124,7 @@ server <- function(input, output, session) {
   output$uc_opr <- shiny::renderUI({
     shiny::checkboxGroupInput(
       inputId = "op_tech",
-      label = "Operasjonsmetode",
+      label = "Operasjonsmetode:",
       choices = unique(dFull$Operasjonsmetode),
       selected = 6,
       inline = TRUE
@@ -133,7 +133,8 @@ server <- function(input, output, session) {
   # # -------------  OAGB
   output$uc_oagb <- shiny::renderUI({
      shiny::conditionalPanel(
-       condition = "input.op_tech == 1", # "`1` %in% input.op_tech",
+       condition = "input.op_tech == 1",
+       # condition = "1 %in%  input.op_tech",
        shiny::checkboxGroupInput(
          inputId = "oagb",
          label = "RYGBP OAGB",
@@ -159,10 +160,11 @@ server <- function(input, output, session) {
              soreg::slice(dFull, input$sh, input$op_aar, input$prim,
                           input$op_tech)), # input$dato_iv
            "Ki2 Reinnlagt" = soreg::reinn_tb(
-             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
-                          input$op_tech)),
+             soreg::slice(dFull, input$sh, input$op_aar,
+                          input$prim, input$op_tech)),
            "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(
-             soreg::snitt(dFull, input$sh, input$op_aar)),
+             soreg::slice(dFull, input$sh, input$op_aar,
+                          input$prim, input$op_tech)),
            "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(
              soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
            "Ki5 Kontroll normtid to år" = soreg::aarKtrl(
@@ -180,13 +182,14 @@ server <- function(input, output, session) {
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
            "Ki1 Liggedøgn" = soreg::lgg_gr(
          #    soreg::snitt(dFull, input$sh, input$op_aar)),
-            soreg::slice(dFull, input$sh, input$op_aar, input$prim,
-                          input$op_tech)),
+            soreg::slice(dFull, input$sh, input$op_aar,
+                         input$prim, input$op_tech)),
            "Ki2 Reinnlagt" = soreg::reinn_gr(
-            soreg::slice(dFull, input$sh, input$op_aar, input$prim,
-                          input$op_tech)),
+            soreg::slice(dFull, input$sh, input$op_aar,
+                         input$prim, input$op_tech)),
            "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(
-             soreg::snitt(dFull, input$sh, input$op_aar)),
+             soreg::slice(dFull, input$sh, input$op_aar,
+                          input$prim, input$op_tech)),
            "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_tb(
              soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
            "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_tb(

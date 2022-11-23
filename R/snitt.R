@@ -155,7 +155,8 @@ df %>%
   ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.0, .05),
                                                           add = 0)) +
   ggplot2::xlab("Ligged\u00F8gn") +
-  ggplot2::ylab("Talet p\u00E5 pasienter")
+  ggplot2::ylab("Talet p\u00E5 pasienter")+
+  ggplot2::theme_minimal()
 }
 
 
@@ -263,7 +264,7 @@ aarKtrl <- function(df, k) {
       et_nor_p = nitti_p(dag = .data$Operasjonsdato),
       to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato),
       to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato),
-      pTWL = 100 * (.data$BR_Vekt - .data$`ToAar_Vekt`) / .data$BR_Vekt)
+      pTWL = 100 * (.data$BR_Vekt - .data$`a2_Vekt`) / .data$BR_Vekt)
 
 df <- df %>%
     dplyr::mutate(
@@ -315,9 +316,9 @@ switch(k,
 twlTb <- function(df, opr_tp, opr_oa = 2) {
 
  dTwl  <- df %>%
-  dplyr::filter(!is.na(.data$`ToAar_Vekt`)) %>%
+  dplyr::filter(!is.na(.data$`a2_Vekt`)) %>%
   dplyr::mutate(
-    pTWL = 100 * (.data$BR_Vekt - .data$`ToAar_Vekt`) / .data$BR_Vekt) %>%
+    pTWL = 100 * (.data$BR_Vekt - .data$`a2_Vekt`) / .data$BR_Vekt) %>%
   dplyr::mutate(del20 = .data$pTWL >= 20.0)
  # pTWL at 2 year must exist!
  d_slv  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 6)
