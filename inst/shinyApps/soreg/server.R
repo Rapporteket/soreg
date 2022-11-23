@@ -5,6 +5,20 @@ server <- function(input, output, session) {
 
   rapbase::appLogger(session = session, msg = "Starting Soreg application")
 
+  # Parameters that will remain throughout the session
+  ## setting values that do depend on a Rapporteket context
+  if (rapbase::isRapContext()) {
+    reshId <- rapbase::getUserReshId(session)
+##    hospitalName <- noric::getHospitalName(reshId)
+    userFullName <- rapbase::getUserFullName(session)
+    userRole <- rapbase::getUserRole(session)
+  #  registryName <- noric::makeRegistryName("noricStaging", reshId)
+##    mapOrgId <- mapOrgReshId(registryName)
+    author <- paste0(userFullName, "/", "Rapporteket")
+  } else {
+    ### if need be, define your (local) values here
+  }
+
   # Faste verdier i sesjonen
   registryName <- "soreg"
 
