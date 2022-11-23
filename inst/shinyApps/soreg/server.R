@@ -74,12 +74,14 @@ server <- function(input, output, session) {
     shiny::selectInput(
       inputId = "kIix",
       label = "Kvalitetsindikator:",
-      choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6"))
+      choices = c("Ki1 Liggedøgn", "Ki2 Reinnlagt",
+                  "Ki3 Alvorlege komplikasjonar", "Ki4 Kontroll normtid eitt år",
+                  "Ki5 Kontroll normtid to år", "Ki6 Vekttap to år"))
   })
   output$uc_sh <- shiny::renderUI({
     shinyWidgets::pickerInput(
       inputId = "sh",
-      label = "velg sjukehus",
+      label = "Vel sjukehus",
       choices = (unique(dFull$OperererendeSykehus)),
       selected = "Helse Bergen",
       multiple = TRUE,
@@ -101,7 +103,7 @@ server <- function(input, output, session) {
     }
     shiny::checkboxGroupInput(
       inputId = "op_aar",
-      label = "År:",
+      label = "Operasjonsår:",
       choices = years,
       selected = 2015:2018,
       inline = TRUE)
@@ -110,8 +112,10 @@ server <- function(input, output, session) {
   output$uc_prim <- shiny::renderUI({
     shiny::checkboxGroupInput(
       inputId = "prim",
-      label = "Primæaroperasjon ?",
+      label = "Primæroperasjon ?",
       choices = unique(dFull$op_primar),
+       choiceNames = list("Ja", "Nei"),
+       choiceValues = list("Ja", "Nei"),
       selected = TRUE,
       inline = TRUE
     )
@@ -120,7 +124,7 @@ server <- function(input, output, session) {
   output$uc_opr <- shiny::renderUI({
     shiny::checkboxGroupInput(
       inputId = "op_tech",
-      label = "Operasjonsteknikk",
+      label = "Operasjonsmetode",
       choices = unique(dFull$Operasjonsmetode),
       selected = 6,
       inline = TRUE
@@ -129,10 +133,10 @@ server <- function(input, output, session) {
   # # -------------  OAGB
   output$uc_oagb <- shiny::renderUI({
      shiny::conditionalPanel(
-       condition = "input.op_tech == 1", #  "`1` %in% input.op_tech",
+       condition = "input.op_tech == 1", # "`1` %in% input.op_tech",
        shiny::checkboxGroupInput(
          inputId = "oagb",
-         label = "OAGB GBP",
+         label = "RYGBP OAGB",
          choices = c(1, 2),
          selected = 2,
          inline = TRUE)
@@ -150,19 +154,20 @@ server <- function(input, output, session) {
   # # liggedøgn
   # # .................
   kI <- shiny::reactive({
-    switch(if (is.null(input$kIix)) "KI1" else input$kIix,
-           "KI1" = soreg::lgg_tb(
+    switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
+           "Ki1 Liggedøgn" = soreg::lgg_tb(
              soreg::slice(dFull, input$sh, input$op_aar, input$prim,
                           input$op_tech)), # input$dato_iv
-           "KI2" = soreg::reinn_tb(
+           "Ki2 Reinnlagt" = soreg::reinn_tb(
+             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
+                          input$op_tech)),
+           "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(
              soreg::snitt(dFull, input$sh, input$op_aar)),
-           "KI3" = soreg::kompl_tb(
-             soreg::snitt(dFull, input$sh, input$op_aar)),
-           "KI4" = soreg::aarKtrl(
+           "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(
              soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
-           "KI5" = soreg::aarKtrl(
+           "Ki5 Kontroll normtid to år" = soreg::aarKtrl(
              soreg::snitt(dFull, input$sh, input$op_aar), k = 2),
-           "KI6" = soreg::twlTb(
+           "Ki6 Vekttap to år" = soreg::twlTb(
              soreg::snitt(dFull, input$sh, input$op_aar),
              opr_tp = input$op_tech,
              opr_oa = input$oagb)
@@ -172,19 +177,21 @@ server <- function(input, output, session) {
   output$dT <- shiny::renderTable(kI())
   #
   pl <- shiny::reactive({
-    switch(if (is.null(input$kIix)) "KI1" else input$kIix,
-           "KI1" = soreg::lgg_gr(
+    switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
+           "Ki1 Liggedøgn" = soreg::lgg_gr(
          #    soreg::snitt(dFull, input$sh, input$op_aar)),
             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
                           input$op_tech)),
-           "KI2" = soreg::reinn_gr(
+           "Ki2 Reinnlagt" = soreg::reinn_gr(
             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
                           input$op_tech)),
-           "KI3" = soreg::kompl_gr(
+           "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(
              soreg::snitt(dFull, input$sh, input$op_aar)),
-           "KI4" = soreg::aar_ktr_tb(
+           "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_tb(
              soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
-           "KI6" = soreg::twlGr(
+           "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_tb(
+             soreg::snitt(dFull, input$sh, input$op_aar), k = 2),
+           "Ki6 Vekttap to år" = soreg::twlGr(
              soreg::snitt(dTwl, input$sh, input$op_aar),
              input$op_tech, input$oagb)
     )
