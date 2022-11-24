@@ -97,12 +97,12 @@ server <- function(input, output, session) {
       inputId = "sh",
       label = "Vel sjukehus",
       choices = (unique(dFull$OperererendeSykehus)),
-      selected = "Helse Bergen",  # eget sjukehus
+      selected = "Helse Bergen",  # eget sjukehus?
       multiple = TRUE,
       options = shinyWidgets::pickerOptions(
         actionsBox = TRUE,
         title = "Please select a hospital",
-        header = "This is a list of hospitals")
+        header = "Vel sjukehus")
     )
   })
   # # -------------------------------  operation years
@@ -119,7 +119,7 @@ server <- function(input, output, session) {
       inputId = "op_aar",
       label = "Operasjonsår:",
       choices = years,
-      selected = 2015:2018,
+      selected = 2016:2019,
       inline = TRUE)
   })
   # #--------- primæroperasjon?
@@ -171,8 +171,8 @@ server <- function(input, output, session) {
   kI <- shiny::reactive({
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
            "Ki1 Liggedøgn" = soreg::lgg_tb(
-             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
-                          input$op_tech)), # input$dato_iv
+             soreg::siivu(dFull, input$sh, input$op_aar, input$prim,
+                          input$op_tech, input$oagb)), # input$dato_iv
            "Ki2 Reinnlagt" = soreg::reinn_tb(
              soreg::slice(dFull, input$sh, input$op_aar,
                           input$prim, input$op_tech)),

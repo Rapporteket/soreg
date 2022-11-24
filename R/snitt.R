@@ -51,23 +51,31 @@ slice <- function(df, sh, yr, prm, opr) {
 #' @export
 
 
-siivu <- function(df, sh, yr, prm, opr, oa, dayIv) {
+siivu <- function(df, sh, yr, prm, opr, oa) {
   # if dato_iv exists()
   # df %>%
   #   dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
   #                 # .data$op_aar %in% .env$yr,
   #                 .data$op_primar %in% .env$prm,
   #                 .data$Operasjonsmetode %in% .env$opr,
-  #                 .data$Opmetode_GBP %in% .env$oa,
+  #                 .data$Opmetode_GBP %in% .env$oa)
   #                 .data$dato_iv %in% .env$dayIv)
   # else
+    if (is.null(oa)) {
+      df %>%
+        dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
+                      .data$op_aar %in% .env$yr,
+                      .data$op_primar %in% .env$prm,
+                      .data$Operasjonsmetode %in% .env$opr)
+    } else
+    {
     df %>%
     dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
                   .data$op_aar %in% .env$yr,
                   .data$op_primar %in% .env$prm,
                   .data$Operasjonsmetode %in% .env$opr,
-                  .data$Opmetode_GBP %in% .env$oa,
-                  .data$dato_iv %in% .env$dayIv)
+                  .data$Opmetode_GBP %in% .env$oa)
+    }
 }
 
 #' slingringsmonn for aarskontrollar, minus
