@@ -61,7 +61,7 @@ siivu <- function(df, sh, yr, prm, opr, oa) {
   #                 .data$Opmetode_GBP %in% .env$oa)
   #                 .data$dato_iv %in% .env$dayIv)
   # else
-    if (is.null(oa)) {
+    if (is.na(oa)) {
       df %>%
         dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
                       .data$op_aar %in% .env$yr,

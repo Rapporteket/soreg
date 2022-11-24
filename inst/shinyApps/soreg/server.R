@@ -171,8 +171,8 @@ server <- function(input, output, session) {
   kI <- shiny::reactive({
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
            "Ki1 Liggedøgn" = soreg::lgg_tb(
-             soreg::siivu(dFull, input$sh, input$op_aar, input$prim,
-                          input$op_tech, input$oagb)), # input$dato_iv
+             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
+                          input$op_tech)), # , input$oagb)), # input$dato_iv
            "Ki2 Reinnlagt" = soreg::reinn_tb(
              soreg::slice(dFull, input$sh, input$op_aar,
                           input$prim, input$op_tech)),
