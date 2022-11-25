@@ -12,8 +12,7 @@ server <- function(input, output, session) {
 ##    hospitalName <- noric::getHospitalName(reshId)
     userFullName <- rapbase::getUserFullName(session)
     userRole <- rapbase::getUserRole(session)
-  #  registryName <- noric::makeRegistryName("noricStaging", reshId)
-##    mapOrgId <- mapOrgReshId(registryName)
+  # userHospital  <-   FinnSjukehusNavn(reshId)
     author <- paste0(userFullName, "/", "Rapporteket")
   } else {
     ### if need be, define your (local) values here
@@ -96,7 +95,7 @@ server <- function(input, output, session) {
     shinyWidgets::pickerInput(
       inputId = "sh",
       label = "Vel sjukehus",
-      choices = (unique(dFull$OperererendeSykehus)),
+      choices = unique(dFull$OperererendeSykehus),
       selected = "Helse Bergen",  # eget sjukehus?
       multiple = TRUE,
       options = shinyWidgets::pickerOptions(
@@ -127,9 +126,9 @@ server <- function(input, output, session) {
     shiny::checkboxGroupInput(
       inputId = "prim",
       label = "Operasjonstype:",
-       choices = unique(dFull$op_primar),
-     #  choiceNames  = list("Primæroperasjon", "Revisjonsoperasjon"),
-     #  choiceValues = list("Primæroperasjon", "Revisjonsoperasjon"),
+     #  choices = unique(dFull$op_primar),
+       choiceNames  = list("Primæroperasjon", "Revisjonsoperasjon"),
+       choiceValues = list(FALSE, TRUE),
       selected = TRUE,
       inline = TRUE
     )

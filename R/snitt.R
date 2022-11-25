@@ -28,10 +28,10 @@ snitt <- function(df, sh, yr) {
 
 slice <- function(df, sh, yr, prm, opr) {
   df %>%
-    dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
-                  .data$op_aar %in% .env$yr,
-                  .data$op_primar %in% .env$prm,
-                  .data$Operasjonsmetode %in% .env$opr)
+    dplyr::filter(.data$OperererendeSykehus %in% sh,
+                  .data$op_aar %in% yr,
+                  .data$op_primar %in% prm,
+                  .data$Operasjonsmetode %in% opr)
               #    .data$Opmetode_GBP %in% .env$oa)
 }
 
@@ -76,6 +76,29 @@ siivu <- function(df, sh, yr, prm, opr, oa) {
                   .data$Operasjonsmetode %in% .env$opr,
                   .data$Opmetode_GBP %in% .env$oa)
     }
+}
+
+#' Finn RESH tabellen
+#'
+#' @param registryName streng
+#' @return dataframe tabell
+#' @export
+
+Finn_Sh_RESH <- function(registryName){
+  query <- paste("select AvdRESH, SykehusNavn",
+                 "from ForlopsOversikt",
+                 "group by AvdRESH, SykehusNavn")
+  rapbase::loadRegData(registryName, query)
+}
+
+#' Fra RESH til Sykehusnavn
+#'
+#' @param registryName streng
+#' @return dataframe tabell
+#' @export
+
+Get_Hospital_Name <- function(df, RESHId){
+   df$SykehusNavn[df$AvdRESH == RESHId]
 }
 
 #' slingringsmonn for aarskontrollar, minus
