@@ -140,11 +140,12 @@ df %<>%
   dplyr::mutate(
     liggedognLenge = LiggeDogn > maksdogn_vis,
     liggedognTrunk = pmin(LiggeDogn, maksdogn_vis + 1))
-
-    liggedognMaks <- max(df$LiggeDogn, na.rm = TRUE)
-    liggedognBreaks <- seq(
-        pmin(1, min(df$LiggeDogn, na.rm = TRUE)),
-        maksdogn_vis + 1)
+    # liggedognMaks <- max(df$LiggeDogn, na.rm = TRUE)
+    # liggedognBreaks <- seq(
+    #     pmin(1, min(df$LiggeDogn, na.rm = TRUE)),
+    #     maksdogn_vis + 1)
+liggedognMaks <- max( LiggeDogn, na.rm = T)
+liggedognBreaks <- 0:15
     liggedognTekst <- liggedognBreaks
     liggedognTekst[length(liggedognTekst)] <-
       paste0("\u2265", maksdogn_vis + 1)
