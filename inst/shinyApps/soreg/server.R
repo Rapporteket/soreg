@@ -158,6 +158,15 @@ server <- function(input, output, session) {
          inline = TRUE)
       )
   })
+
+  # shiny::renderUI({
+  #   if (length(input$selectedVars) == 0) {
+  #     NULL
+  #   } else {
+  #     shiny::actionButton(inputId = "togglePivoting",
+  #                         label = rvals$togglePivotingText)
+  #   }
+  # })
   # #------------- opr date interval
   output$uc_dates <- shiny::renderUI({
     shiny::dateRangeInput(
