@@ -93,7 +93,8 @@ Finn_Sh_RESH <- function(registryName){
 
 #' Fra RESH til Sykehusnavn
 #'
-#' @param registryName streng
+#' @param df data.table
+#' @param RESHId num
 #' @return dataframe tabell
 #' @export
 
