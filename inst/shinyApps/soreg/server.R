@@ -127,10 +127,10 @@ server <- function(input, output, session) {
       inputId = "prim",
       label = "Operasjonstype:",
      #  choices = unique(dFull$op_primar),
-       choiceNames  = list("Primæroperasjon", "Revisjonsoperasjon"),
-       choiceValues = list(FALSE, TRUE),
-      selected = TRUE,
-      inline = TRUE
+     choiceNames  = list("Primæroperasjon", "Revisjonsoperasjon"),
+     choiceValues = list(TRUE, FALSE),
+     selected = TRUE,
+     inline = TRUE
     )
   })
   # #----------- operasjonsteknikk
@@ -181,8 +181,8 @@ server <- function(input, output, session) {
   kI <- shiny::reactive({
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
            "Ki1 Liggedøgn" = soreg::lgg_tb(
-             soreg::siivu(dFull, input$sh, input$op_aar, input$prim,
-                          input$op_tech, input$oagb)), # input$dato_iv
+             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
+                          input$op_tech )), # input$dato_iv
            "Ki2 Reinnlagt" = soreg::reinn_tb(
              soreg::slice(dFull, input$sh, input$op_aar,
                           input$prim, input$op_tech)),
