@@ -6,6 +6,9 @@
 \usage{
 Finn_Sh_RESH(registryName)
 }
+\arguments{
+\item{registryName}{streng}
+}
 \value{
 dataframe tabell
 }

@@ -3,7 +3,6 @@
 export("%$%")
 export("%<>%")
 export("%>%")
-export("%in%")
 export("%within%")
 export(.data)
 export(.env)

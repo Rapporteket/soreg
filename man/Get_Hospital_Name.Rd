@@ -6,6 +6,11 @@
 \usage{
 Get_Hospital_Name(df, RESHId)
 }
+\arguments{
+\item{df}{data.table}
+
+\item{RESHId}{num}
+}
 \value{
 dataframe tabell
 }

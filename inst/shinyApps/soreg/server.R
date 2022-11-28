@@ -145,18 +145,13 @@ server <- function(input, output, session) {
   })
   # # -------------  OAGB
   output$uc_oagb <- shiny::renderUI({
-     shiny::conditionalPanel(
-        condition = "input.op_tech == 1",
-       # condition = "input.op_tech.includes(1)",
-      # condition =  is.element(1, input.op_tech),
-      # condition =  "1 %in% input.op_tech",
-       shiny::checkboxGroupInput(
-         inputId = "oagb",
-         label = "RYGBP OAGB",
-         choices = c(1, 2),
-         selected = 2,
-         inline = TRUE)
-      )
+    if (1 %in% input$op_tech) {shiny::checkboxGroupInput(
+      inputId = "oagb",
+      label = "RYGBP OAGB",
+      choices = c(1, 2),
+      selected = 2,
+      inline = TRUE
+    )} else {NULL}
   })
 
   # shiny::renderUI({
@@ -179,22 +174,18 @@ server <- function(input, output, session) {
   # # liggedøgn
   # # .................
   kI <- shiny::reactive({
+    slc = soreg::slice(dFull, input$sh, input$op_aar,
+                       input$prim, input$op_tech )
+    sntt = soreg::snitt(dFull, input$sh, input$op_aar)
+
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
-           "Ki1 Liggedøgn" = soreg::lgg_tb(
-             soreg::slice(dFull, input$sh, input$op_aar, input$prim,
-                          input$op_tech )), # input$dato_iv
-           "Ki2 Reinnlagt" = soreg::reinn_tb(
-             soreg::slice(dFull, input$sh, input$op_aar,
-                          input$prim, input$op_tech)),
-           "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(
-             soreg::slice(dFull, input$sh, input$op_aar,
-                          input$prim, input$op_tech)),
-           "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(
-             soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
-           "Ki5 Kontroll normtid to år" = soreg::aarKtrl(
-             soreg::snitt(dFull, input$sh, input$op_aar), k = 2),
+           "Ki1 Liggedøgn" = soreg::lgg_tb(slc),
+           "Ki2 Reinnlagt" = soreg::reinn_tb(slc),
+           "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(slc),
+           "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(sntt, k = 1),
+           "Ki5 Kontroll normtid to år" = soreg::aarKtrl(sntt, k = 2),
            "Ki6 Vekttap to år" = soreg::twlTb(
-             soreg::snitt(dFull, input$sh, input$op_aar),
+             sntt,
              opr_tp = input$op_tech,
              opr_oa = input$oagb)
     )
