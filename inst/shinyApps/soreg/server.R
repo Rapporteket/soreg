@@ -174,9 +174,12 @@ server <- function(input, output, session) {
   # # liggedøgn
   # # .................
   kI <- shiny::reactive({
-    slc = soreg::slice(dFull, input$sh, input$op_aar,
-                       input$prim, input$op_tech )
+    slc = soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)
     sntt = soreg::snitt(dFull, input$sh, input$op_aar)
+
+    if (!is.null(input$oagb)) {sntt = siivu(
+      dFull, input$sh, input$op_aar, input$prim, input$op_tech, input$oagb
+    )} else { NULL }
 
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
            "Ki1 Liggedøgn" = soreg::lgg_tb(slc),
@@ -190,6 +193,7 @@ server <- function(input, output, session) {
              opr_oa = input$oagb)
     )
   })
+
 
   output$dT <- shiny::renderTable(kI())
   #

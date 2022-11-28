@@ -10,8 +10,8 @@
 
 snitt <- function(df, sh, yr) {
   df %>%
-  dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
-                .data$op_aar %in% .env$yr)
+  dplyr::filter(.data$OperererendeSykehus %in% sh,
+                .data$op_aar %in% yr)
   }
 
 #' Pick particular hospitals and years from a data frame
@@ -61,21 +61,21 @@ siivu <- function(df, sh, yr, prm, opr, oa) {
   #                 .data$Opmetode_GBP %in% .env$oa)
   #                 .data$dato_iv %in% .env$dayIv)
   # else
-    if (is.na(oa)) {
-      df %>%
-        dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
-                      .data$op_aar %in% .env$yr,
-                      .data$op_primar %in% .env$prm,
-                      .data$Operasjonsmetode %in% .env$opr)
-    } else
-    {
+  if (is.na(oa)) {
     df %>%
-    dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
-                  .data$op_aar %in% .env$yr,
-                  .data$op_primar %in% .env$prm,
-                  .data$Operasjonsmetode %in% .env$opr,
-                  .data$Opmetode_GBP %in% .env$oa)
-    }
+      dplyr::filter(.data$OperererendeSykehus %in% sh,
+                    .data$op_aar %in% yr,
+                    .data$op_primar %in% prm,
+                    .data$Operasjonsmetode %in% opr)
+  } else
+  {
+    df %>%
+      dplyr::filter(.data$OperererendeSykehus %in% sh,
+                    .data$op_aar %in% yr,
+                    .data$op_primar %in% prm,
+                    .data$Operasjonsmetode %in% opr,
+                    .data$Opmetode_GBP %in% oa)
+  }
 }
 
 #' Finn RESH tabellen
