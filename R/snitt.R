@@ -301,16 +301,16 @@ aarKtrl <- function(df, k) {
 
 df <- df %>%
     dplyr::mutate(
-      et_nt = .data$EttAar_Oppfolgingsdato %within%
+      et_nt = .data$a1_KontrollDato %within%
         lubridate::interval(.data$et_nor_m, .data$et_nor_p),
-      to_nt = .data$ToAar_Oppfolgingsdato %within%
+      to_nt = .data$a2_KontrollDato %within%
         lubridate::interval(.data$to_nor_m, .data$to_nor_p),
-      et_b4 = .data$EttAar_Oppfolgingsdato %within%
+      et_b4 = .data$a1_KontrollDato %within%
         lubridate::interval(.data$Operasjonsdato + 1, .data$et_nor_m - 1),
-      et_lt = .data$EttAar_Oppfolgingsdato > .data$et_nor_p,
-      to_b4 = .data$ToAar_Oppfolgingsdato %within%
+      et_lt = .data$a1_KontrollDato > .data$et_nor_p,
+      to_b4 = .data$a2_KontrollDato %within%
         lubridate::interval(.data$Operasjonsdato + 1, .data$to_nor_m - 1),
-      to_lt = .data$ToAar_Oppfolgingsdato > .data$to_nor_p)
+      to_lt = .data$a2_KontrollDato > .data$to_nor_p)
 
 df <- df %>% dplyr::select(
     c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar",
