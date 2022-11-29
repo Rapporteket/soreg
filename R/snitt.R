@@ -10,7 +10,7 @@
 
 snitt <- function(df, sh, yr) {
   df %>%
-  dplyr::filter(.data$OperererendeSykehus %in% sh,
+  dplyr::filter(as.character(.data$OpererendeRESH) %in% sh,
                 .data$op_aar %in% yr)
   }
 
@@ -28,7 +28,7 @@ snitt <- function(df, sh, yr) {
 
 slice <- function(df, sh, yr, prm, opr) {
   df %>%
-    dplyr::filter(.data$OperererendeSykehus %in% sh,
+    dplyr::filter(as.character(.data$OpererendeRESH) %in% sh,
                   .data$op_aar %in% yr,
                   .data$op_primar %in% prm,
                   .data$Operasjonsmetode %in% opr)
@@ -53,29 +53,12 @@ slice <- function(df, sh, yr, prm, opr) {
 
 siivu <- function(df, sh, yr, prm, opr, oa) {
   # if dato_iv exists()
-  # df %>%
-  #   dplyr::filter(.data$OperererendeSykehus %in% .env$sh,
-  #                 # .data$op_aar %in% .env$yr,
-  #                 .data$op_primar %in% .env$prm,
-  #                 .data$Operasjonsmetode %in% .env$opr,
-  #                 .data$Opmetode_GBP %in% .env$oa)
-  #                 .data$dato_iv %in% .env$dayIv)
-  # else
-  if (is.na(oa)) {
-    df %>%
-      dplyr::filter(.data$OperererendeSykehus %in% sh,
-                    .data$op_aar %in% yr,
-                    .data$op_primar %in% prm,
-                    .data$Operasjonsmetode %in% opr)
-  } else
-  {
-    df %>%
-      dplyr::filter(.data$OperererendeSykehus %in% sh,
-                    .data$op_aar %in% yr,
-                    .data$op_primar %in% prm,
-                    .data$Operasjonsmetode %in% opr,
-                    .data$Opmetode_GBP %in% oa)
-  }
+  df %>%
+    dplyr::filter(as.character(.data$OpererendeRESH) %in% sh,
+                  .data$op_aar %in% yr,
+                  .data$op_primar %in% prm,
+                  .data$Operasjonsmetode %in% opr,
+                  .data$Opmetode_GBP %in% oa)
 }
 
 #' Finn RESH tabellen
