@@ -9,12 +9,12 @@ server <- function(input, output, session) {
   ## setting values that do depend on a Rapporteket context
   if (rapbase::isRapContext()) {
     reshId <- rapbase::getUserReshId(session)
-    reshIch <- as.character(reshId)
+    # reshIch <- as.character(reshId)
     userFullName <- rapbase::getUserFullName(session)
     userRole <- rapbase::getUserRole(session)
     shsene <- Finn_Sh_RESH("soreg")
     userHosp <- setNames(as.list(shsene$SykehusNavn), shsene$AvdRESH)
-    userHsp <- Get_Hospital_Name(shsene, reshId)
+    userHsp <- Get_Hospital_Name(shsene, reshId)  # VV = 103091
     author <- paste0(userFullName, "/", "Rapporteket")
   } else {
     ### if need be, define your (local) values here
