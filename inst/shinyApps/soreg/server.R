@@ -14,7 +14,7 @@ server <- function(input, output, session) {
     userRole <- rapbase::getUserRole(session)
     shsene <- Finn_Sh_RESH("soreg")
     userHosp <- setNames(as.list(shsene$SykehusNavn), shsene$AvdRESH)
-    userHsp <- userHosp$reshIch
+    userHsp <- Get_Hospital_Name(shsene, reshId)
     author <- paste0(userFullName, "/", "Rapporteket")
   } else {
     ### if need be, define your (local) values here
@@ -98,7 +98,7 @@ server <- function(input, output, session) {
       inputId = "sh",
       label = "Vel sjukehus",
       choices = unique(dFull$OperererendeSykehus),
-      selected = userHosp$reshIch,
+      selected = userHsp,
         # Get_Hospital_Name( dFull, userHosp$RESHId), # "Helse Bergen",  # eget sjukehus?
       multiple = TRUE,
       options = shinyWidgets::pickerOptions(
