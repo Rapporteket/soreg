@@ -9,11 +9,12 @@ server <- function(input, output, session) {
   ## setting values that do depend on a Rapporteket context
   if (rapbase::isRapContext()) {
     reshId <- rapbase::getUserReshId(session)
+    reshIch <- as.character(reshId)
     userFullName <- rapbase::getUserFullName(session)
     userRole <- rapbase::getUserRole(session)
     shsene <- Finn_Sh_RESH("soreg")
     userHosp <- setNames(as.list(shsene$SykehusNavn), shsene$AvdRESH)
-    # userHsp <- userHosp$reshId
+    userHsp <- userHosp$reshIch
     author <- paste0(userFullName, "/", "Rapporteket")
   } else {
     ### if need be, define your (local) values here
@@ -97,7 +98,7 @@ server <- function(input, output, session) {
       inputId = "sh",
       label = "Vel sjukehus",
       choices = unique(dFull$OperererendeSykehus),
-      selected = userHosp$reshId,
+      selected = userHosp$reshIch,
         # Get_Hospital_Name( dFull, userHosp$RESHId), # "Helse Bergen",  # eget sjukehus?
       multiple = TRUE,
       options = shinyWidgets::pickerOptions(
