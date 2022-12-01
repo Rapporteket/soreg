@@ -19,7 +19,7 @@ ki <- function(df, indicator) {
   )
 
   denominator <- nrow(df)
-  indicator <- numerator / denominator
+  indicator <- round(100 * numerator / denominator, 1)
 
   tibble::tibble(numerator, denominator, indicator)
 }

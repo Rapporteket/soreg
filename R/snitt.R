@@ -143,9 +143,8 @@ lgg_tb <- function(df) {
  dplyr::summarise(soreg::ki(dplyr::across(), "liggetid")) %>%
  dplyr::arrange(dplyr::desc(.data$indicator)) %>%
  dplyr::ungroup()
-  res$indicator <- 100*res$indicator
   res$op_aar <- format(res$op_aar, digits = 4)
-  names(res) <- c("Sjukehus", "År", "tellere", "nevnere", "%")
+  names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
   res
 }
 
@@ -198,13 +197,16 @@ df %>%
 
 reinn_tb <- function(df)  {
   df <- df %>%
-  dplyr::filter(((.data$u6_KontrollType %in% 1:3) |
-                   (.data$u6_Behandling30Dager == 1)) &
-                  (.data$u6_Behandling30Dager != 2))
-df %>%
-  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-  dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
-  dplyr::arrange(dplyr::desc(.data$indicator))
+    dplyr::filter(((.data$u6_KontrollType %in% 1:3) |
+                     (.data$u6_Behandling30Dager == 1)) &
+                    (.data$u6_Behandling30Dager != 2))
+  res <- df %>%
+    dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+    dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
+    dplyr::arrange(dplyr::desc(.data$indicator))
+  res$op_aar <- format(res$op_aar, digits = 4)
+  names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
+  res
 }
 
 #' lage reinnleggninggraf
@@ -228,10 +230,13 @@ kompl_tb <- function(df) {
   df <- df %>%
  dplyr::filter((.data$u6_KontrollType %in% 1:3) |
                  (!is.na(.data$u6_KomplAlvorGrad)))
-df  %>%
+res <- df  %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
   dplyr::summarise(soreg::ki(dplyr::across(), "kompl")) %>%
  dplyr::arrange(dplyr::desc(.data$indicator))
+res$op_aar <- format(res$op_aar, digits = 4)
+names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
+res
 }
 
 #' lage komplikasjonsgraf
@@ -374,11 +379,15 @@ twlTb <- function(df, opr_tp, opr_oa = 2) {
 #' @export
 
 detail <- function(dm) {
-  dm %>%
- dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
- dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
-                  "ops" = dplyr::n(),
-                  "minst20" = mean(.data$del20, na.rm = TRUE))
+  res <- dm %>%
+    dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+    dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
+                     "ops" = dplyr::n(),
+                     "minst20" = mean(.data$del20, na.rm = TRUE))
+  res$op_aar <- format(res$op_aar, digits = 4)
+  res$minst20 <- 100*res$minst20
+  names(res) <- c("Sjukehus", "År", "Vekttap ≥ 20%", "Operasjonar", "%")
+  res
 }
 
 #----------------------------------------------------------------------------80
