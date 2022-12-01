@@ -15,6 +15,7 @@ server <- function(input, output, session) {
     shsene <-  RESH_table("soreg")
     userHosp <- setNames(as.list(shsene$SykehusNavn), shsene$AvdRESH)
     userHsp <- RESH_to_sh(shsene, reshId)  # VV = 103091
+    brkrSh <- RESH_sh(userHosp, reshId)
     author <- paste0(userFullName, "/", "Rapporteket")
   } else {
     ### if need be, define your (local) values here
@@ -97,9 +98,8 @@ server <- function(input, output, session) {
     shinyWidgets::pickerInput(
       inputId = "sh",
       label = "Vel sjukehus",
-      choices = unique(dFull$OperererendeSykehus),
-      selected = userHsp,
-        # Get_Hospital_Name( dFull, userHosp$RESHId), # "Helse Bergen",  # eget sjukehus?
+      choices =  unique(dFull$OperererendeSykehus), #unique(dFull$OpererendeRESH), #
+      selected = userHsp, #     # "Helse Bergen",  # eget sjukehus?
       multiple = TRUE,
       options = shinyWidgets::pickerOptions(
         actionsBox = TRUE,
@@ -121,7 +121,7 @@ server <- function(input, output, session) {
       inputId = "op_aar",
       label = "Operasjonsår:",
       choices = years,
-      selected = 2016:2019,
+      selected = c("2017", "2019"), # 2016:2019,
       inline = TRUE)
   })
   # #--------- primæroperasjon?

@@ -32,7 +32,6 @@ slice <- function(df, sh, yr, prm, opr) {
                   .data$op_aar %in% yr,
                   .data$op_primar %in% prm,
                   .data$Operasjonsmetode %in% opr)
-              #    .data$Opmetode_GBP %in% .env$oa)
 }
 
 #' Pick particular hospitals and years from a data frame
@@ -84,6 +83,18 @@ RESH_table <- function(registryName){
 RESH_to_sh <- function(df, RESHId){
    df$SykehusNavn[df$AvdRESH == RESHId]
 }
+
+#' Fra RESH til Sykehus
+#'
+#' @param ct named list
+#' @param RESHId num
+#' @return dataframe tabell
+#' @export
+
+RESH_sh <- function(ct, RESHId){
+  ct[[as.character(RESHId)]]
+}
+
 
 #' slingringsmonn for aarskontrollar, minus
 #'
