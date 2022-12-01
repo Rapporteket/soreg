@@ -61,13 +61,13 @@ siivu <- function(df, sh, yr, prm, opr, oa) {
                   .data$Opmetode_GBP %in% oa)
 }
 
-#' Finn RESH tabellen
+#' Lag RESH tabellen
 #'
 #' @param registryName streng
 #' @return dataframe tabell
 #' @export
 
-Finn_Sh_RESH <- function(registryName){
+RESH_table <- function(registryName){
   query <- paste("select AvdRESH, SykehusNavn",
                  "from ForlopsOversikt",
                  "group by AvdRESH, SykehusNavn")
@@ -81,7 +81,7 @@ Finn_Sh_RESH <- function(registryName){
 #' @return dataframe tabell
 #' @export
 
-Get_Hospital_Name <- function(df, RESHId){
+RESH_to_sh <- function(df, RESHId){
    df$SykehusNavn[df$AvdRESH == RESHId]
 }
 

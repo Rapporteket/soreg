@@ -12,9 +12,9 @@ server <- function(input, output, session) {
     # reshIch <- as.character(reshId)
     userFullName <- rapbase::getUserFullName(session)
     userRole <- rapbase::getUserRole(session)
-    shsene <- Finn_Sh_RESH("soreg")
+    shsene <-  RESH_table("soreg")
     userHosp <- setNames(as.list(shsene$SykehusNavn), shsene$AvdRESH)
-    userHsp <- Get_Hospital_Name(shsene, reshId)  # VV = 103091
+    userHsp <- RESH_to_sh(shsene, reshId)  # VV = 103091
     author <- paste0(userFullName, "/", "Rapporteket")
   } else {
     ### if need be, define your (local) values here
@@ -115,7 +115,7 @@ server <- function(input, output, session) {
       # remove NAs if they exist (bad registry)
       years <- years[!is.na(years)]
     } else {
-      years <- c("2016", "2017", "2018", "2019", "2020")
+      years <- c("2017", "2018", "2019", "2020")
     }
     shiny::checkboxGroupInput(
       inputId = "op_aar",
