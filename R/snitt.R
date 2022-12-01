@@ -12,7 +12,7 @@ snitt <- function(df, sh, yr) {
   df %>%
   dplyr::filter(.data$OperererendeSykehus %in% sh,
                 .data$op_aar %in% yr)
-  }  # as.character(.data$OpererendeRESH)
+  } # as.character(.data$OpererendeRESH)
 
 #' Pick particular hospitals and years from a data frame
 #'
@@ -215,10 +215,21 @@ reinn_tb <- function(df)  {
 #' @export
 
 reinn_gr <- function(df) {
-  d_reinn_graf <- df %>%
+  df <- df %>%
+    dplyr::filter(((.data$u6_KontrollType %in% 1:3) |
+                     (.data$u6_Behandling30Dager == 1)) &
+                    (.data$u6_Behandling30Dager != 2))
+  res <- df %>%
+    dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+    dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
+    dplyr::arrange(dplyr::desc(.data$indicator))
+
+  d_reinn_graf <- res %>%
     ggplot2::ggplot() +
-    ggplot2::aes(x=op_aar, y = indicator, group = OperererendeSykehus) +
+    ggplot2::aes(x=op_aar, y = indicator,
+                 group = OperererendeSykehus, color = OperererendeSykehus) +
     ggplot2::geom_line()
+  d_reinn_graf
 }
 
 #' lage komplikasjontabell

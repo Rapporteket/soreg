@@ -80,7 +80,7 @@ server <- function(input, output, session) {
   d_slv <- dTwl %>%
     dplyr::filter(Operasjonsmetode == 6)
   d_gbp <- dTwl %>%
-    dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 1)
+    dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 1 | is.na(Opmetode_GBP))
   d_oa <- dTwl %>%
     dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 2)
   #
@@ -201,21 +201,15 @@ server <- function(input, output, session) {
   output$dT <- shiny::renderTable(kI())
   #
   pl <- shiny::reactive({
+    slc = soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)
+    sntt = soreg::snitt(dFull, input$sh, input$op_aar)
+
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
-           "Ki1 Liggedøgn" = soreg::lgg_gr(
-         #    soreg::snitt(dFull, input$sh, input$op_aar)),
-            soreg::slice(dFull, input$sh, input$op_aar,
-                         input$prim, input$op_tech)),
-           "Ki2 Reinnlagt" = soreg::reinn_gr(
-            soreg::slice(dFull, input$sh, input$op_aar,
-                         input$prim, input$op_tech)),
-           "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(
-             soreg::slice(dFull, input$sh, input$op_aar,
-                          input$prim, input$op_tech)),
-           "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_tb(
-             soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
-           "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_tb(
-             soreg::snitt(dFull, input$sh, input$op_aar), k = 2),
+           "Ki1 Liggedøgn" = soreg::lgg_gr(slc),
+           "Ki2 Reinnlagt" = soreg::reinn_gr(slc),
+           "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(slc),
+           "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_tb(sntt, k = 1),
+           "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_tb(sntt, k = 2),
            "Ki6 Vekttap to år" = soreg::twlGr(
              soreg::snitt(dTwl, input$sh, input$op_aar),
              input$op_tech, input$oagb)
