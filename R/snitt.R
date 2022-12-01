@@ -10,9 +10,9 @@
 
 snitt <- function(df, sh, yr) {
   df %>%
-  dplyr::filter(as.character(.data$OpererendeRESH) %in% sh,
+  dplyr::filter(.data$OperererendeSykehus %in% sh,
                 .data$op_aar %in% yr)
-  }
+  }  # as.character(.data$OpererendeRESH)
 
 #' Pick particular hospitals and years from a data frame
 #'
@@ -28,7 +28,7 @@ snitt <- function(df, sh, yr) {
 
 slice <- function(df, sh, yr, prm, opr) {
   df %>%
-    dplyr::filter(as.character(.data$OpererendeRESH) %in% sh,
+    dplyr::filter(.data$OperererendeSykehus %in% sh,
                   .data$op_aar %in% yr,
                   .data$op_primar %in% prm,
                   .data$Operasjonsmetode %in% opr)
@@ -53,7 +53,7 @@ slice <- function(df, sh, yr, prm, opr) {
 siivu <- function(df, sh, yr, prm, opr, oa) {
   # if dato_iv exists()
   df %>%
-    dplyr::filter(as.character(.data$OpererendeRESH) %in% sh,
+    dplyr::filter(.data$OpererendeRESH %in% sh,
                   .data$op_aar %in% yr,
                   .data$op_primar %in% prm,
                   .data$Operasjonsmetode %in% opr,
@@ -138,11 +138,15 @@ RESH_sh <- function(ct, RESHId){
 #' @export
 
 lgg_tb <- function(df) {
-  df %>%
+  res <- df %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
  dplyr::summarise(soreg::ki(dplyr::across(), "liggetid")) %>%
  dplyr::arrange(dplyr::desc(.data$indicator)) %>%
  dplyr::ungroup()
+  res$indicator <- 100*res$indicator
+  res$op_aar <- format(res$op_aar, digits = 4)
+  names(res) <- c("Sjukehus", "År", "tellere", "nevnere", "%")
+  res
 }
 
 #' lage liggedogngraf
