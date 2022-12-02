@@ -205,7 +205,7 @@ reinn_tb <- function(df)  {
     dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
     dplyr::arrange(dplyr::desc(.data$indicator))
   res$op_aar <- format(res$op_aar, digits = 4)
-  names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
+  names(res) <- c("Sjukehus", "Opr.år", "teljare", "operasjonar", "%")
   res
 }
 

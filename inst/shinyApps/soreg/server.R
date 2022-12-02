@@ -58,18 +58,18 @@ server <- function(input, output, session) {
   })
   # #------------------ KI
   # # read in data
-   dFull <- soreg::get_arsrp("soreg")
+  dFull <- soreg::get_arsrp("soreg")
   dFull %<>%
     dplyr::mutate(
       op_aar = lubridate::year(Operasjonsdato),
       op_primar = (TidlFedmeOp == 0))
   d_prim <- dFull %>%
     dplyr::filter(op_primar)
- d_prim_6v <- d_prim %>%
-   dplyr::filter(u6_KontrollType %in% 1:3)   # not found??
- d_ligg <- lgg_tb(d_prim_6v)
- d_innlegg30 <- reinn_tb(d_prim)
- d_kompl <- kompl_tb(d_prim)
+  d_prim_6v <- d_prim %>%
+    dplyr::filter(u6_KontrollType %in% 1:3)   # not found??
+  d_ligg <- lgg_tb(d_prim_6v)
+  d_innlegg30 <- reinn_tb(d_prim)
+  d_kompl <- kompl_tb(d_prim)
 
   dTwl  <- dFull %>%
     dplyr::filter(!is.na(a2_Vekt)) %>% # pTWL at 2 year must exist!
@@ -148,13 +148,21 @@ server <- function(input, output, session) {
   })
   # # -------------  OAGB
   output$uc_oagb <- shiny::renderUI({
-    if (1 %in% input$op_tech) {shiny::checkboxGroupInput(
+    if (1 %in% input$op_tech) {
+      shinyWidgets::awesomeCheckboxGroup(
       inputId = "oagb",
       label = "RYGBP OAGB",
       choices = c(1, 2),
-      selected = 2,
-      inline = TRUE
-    )} else {NULL}
+      # selected = 2,
+      inline = TRUE,
+      )
+      # shiny::checkboxGroupInput(
+      # inputId = "oagb",
+      # label = "RYGBP OAGB",
+      # choices = c(1, 2),
+      # selected = 2,
+      # inline = TRUE)
+    } else {NULL}
   })
 
   # shiny::renderUI({
@@ -177,12 +185,15 @@ server <- function(input, output, session) {
   # # liggedøgn
   # # .................
   kI <- shiny::reactive({
-    slc = soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)
+   # slc = soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)
     sntt = soreg::snitt(dFull, input$sh, input$op_aar)
-
-    if (!is.null(input$oagb) & length(input$oagb)==1) {slc = siivu(
+    #  & length(input$oagb)==1
+    if (!is.null(input$oagb))
+    {slc = soreg::siivu(
       dFull, input$sh, input$op_aar, input$prim, input$op_tech, input$oagb
-    )} else { NULL }
+    )} else
+    {slc = soreg::slice(
+      dFull, input$sh, input$op_aar, input$prim, input$op_tech) }
 
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
            "Ki1 Liggedøgn" = soreg::lgg_tb(slc),
