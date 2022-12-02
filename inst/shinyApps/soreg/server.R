@@ -185,10 +185,9 @@ server <- function(input, output, session) {
   # # liggedøgn
   # # .................
   kI <- shiny::reactive({
-   # slc = soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)
     sntt = soreg::snitt(dFull, input$sh, input$op_aar)
-    #  & length(input$oagb)==1
-    if (!is.null(input$oagb))
+
+    if (!is.null(input$oagb))  #  & length(input$oagb)==1
     {slc = soreg::siivu(
       dFull, input$sh, input$op_aar, input$prim, input$op_tech, input$oagb
     )} else

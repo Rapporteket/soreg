@@ -53,7 +53,7 @@ slice <- function(df, sh, yr, prm, opr) {
 siivu <- function(df, sh, yr, prm, opr, oa) {
   # if dato_iv exists()
   df %>%
-    dplyr::filter(.data$OpererendeRESH %in% sh,
+    dplyr::filter(.data$OperererendeSykehus %in% sh,
                   .data$op_aar %in% yr,
                   .data$op_primar %in% prm,
                   .data$Operasjonsmetode %in% opr,
