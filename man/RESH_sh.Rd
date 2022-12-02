@@ -7,7 +7,7 @@
 RESH_sh(ct, RESHId)
 }
 \arguments{
-\item{ct}{data.table}
+\item{ct}{named list}
 
 \item{RESHId}{num}
 }
