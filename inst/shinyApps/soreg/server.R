@@ -188,10 +188,10 @@ server <- function(input, output, session) {
     sntt = soreg::snitt(dFull, input$sh, input$op_aar)
     slc = soreg::slice(
       dFull, input$sh, input$op_aar, input$prim, input$op_tech)
-    # if (!is.na(input$oagb) & length(input$oagb)==1)
-    # {slc = soreg::siivu(
-    #   dFull, input$sh, input$op_aar, input$prim, input$op_tech, input$oagb
-    # )} else
+    if (!is.na(input$oagb) & length(input$oagb)==1)
+    {slc = soreg::siivu(
+      dFull, input$sh, input$op_aar, input$prim, input$op_tech, input$oagb
+    )} # else
     # {slc = soreg::slice(
     #   dFull, input$sh, input$op_aar, input$prim, input$op_tech) }
 
@@ -221,9 +221,9 @@ server <- function(input, output, session) {
            "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(slc),
            "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_tb(sntt, k = 1),
            "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_tb(sntt, k = 2),
-           "Ki6 Vekttap to år" = soreg::twlGr(
-             soreg::snitt(dTwl, input$sh, input$op_aar),
-             input$op_tech, input$oagb)
+           # "Ki6 Vekttap to år" = soreg::twlGr(
+           #   soreg::snitt(dTwl, input$sh, input$op_aar),
+           #   input$op_tech, input$oagb)
     )
   })
   output$graf <- shiny::renderPlot(pl())
