@@ -188,7 +188,7 @@ server <- function(input, output, session) {
     sntt = soreg::snitt(dFull, input$sh, input$op_aar)
     slc = soreg::slice(
       dFull, input$sh, input$op_aar, input$prim, input$op_tech)
-    if (!is.na(input$oagb) & length(input$oagb)==1)
+    if (!is.na(input$oagb))
     {slc = soreg::siivu(
       dFull, input$sh, input$op_aar, input$prim, input$op_tech, input$oagb
     )} # else
