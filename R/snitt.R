@@ -416,5 +416,6 @@ twlGr <- function(df, opr_tp, opr_oa = 2) {
                                    color = .data$OperererendeSykehus)) +
   ggplot2::geom_density() + ggplot2::geom_vline(xintercept = 20,
                                                   linetype = "dashed",
-                                                  color = "red")
+                                                  color = "red") +
+  ggplot2::theme_minimal()
 }
