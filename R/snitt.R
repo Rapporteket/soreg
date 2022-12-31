@@ -378,8 +378,8 @@ twlTb <- function(df, opr_tp, opr_oa = 2) {
    detail(d_slv)},
  "1"  = {
    switch(opr_oa,
-    "1" = detail(d_oa),
-    "2" = detail(d_gbp)
+    "1" = detail(d_gbp),
+    "2" = detail(d_oa)
     )}
  )
 }
