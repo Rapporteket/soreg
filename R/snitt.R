@@ -409,9 +409,10 @@ detail <- function(dm) {
 #' @return df data frame grouped by year and hospital
 #' @export
 
-twlGr <- function(df, opr_tp, opr_oa = 2) {
+twlGr <- function(df, opr_tp, opr_oa) {
+  d_fr = twlTb(df, opr_tp, opr_oa)
 
-  ggplot2::ggplot(data = df, ggplot2::aes(stat = "identity",
+  ggplot2::ggplot(data = d_fr, ggplot2::aes(stat = "identity",
                                    x = .data$pTWL,
                                    color = .data$OperererendeSykehus)) +
   ggplot2::geom_density() + ggplot2::geom_vline(xintercept = 20,
