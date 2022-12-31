@@ -363,9 +363,9 @@ switch(k,
 twlTb <- function(df, opr_tp, opr_oa = 2) {
 
  dTwl  <- df %>%
-  dplyr::filter(!is.na(.data$`a2_Vekt`)) %>%
+  dplyr::filter(!is.na(.data$a2_Vekt)) %>%
   dplyr::mutate(
-    pTWL = 100 * (.data$BR_Vekt - .data$`a2_Vekt`) / .data$BR_Vekt) %>%
+    pTWL = 100 * (.data$BR_Vekt - .data$a2_Vekt) / .data$BR_Vekt) %>%
   dplyr::mutate(del20 = .data$pTWL >= 20.0)
  # pTWL at 2 year must exist!
  d_slv  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 6)
@@ -410,13 +410,34 @@ detail <- function(dm) {
 #' @export
 
 twlGr <- function(df, opr_tp, opr_oa) {
-  d_fr = twlTb(df, opr_tp, opr_oa)
+  dTwl  <- df %>%
+    dplyr::filter(!is.na(.data$`a2_Vekt`)) %>%
+    dplyr::mutate(
+      pTWL = 100 * (.data$BR_Vekt - .data$`a2_Vekt`) / .data$BR_Vekt) %>%
+    dplyr::mutate(del20 = .data$pTWL >= 20.0)
+  # pTWL at 2 year must exist!
+  d_slv  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 6)
+  d_gbp  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 1,
+                                   .data$Opmetode_GBP == 1)
+  d_oa   <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 1,
+                                   .data$Opmetode_GBP == 2)
+   switch(opr_tp,
+         "6"  = {
+           detail(d_slv)},
+         "1"  = {
+           switch(opr_oa,
+                  "1" = detail(d_gbp),
+                  "2" = detail(d_oa)
+           )}
+  )
 
-  ggplot2::ggplot(data = d_fr, ggplot2::aes(stat = "identity",
-                                   x = .data$pTWL,
-                                   color = .data$OperererendeSykehus)) +
-  ggplot2::geom_density() + ggplot2::geom_vline(xintercept = 20,
-                                                  linetype = "dashed",
-                                                  color = "red") +
-  ggplot2::theme_minimal()
+  # ggplot2::ggplot(data = d_fr) +
+  # ggplot2::geom_density(    ggplot2::aes(stat = "identity",
+  #                                        x = pTWL,
+  #                                        color = OperererendeSykehus)
+  # ) +
+  #   ggplot2::geom_vline(xintercept = 20,
+  #                       linetype = "dashed",
+  #                       color = "red") +
+  # ggplot2::theme_minimal()
 }
