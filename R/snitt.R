@@ -421,9 +421,9 @@ twlGr <- function(df, opr_tp, opr_oa) {
                                    .data$Opmetode_GBP == 1)
   d_oa   <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 1,
                                    .data$Opmetode_GBP == 2)
-   switch(opr_tp,
+   dr = switch(opr_tp,
          "6"  = {
-           detail(d_slv)},
+          detail( d_slv)},
          "1"  = {
            switch(opr_oa,
                   "1" = detail(d_gbp),
@@ -431,6 +431,10 @@ twlGr <- function(df, opr_tp, opr_oa) {
            )}
   )
 
+ggplot2::ggplot(data = dr,
+                ggplot2::aes(x=År , y=`%`, color=Sjukehus, group=Sjukehus)) +
+  ggplot2::geom_line() +
+  ggplot2::theme_minimal()
   # ggplot2::ggplot(data = d_fr) +
   # ggplot2::geom_density(    ggplot2::aes(stat = "identity",
   #                                        x = pTWL,
