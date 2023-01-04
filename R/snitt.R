@@ -330,6 +330,7 @@ df <- df %>% dplyr::select(
     c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar",
       "Operasjonsmetode", "Opmetode_GBP", "et_b4", "et_nt", "et_lt",
       "to_b4",  "to_nt", "to_lt", "pTWL"))
+df$op_aar <- format(df$op_aar, digits = 4)
 
 switch(k,
 "1" = {
