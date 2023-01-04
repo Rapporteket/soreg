@@ -353,6 +353,68 @@ switch(k,
 
 
 
+#' lage aarskontrollfigur
+#' @param df data frame
+#' @param k which year control
+#' @return df data frame grouped by year and hospital
+#' @export
+
+
+aar_ktr_gr <- function(df, k) {
+  nt <- et_nt <- to_nt <- NULL
+  last_opday <- max(df$Operasjonsdato)
+  switch(k,
+         "1" = {
+           last_op <-  last_opday - months(15)},
+         "2" = {
+           last_op <-  last_opday - months(27)})
+  df <- df %>%
+    dplyr::mutate(
+      et_nor_m = nitti_m(dag = .data$Operasjonsdato),
+      et_nor_p = nitti_p(dag = .data$Operasjonsdato),
+      to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato),
+      to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato),
+      pTWL = 100 * (.data$BR_Vekt - .data$`a2_Vekt`) / .data$BR_Vekt)
+
+  df <- df %>%
+    dplyr::mutate(
+      et_nt = .data$a1_KontrollDato %within%
+        lubridate::interval(.data$et_nor_m, .data$et_nor_p),
+      to_nt = .data$a2_KontrollDato %within%
+        lubridate::interval(.data$to_nor_m, .data$to_nor_p),
+      et_b4 = .data$a1_KontrollDato %within%
+        lubridate::interval(.data$Operasjonsdato + 1, .data$et_nor_m - 1),
+      et_lt = .data$a1_KontrollDato > .data$et_nor_p,
+      to_b4 = .data$a2_KontrollDato %within%
+        lubridate::interval(.data$Operasjonsdato + 1, .data$to_nor_m - 1),
+      to_lt = .data$a2_KontrollDato > .data$to_nor_p)
+
+  df <- df %>% dplyr::select(
+    c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar",
+      "Operasjonsmetode", "Opmetode_GBP", "et_b4", "et_nt", "et_lt",
+      "to_b4",  "to_nt", "to_lt", "pTWL"))
+  df$op_aar <- format(df$op_aar, digits = 4)
+
+  switch(k,
+         "1" = {
+           df %>%
+             dplyr::filter(.data$Operasjonsdato < last_op) %>%
+             dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+             dplyr::mutate(ops = dplyr::n()) %>%
+             dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = .data$ops[1],
+                              ktl = sum(et_nt, na.rm = T) / .data$ops[1])},
+         "2" = {
+           df %>%
+             dplyr::filter(.data$Operasjonsdato < last_op) %>%
+             dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+             dplyr::mutate(ops = dplyr::n()) %>%
+             dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = .data$ops[1],
+                              ktl = sum(to_nt, na.rm = T) / .data$ops[1])
+         }
+  )
+}
+
+
 #----------------------------------------------------------------------------80
 #' lage vekttaptabell
 #' @param df data frame full data

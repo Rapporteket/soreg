@@ -218,8 +218,8 @@ server <- function(input, output, session) {
            "Ki1 Liggedøgn" = soreg::lgg_gr(slc),
            "Ki2 Reinnlagt" = soreg::reinn_gr(slc),
            "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(slc),
-           "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_tb(sntt, k = 1),
-           "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_tb(sntt, k = 2),
+           "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_gr(sntt, k = 1),
+           "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_gr(sntt, k = 2),
             "Ki6 Vekttap to år" = soreg::twlGr(
               soreg::snitt(sntt, input$sh, input$op_aar), # dTwl
               input$op_tech, input$oagb)
