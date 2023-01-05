@@ -423,7 +423,7 @@ aar_ktr_gr <- function(df, k) {
 #' @return df data frame grouped by year and hospital
 #' @export
 
-twlTb <- function(df, opr_tp, opr_oa = 2) {
+twlTb <- function(df, opr_tp, opr_oa) {
 
  dTwl  <- df %>%
   dplyr::filter(!is.na(.data$a2_Vekt)) %>%
@@ -474,9 +474,9 @@ detail <- function(dm) {
 
 twlGr <- function(df, opr_tp, opr_oa) {
   dTwl  <- df %>%
-    dplyr::filter(!is.na(.data$`a2_Vekt`)) %>%
+    dplyr::filter(!is.na(.data$a2_Vekt)) %>%
     dplyr::mutate(
-      pTWL = 100 * (.data$BR_Vekt - .data$`a2_Vekt`) / .data$BR_Vekt) %>%
+      pTWL = 100 * (.data$BR_Vekt - .data$a2_Vekt) / .data$BR_Vekt) %>%
     dplyr::mutate(del20 = .data$pTWL >= 20.0)
   # pTWL at 2 year must exist!
   d_slv  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 6)

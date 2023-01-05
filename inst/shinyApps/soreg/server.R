@@ -187,10 +187,11 @@ server <- function(input, output, session) {
            "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(slc),
            "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(sntt, k = 1),
            "Ki5 Kontroll normtid to år" = soreg::aarKtrl(sntt, k = 2),
-           "Ki6 Vekttap to år" = soreg::twlTb(
-             sntt,
-             opr_tp = input$op_tech,
-             opr_oa = input$oagb)
+           "Ki6 Vekttap to år" =
+             soreg::twlTb(
+             slc,
+             input$op_tech,
+             input$oagb)
     )
   })
   output$dT <- shiny::renderTable(kI())
@@ -212,8 +213,9 @@ server <- function(input, output, session) {
            "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_gr(sntt, k = 1),
            "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_gr(sntt, k = 2),
             "Ki6 Vekttap to år" = soreg::twlGr(
-              soreg::snitt(sntt, input$sh, input$op_aar), # dTwl
-              input$op_tech, input$oagb)
+              slc,
+              input$op_tech,
+              input$oagb)
     )
   })
   output$graf <- shiny::renderPlot(pl())
