@@ -149,7 +149,8 @@ server <- function(input, output, session) {
   # # -------------  OAGB
   output$uc_oagb <- shiny::renderUI({
     if (1 %in% input$op_tech) {
-      shinyWidgets::awesomeCheckboxGroup(
+      # shinyWidgets::awesomeCheckboxGroup(
+      shiny::checkboxGroupInput(
       inputId = "oagb",
       label = "RYGBP OAGB",
       choices = c(1, 2),
