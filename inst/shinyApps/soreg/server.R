@@ -157,23 +157,9 @@ server <- function(input, output, session) {
       # selected = 2,
       inline = TRUE,
       )
-      # shiny::checkboxGroupInput(
-      # inputId = "oagb",
-      # label = "RYGBP OAGB",
-      # choices = c(1, 2),
-      # selected = 2,
-      # inline = TRUE)
     } else {NULL}
   })
 
-  # shiny::renderUI({
-  #   if (length(input$selectedVars) == 0) {
-  #     NULL
-  #   } else {
-  #     shiny::actionButton(inputId = "togglePivoting",
-  #                         label = rvals$togglePivotingText)
-  #   }
-  # })
   # #------------- opr date interval
   output$uc_dates <- shiny::renderUI({
     shiny::dateRangeInput(
@@ -207,13 +193,17 @@ server <- function(input, output, session) {
              opr_oa = input$oagb)
     )
   })
-
-
   output$dT <- shiny::renderTable(kI())
   #
   pl <- shiny::reactive({
-    slc = soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)
+    # slc = soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)
     sntt = soreg::snitt(dFull, input$sh, input$op_aar)
+    if (is.null(input$oagb))
+    {slc = soreg::slice(
+      dFull, input$sh, input$op_aar, input$prim, input$op_tech) } else
+      {slc = soreg::siivu(
+        dFull, input$sh, input$op_aar, input$prim, input$op_tech, input$oagb
+      )}
 
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
            "Ki1 Liggedøgn" = soreg::lgg_gr(slc),
