@@ -342,15 +342,16 @@ switch(k,
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
     dplyr::mutate(ops = dplyr::n()) %>%
     dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = .data$ops[1],
-                     ktl = sum(et_nt, na.rm = T) / .data$ops[1])},
+                     ktl = sum(et_nt, na.rm = T) / .data$ops[1]) %>%
+    dplyr::arrange(dplyr::desc(.data$ktl))},
 "2" = {
   df %>%
     dplyr::filter(.data$Operasjonsdato < last_op) %>%
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
     dplyr::mutate(ops = dplyr::n()) %>%
     dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = .data$ops[1],
-                     ktl = sum(to_nt, na.rm = T) / .data$ops[1])
-  }
+                     ktl = sum(to_nt, na.rm = T) / .data$ops[1]) %>%
+    dplyr::arrange(dplyr::desc(.data$ktl))}
 )
 }
 
