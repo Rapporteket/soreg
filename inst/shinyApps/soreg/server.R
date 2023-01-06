@@ -183,6 +183,18 @@ slc <- shiny::reactive({
               input$oagb)}
     })
 
+twl_20 <-  shiny::reactive({
+  switch( input$op_tech,
+          "6", {dFull %>% dplyr::filter(.data$Operasjonsmetode == 6)},
+          "1", {dFull %>% dplyr::filter(.data$Operasjonsmetode == 1)},
+          # switch(
+          # input$oagb,
+          # "1", {},
+          # "2", {}
+          # )
+  )
+  })
+
 kI <- shiny::reactive({
 
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
@@ -191,11 +203,10 @@ kI <- shiny::reactive({
            "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(slc()),
            "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(sntt(), k = 1),
            "Ki5 Kontroll normtid to år" = soreg::aarKtrl(sntt(), k = 2),
-           "Ki6 Vekttap to år" =
-             soreg::twlTb(
-             slc(),
-             input$op_tech,
-             input$oagb)
+           "Ki6 Vekttap to år" =             soreg::detail(slc())
+            # slc(),
+            # input$op_tech,
+            # input$oagb)
     )
   })
   output$dT <- shiny::renderTable(kI()) # .... kvalitetsindikatortabeller

@@ -427,29 +427,34 @@ aar_ktr_gr <- function(df, k) {
 #' @return df data frame grouped by year and hospital
 #' @export
 
-twlTb <- function(df, opr_tp, opr_oa) {
+# twlTb <- function(df, opr_tp, opr_oa) {
+#
+#  dTwl  <- df %>%
+#   dplyr::filter(!is.na(.data$a2_Vekt))
+# # %>%
+# #  dplyr::mutate(
+# #    pTWL = 100 * (.data$BR_Vekt - .data$a2_Vekt) / .data$BR_Vekt) %>%
+# #  dplyr::mutate(del20 = .data$pTWL >= 20.0)
+#  # pTWL at 2 year must exist!
+#  d_slv  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 6)
+#  d_gbp  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 1,
+#                                    .data$Opmetode_GBP == 1)
+#  d_oa   <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 1,
+#                                    .data$Opmetode_GBP == 2)
+#  switch(opr_tp,
+#  "6"  = {
+#    detail(d_slv)},
+#  "1"  = {
+#    switch(opr_oa,
+#     "1" = detail(d_gbp),
+#     "2" = detail(d_oa)
+#     )}
+#  )
+# }
 
- dTwl  <- df %>%
-  dplyr::filter(!is.na(.data$a2_Vekt)) %>%
-  dplyr::mutate(
-    pTWL = 100 * (.data$BR_Vekt - .data$a2_Vekt) / .data$BR_Vekt) %>%
-  dplyr::mutate(del20 = .data$pTWL >= 20.0)
- # pTWL at 2 year must exist!
- d_slv  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 6)
- d_gbp  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 1,
-                                   .data$Opmetode_GBP == 1)
- d_oa   <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 1,
-                                   .data$Opmetode_GBP == 2)
- switch(opr_tp,
- "6"  = {
-   detail(d_slv)},
- "1"  = {
-   switch(opr_oa,
-    "1" = detail(d_gbp),
-    "2" = detail(d_oa)
-    )}
- )
-}
+
+twlTb <- function(){detail(slc())}
+
 
 #' lage vekttapdetaljer
 #' @param dm data frame
