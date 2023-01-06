@@ -181,15 +181,7 @@ slc <- shiny::reactive({
               input$oagb)}
     })
 
-  kI <- shiny::reactive({
-    # sntt = soreg::snitt(dFull, input$sh, input$op_aar)
-    # # slc = soreg::slice( dFull, input$sh, input$op_aar, input$prim, input$op_tech)
-    # if (is.null(input$oagb))
-    # {slc = soreg::slice(
-    #   dFull, input$sh, input$op_aar, input$prim, input$op_tech) } else
-    #   {slc = soreg::siivu(
-    #     dFull, input$sh, input$op_aar, input$prim, input$op_tech, input$oagb
-    #   )}
+kI <- shiny::reactive({
 
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
            "Ki1 Liggedøgn" = soreg::lgg_tb(slc()),
@@ -204,17 +196,9 @@ slc <- shiny::reactive({
              input$oagb)
     )
   })
-  output$dT <- shiny::renderTable(kI()) # .... kvalitetsindikator
+  output$dT <- shiny::renderTable(kI()) # .... kvalitetsindikatortabeller
   #
-  pl <- shiny::reactive({
-    # # slc = soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)
-    # sntt = soreg::snitt(dFull, input$sh, input$op_aar)
-    # if (is.null(input$oagb))
-    # {slc = soreg::slice(
-    #   dFull, input$sh, input$op_aar, input$prim, input$op_tech) } else
-    #   {slc = soreg::siivu(
-    #     dFull, input$sh, input$op_aar, input$prim, input$op_tech, input$oagb
-    #   )}
+pl <- shiny::reactive({
 
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
            "Ki1 Liggedøgn" = soreg::lgg_gr(slc()),
@@ -228,7 +212,7 @@ slc <- shiny::reactive({
               input$oagb)
     )
   })
-  output$graf <- shiny::renderPlot(pl())
+  output$graf <- shiny::renderPlot(pl()) # .... kvalitetsindikatorgrafer
   # #------------------
 
 # Datadump

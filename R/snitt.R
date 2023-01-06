@@ -228,7 +228,8 @@ reinn_gr <- function(df) {
     ggplot2::ggplot() +
     ggplot2::aes(x=op_aar, y = indicator,
                  group = OperererendeSykehus, color = OperererendeSykehus) +
-    ggplot2::geom_line()
+    ggplot2::geom_line() +
+    ggplot2::theme_minimal()
   d_reinn_graf
 }
 
