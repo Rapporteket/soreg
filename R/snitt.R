@@ -470,7 +470,7 @@ detail <- function(dm) {
   res$op_aar <- format(res$op_aar, digits = 4)
   res$minst20 <- 100*res$minst20
   names(res) <- c("Sjukehus", "År", "Vekttap ≥ 20%", "Operasjonar", "%")
-  res
+  res %>%  dplyr::arrange(dplyr::desc(.data$`%`))
 }
 
 #----------------------------------------------------------------------------80
