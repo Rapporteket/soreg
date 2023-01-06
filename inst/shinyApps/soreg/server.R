@@ -183,17 +183,6 @@ slc <- shiny::reactive({
               input$oagb)}
     })
 
-twl_20 <-  shiny::reactive({
-  switch( input$op_tech,
-          "6", {dFull %>% dplyr::filter(.data$Operasjonsmetode == 6)},
-          "1", {dFull %>% dplyr::filter(.data$Operasjonsmetode == 1)},
-          # switch(
-          # input$oagb,
-          # "1", {},
-          # "2", {}
-          # )
-  )
-  })
 
 kI <- shiny::reactive({
 
