@@ -62,7 +62,9 @@ server <- function(input, output, session) {
   dFull %<>%
     dplyr::mutate(
       op_aar = lubridate::year(Operasjonsdato),
-      op_primar = (TidlFedmeOp == 0))
+      op_primar = (TidlFedmeOp == 0),
+      pTWL = 100 * (BR_Vekt - a2_Vekt) / BR_Vekt,
+      del20 = pTWL >= 20.0)
   # d_prim <- dFull %>%
   #   dplyr::filter(op_primar)
   # d_prim_6v <- d_prim %>%
