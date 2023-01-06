@@ -466,9 +466,9 @@ detail <- function(dm) {
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
     dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
                      "ops" = dplyr::n(),
-                     "minst20" = mean(.data$del20, na.rm = TRUE))
+                     "minst20" = 100 * mean(.data$del20, na.rm = TRUE))
   res$op_aar <- format(res$op_aar, digits = 4)
-  res$minst20 <- 100*res$minst20
+ # res$minst20 <- 100*res$minst20
   names(res) <- c("Sjukehus", "År", "Vekttap ≥ 20%", "Operasjonar", "%")
   res %>%  dplyr::arrange(dplyr::desc(.data$`%`))
 }
