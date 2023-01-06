@@ -231,7 +231,7 @@ slc <- shiny::reactive({
   output$graf <- shiny::renderPlot(pl())
   # #------------------
 
-  # Datadump
+# Datadump
   ## metadata fra registerdatabasen
   meta <- reactive({
     rapbase::describeRegistryDb(registryName)
