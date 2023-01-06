@@ -406,14 +406,25 @@ aar_ktr_gr <- function(df, k) {
              dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
              dplyr::mutate(ops = dplyr::n()) %>%
              dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = .data$ops[1],
-                              ktl = sum(et_nt, na.rm = T) / .data$ops[1])},
+                              ktl = sum(et_nt, na.rm = T) / .data$ops[1]) %>%
+             ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
+                                          group = OperererendeSykehus,
+                                          color = OperererendeSykehus)  ) +
+             ggplot2::geom_line()+
+             ggplot2::theme_minimal()
+               },
          "2" = {
            df %>%
              dplyr::filter(.data$Operasjonsdato < last_op) %>%
              dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
              dplyr::mutate(ops = dplyr::n()) %>%
              dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = .data$ops[1],
-                              ktl = sum(to_nt, na.rm = T) / .data$ops[1])
+                              ktl = sum(to_nt, na.rm = T) / .data$ops[1]) %>%
+             ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
+                                          group = OperererendeSykehus,
+                                          color = OperererendeSykehus)  ) +
+             ggplot2::geom_line()+
+             ggplot2::theme_minimal()
          }
   )
 }

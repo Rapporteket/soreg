@@ -190,8 +190,8 @@ kI <- shiny::reactive({
            "Ki1 Liggedøgn" = soreg::lgg_tb(slc()),
            "Ki2 Reinnlagt" = soreg::reinn_tb(slc()),
            "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(slc()),
-           "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(sntt(), k = 1),
-           "Ki5 Kontroll normtid to år" = soreg::aarKtrl(sntt(), k = 2),
+           "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(slc(), k = 1),
+           "Ki5 Kontroll normtid to år" = soreg::aarKtrl(slc(), k = 2),
            "Ki6 Vekttap to år" =             soreg::detail(slc())
     )
   })
@@ -203,8 +203,8 @@ pl <- shiny::reactive({
            "Ki1 Liggedøgn" = soreg::lgg_gr(slc()),
            "Ki2 Reinnlagt" = soreg::reinn_gr(slc()),
            "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(slc()),
-           "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_gr(sntt(), k = 1),
-           "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_gr(sntt(), k = 2),
+           "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_gr(slc(), k = 1),
+           "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_gr(slc(), k = 2),
             "Ki6 Vekttap to år" = soreg::wlGr( soreg::detail(slc()) )
     )
   })
