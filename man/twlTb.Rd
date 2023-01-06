@@ -4,7 +4,7 @@
 \alias{twlTb}
 \title{lage vekttaptabell}
 \usage{
-twlTb(df, opr_tp, opr_oa = 2)
+twlTb()
 }
 \arguments{
 \item{df}{data frame full data}

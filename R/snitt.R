@@ -517,3 +517,13 @@ ggplot2::ggplot(data = dr,
   #                       color = "red") +
   # ggplot2::theme_minimal()
 }
+
+#' lage vekttapgraf
+#' @param df data frame sliced
+#' @export
+
+wlGr <- function(df){
+  df %>% ggplot2::ggplot(ggplot2::aes(x = År, y = `%`, color=Sjukehus, group=Sjukehus)) +
+    ggplot2::geom_line() +
+    ggplot2::theme_minimal()
+}

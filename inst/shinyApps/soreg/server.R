@@ -204,9 +204,6 @@ kI <- shiny::reactive({
            "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(sntt(), k = 1),
            "Ki5 Kontroll normtid to år" = soreg::aarKtrl(sntt(), k = 2),
            "Ki6 Vekttap to år" =             soreg::detail(slc())
-            # slc(),
-            # input$op_tech,
-            # input$oagb)
     )
   })
   output$dT <- shiny::renderTable(kI()) # .... kvalitetsindikatortabeller
@@ -219,10 +216,7 @@ pl <- shiny::reactive({
            "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(slc()),
            "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_gr(sntt(), k = 1),
            "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_gr(sntt(), k = 2),
-            "Ki6 Vekttap to år" = soreg::twlGr(
-              slc(),
-              input$op_tech,
-              input$oagb)
+            "Ki6 Vekttap to år" = soreg::wlGr( soreg::detail(slc()) )
     )
   })
   output$graf <- shiny::renderPlot(pl()) # .... kvalitetsindikatorgrafer
