@@ -169,8 +169,8 @@ server <- function(input, output, session) {
       end = max(dFull$Operasjonsdato)
     )
   })
-  # # liggedøgn
-  # # .................
+
+  # ................. reaktivitet
 
 sntt <- shiny::reactive({soreg::snitt(dFull, input$sh, input$op_aar)})
 
@@ -204,26 +204,26 @@ slc <- shiny::reactive({
              input$oagb)
     )
   })
-  output$dT <- shiny::renderTable(kI())
+  output$dT <- shiny::renderTable(kI()) # .... kvalitetsindikator
   #
   pl <- shiny::reactive({
-    # slc = soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)
-    sntt = soreg::snitt(dFull, input$sh, input$op_aar)
-    if (is.null(input$oagb))
-    {slc = soreg::slice(
-      dFull, input$sh, input$op_aar, input$prim, input$op_tech) } else
-      {slc = soreg::siivu(
-        dFull, input$sh, input$op_aar, input$prim, input$op_tech, input$oagb
-      )}
+    # # slc = soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)
+    # sntt = soreg::snitt(dFull, input$sh, input$op_aar)
+    # if (is.null(input$oagb))
+    # {slc = soreg::slice(
+    #   dFull, input$sh, input$op_aar, input$prim, input$op_tech) } else
+    #   {slc = soreg::siivu(
+    #     dFull, input$sh, input$op_aar, input$prim, input$op_tech, input$oagb
+    #   )}
 
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
-           "Ki1 Liggedøgn" = soreg::lgg_gr(slc),
-           "Ki2 Reinnlagt" = soreg::reinn_gr(slc),
-           "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(slc),
-           "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_gr(sntt, k = 1),
-           "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_gr(sntt, k = 2),
+           "Ki1 Liggedøgn" = soreg::lgg_gr(slc()),
+           "Ki2 Reinnlagt" = soreg::reinn_gr(slc()),
+           "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(slc()),
+           "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_gr(sntt(), k = 1),
+           "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_gr(sntt(), k = 2),
             "Ki6 Vekttap to år" = soreg::twlGr(
-              slc,
+              slc(),
               input$op_tech,
               input$oagb)
     )
