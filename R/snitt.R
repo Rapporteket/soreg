@@ -215,22 +215,23 @@ reinn_tb <- function(df)  {
 #' @export
 
 reinn_gr <- function(df) {
-  df <- df %>%
+ # df <-
+  df %>%
     dplyr::filter(((.data$u6_KontrollType %in% 1:3) |
                      (.data$u6_Behandling30Dager == 1)) &
-                    (.data$u6_Behandling30Dager != 2))
-  res <- df %>%
+                    (.data$u6_Behandling30Dager != 2))  %>%
+#  res <- df %>%
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
     dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
-    dplyr::arrange(dplyr::desc(.data$indicator))
+    dplyr::arrange(dplyr::desc(.data$indicator))  %>%
 
-  d_reinn_graf <- res %>%
+#  d_reinn_graf <- res %>%
     ggplot2::ggplot() +
     ggplot2::aes(x=op_aar, y = indicator,
                  group = OperererendeSykehus, color = OperererendeSykehus) +
     ggplot2::geom_line() +
     ggplot2::theme_minimal()
-  d_reinn_graf
+#  d_reinn_graf
 }
 
 #' lage komplikasjontabell
