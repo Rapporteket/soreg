@@ -290,7 +290,8 @@ ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
   ggplot2::scale_x_discrete(drop = FALSE) +
   ggplot2::xlab(NULL) + ggplot2::ylab("Talet p\u00E5 pasienter") +
   ggplot2::coord_flip() + fjern_y +  fjern_y_ticks +
-  ggplot2::theme(panel.grid.minor.x =  ggplot2::element_blank())
+  ggplot2::theme(panel.grid.minor.x =  ggplot2::element_blank()) +
+  ggplot2::theme_minimal()
 }
 
 #' lage aarskontrolltabell
