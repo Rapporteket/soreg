@@ -171,25 +171,35 @@ server <- function(input, output, session) {
   })
   # # liggedøgn
   # # .................
+
+sntt <- shiny::reactive({soreg::snitt(dFull, input$sh, input$op_aar)})
+
+slc <- shiny::reactive({
+  if (is.null(input$oagb))
+{soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)} else
+{soreg::siivu(dFull, input$sh, input$op_aar, input$prim, input$op_tech,
+              input$oagb)}
+    })
+
   kI <- shiny::reactive({
-    sntt = soreg::snitt(dFull, input$sh, input$op_aar)
-    # slc = soreg::slice( dFull, input$sh, input$op_aar, input$prim, input$op_tech)
-    if (is.null(input$oagb))
-    {slc = soreg::slice(
-      dFull, input$sh, input$op_aar, input$prim, input$op_tech) } else
-      {slc = soreg::siivu(
-        dFull, input$sh, input$op_aar, input$prim, input$op_tech, input$oagb
-      )}
+    # sntt = soreg::snitt(dFull, input$sh, input$op_aar)
+    # # slc = soreg::slice( dFull, input$sh, input$op_aar, input$prim, input$op_tech)
+    # if (is.null(input$oagb))
+    # {slc = soreg::slice(
+    #   dFull, input$sh, input$op_aar, input$prim, input$op_tech) } else
+    #   {slc = soreg::siivu(
+    #     dFull, input$sh, input$op_aar, input$prim, input$op_tech, input$oagb
+    #   )}
 
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
-           "Ki1 Liggedøgn" = soreg::lgg_tb(slc),
-           "Ki2 Reinnlagt" = soreg::reinn_tb(slc),
-           "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(slc),
-           "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(sntt, k = 1),
-           "Ki5 Kontroll normtid to år" = soreg::aarKtrl(sntt, k = 2),
+           "Ki1 Liggedøgn" = soreg::lgg_tb(slc()),
+           "Ki2 Reinnlagt" = soreg::reinn_tb(slc()),
+           "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(slc()),
+           "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(sntt(), k = 1),
+           "Ki5 Kontroll normtid to år" = soreg::aarKtrl(sntt(), k = 2),
            "Ki6 Vekttap to år" =
              soreg::twlTb(
-             slc,
+             slc(),
              input$op_tech,
              input$oagb)
     )
