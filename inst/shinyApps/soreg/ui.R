@@ -32,6 +32,7 @@ ui <- shiny::tagList(
            shiny::uiOutput("uc_years"),
            shiny::uiOutput("uc_prim"),
            shiny::uiOutput("uc_opr"),
+         shiny::uiOutput("uc_agg"),
            shiny::uiOutput("uc_oagb"), #
    #        shiny::uiOutput("uc_dates")
     #     ),
