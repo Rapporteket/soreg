@@ -133,8 +133,7 @@ server <- function(input, output, session) {
     shiny::checkboxInput(
       inputId = "out_aggr",
       label = "Alle valgte år:",
-      choices = c(TRUE, FALSE),
-      selected = FALSE)
+      value = FALSE)
   })
 
   # # -------------  OAGB
