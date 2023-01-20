@@ -473,16 +473,22 @@ twlTb <- function(){detail(slc())}
 #' @export
 
 detail <- function(dm) {
-  res <- dm %>%
+  if  (FALSE)  {  res <- dm %>%
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
     dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
                      "ops" = dplyr::n(),
                      "minst20" = 100 * mean(.data$del20, na.rm = TRUE))
-  res$op_aar <- format(res$op_aar, digits = 4)
- # res$minst20 <- 100*res$minst20
-  names(res) <- c("Sjukehus", "År", "Vekttap ≥ 20%", "Operasjonar", "%")
+  names(res) <- c("Sjukehus", "Vekttap ≥ 20%", "Operasjonar", "%")
   res %>%  dplyr::arrange(dplyr::desc(.data$`%`))
-}
+  } else  {    res <- dm %>%
+      dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+      dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
+                       "ops" = dplyr::n(),
+                       "minst20" = 100 * mean(.data$del20, na.rm = TRUE))
+    res$op_aar <- format(res$op_aar, digits = 4)
+    names(res) <- c("Sjukehus", "År", "Vekttap ≥ 20%", "Operasjonar", "%")
+    res %>%  dplyr::arrange(dplyr::desc(.data$`%`))}
+  }
 
 #----------------------------------------------------------------------------80
 #' lage vekttaptabell

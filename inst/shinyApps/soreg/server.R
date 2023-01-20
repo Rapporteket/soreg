@@ -16,6 +16,7 @@ server <- function(input, output, session) {
     userHosp <- setNames(as.list(shsene$SykehusNavn), shsene$AvdRESH)
     userHsp <- RESH_to_sh(shsene, reshId)  # VV = 103091
     brkrSh <- RESH_sh(userHosp, reshId)
+    brkrSh <- "Oslo universitetssykehus"
     author <- paste0(userFullName, "/", "Rapporteket")
   } else {
     ### if need be, define your (local) values here
@@ -65,28 +66,7 @@ server <- function(input, output, session) {
       op_primar = (TidlFedmeOp == 0),
       pTWL = 100 * (BR_Vekt - a2_Vekt) / BR_Vekt,
       del20 = pTWL >= 20.0)
-  # d_prim <- dFull %>%
-  #   dplyr::filter(op_primar)
-  # d_prim_6v <- d_prim %>%
-  #   dplyr::filter(u6_KontrollType %in% 1:3)   # not found??
-  # d_ligg <- lgg_tb(d_prim_6v)
-  # d_innlegg30 <- reinn_tb(d_prim)
-  # d_kompl <- kompl_tb(d_prim)
-  #
-  # dTwl  <- dFull %>%
-  #   dplyr::filter(!is.na(a2_Vekt)) %>% # pTWL at 2 year must exist!
-  #   dplyr::mutate(
-  #     pTWL = 100 * (BR_Vekt - a2_Vekt) / BR_Vekt) %>%
-  #   dplyr::mutate(del20 = pTWL >= 20.0)
-  #
-  # d_slv <- dTwl %>%
-  #   dplyr::filter(Operasjonsmetode == 6)
-  # d_gbp <- dTwl %>%
-  #   dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 1 | is.na(Opmetode_GBP))
-  # d_oa <- dTwl %>%
-  #   dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 2)
-  #
-  #
+
   # #-------- user controls----------  hospital ------
   output$kIix <- shiny::renderUI({
     shiny::selectInput(
@@ -148,6 +128,15 @@ server <- function(input, output, session) {
       inline = TRUE
     )
   })
+  # #----------- aggregate
+  output$uc_agg <- shiny::renderUI({
+    shiny::checkboxInput(
+      inputId = "out_aggr",
+      label = "Alle valgte år:",
+      choices = c(TRUE, FALSE),
+      selected = FALSE)
+  })
+
   # # -------------  OAGB
   output$uc_oagb <- shiny::renderUI({
     if (1 %in% input$op_tech) {
@@ -163,14 +152,14 @@ server <- function(input, output, session) {
   })
 
   # #------------- opr date interval
-  output$uc_dates <- shiny::renderUI({
-    shiny::dateRangeInput(
-      inputId = "dato_iv",
-      label = "Operasjonsinterval ?",
-      start = min(dFull$Operasjonsdato),
-      end = max(dFull$Operasjonsdato)
-    )
-  })
+  # output$uc_dates <- shiny::renderUI({
+  #   shiny::dateRangeInput(
+  #     inputId = "dato_iv",
+  #     label = "Operasjonsinterval ?",
+  #     start = min(dFull$Operasjonsdato),
+  #     end = max(dFull$Operasjonsdato)
+  #   )
+  # })
 
   # ................. reaktivitet
 
