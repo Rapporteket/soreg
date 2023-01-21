@@ -473,7 +473,7 @@ twlTb <- function(){detail(slc())}
 #' @export
 
 detail <- function(dm) {
-  if  (FALSE)  {  res <- dm %>%
+  if  ( FALSE)  {  res <- dm %>%
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
     dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
                      "ops" = dplyr::n(),

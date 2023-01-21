@@ -30,16 +30,17 @@ ui <- shiny::tagList(
            shiny::uiOutput("kIix"),
            shiny::uiOutput("uc_sh"),
            shiny::uiOutput("uc_years"),
+       shiny::uiOutput("uc_agg"),
            shiny::uiOutput("uc_prim"),
            shiny::uiOutput("uc_opr"),
-         shiny::uiOutput("uc_agg"),
            shiny::uiOutput("uc_oagb"), #
    #        shiny::uiOutput("uc_dates")
     #     ),
          shiny::mainPanel(
            width = 9,
            shiny::tabsetPanel(
-             shiny::tabPanel("Tabell", shiny::uiOutput("dT")),
+             shiny::tabPanel("AG", shiny::uiOutput("Sw")),
+             shiny::tabPanel("Tabell",   shiny::uiOutput("dT")),
              shiny::tabPanel("Figur", shiny::plotOutput("graf"))
            )
          )

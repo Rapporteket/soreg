@@ -162,7 +162,9 @@ server <- function(input, output, session) {
 
   # ................. reaktivitet
 
-sntt <- shiny::reactive({soreg::snitt(dFull, input$sh, input$op_aar)})
+# sntt <- shiny::reactive({soreg::snitt(dFull, input$sh, input$op_aar)})
+# dtl <- shiny::reactive({input$out_aggr})
+# output$value <- renderText({ input$somevalue })
 
 slc <- shiny::reactive({
   if (is.null(input$oagb))
@@ -183,6 +185,7 @@ kI <- shiny::reactive({
            "Ki6 Vekttap to år" =             soreg::detail(slc())
     )
   })
+  output$Sw <- shiny::renderText({input$out_aggr})
   output$dT <- shiny::renderTable(kI()) # .... kvalitetsindikatortabeller
   #
 pl <- shiny::reactive({
