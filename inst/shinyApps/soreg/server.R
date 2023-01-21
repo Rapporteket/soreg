@@ -132,7 +132,7 @@ server <- function(input, output, session) {
   output$uc_agg <- shiny::renderUI({
     shiny::checkboxInput(
       inputId = "out_aggr",
-      label = "Alle valgte år:",
+      label = "Vis alle valgte år:",
       value = FALSE)
   })
 
@@ -163,7 +163,7 @@ server <- function(input, output, session) {
   # ................. reaktivitet
 
 # sntt <- shiny::reactive({soreg::snitt(dFull, input$sh, input$op_aar)})
-# dtl <- shiny::reactive({input$out_aggr})
+dtl <- shiny::reactive({input$out_aggr})
 # output$value <- renderText({ input$somevalue })
 
 slc <- shiny::reactive({
@@ -182,7 +182,8 @@ kI <- shiny::reactive({
            "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(slc()),
            "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(slc(), k = 1),
            "Ki5 Kontroll normtid to år" = soreg::aarKtrl(slc(), k = 2),
-           "Ki6 Vekttap to år" =             soreg::detail(slc())
+           if (dtl()) {"Ki6 Vekttap to år" = soreg::detail(slc())} else
+           {"Ki6 Vekttap to år" = soreg::aggrwl(slc())}
     )
   })
   output$Sw <- shiny::renderText({input$out_aggr})

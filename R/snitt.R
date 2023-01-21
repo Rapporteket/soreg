@@ -473,14 +473,7 @@ twlTb <- function(){detail(slc())}
 #' @export
 
 detail <- function(dm) {
-  if  ( FALSE)  {  res <- dm %>%
-    dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-    dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
-                     "ops" = dplyr::n(),
-                     "minst20" = 100 * mean(.data$del20, na.rm = TRUE))
-  names(res) <- c("Sjukehus", "Vekttap ≥ 20%", "Operasjonar", "%")
-  res %>%  dplyr::arrange(dplyr::desc(.data$`%`))
-  } else  {    res <- dm %>%
+   res <- dm %>%
       dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
       dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
                        "ops" = dplyr::n(),
@@ -488,7 +481,20 @@ detail <- function(dm) {
     res$op_aar <- format(res$op_aar, digits = 4)
     names(res) <- c("Sjukehus", "År", "Vekttap ≥ 20%", "Operasjonar", "%")
     res %>%  dplyr::arrange(dplyr::desc(.data$`%`))}
-  }
+
+#' aggregerte vekttap
+#' @param dm data frame
+#' @return df data frame grouped by year and hospital
+#' @export
+
+aggrwl <- function(dm) {
+  res <- dm %>%
+    dplyr::group_by(.data$OperererendeSykehus) %>%
+    dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
+                     "ops" = dplyr::n(),
+                     "minst20" = 100 * mean(.data$del20, na.rm = TRUE))
+  names(res) <- c("Sjukehus", "Vekttap ≥ 20%", "Operasjonar", "%")
+  res %>%  dplyr::arrange(dplyr::desc(.data$`%`))}
 
 #----------------------------------------------------------------------------80
 #' lage vekttaptabell
