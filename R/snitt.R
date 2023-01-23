@@ -301,24 +301,21 @@ ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
 #' @export
 
 aarKtrl <- function(df, k) {
-  nt <- et_nt <- to_nt <- NULL
+
   last_opday <- max(df$Operasjonsdato)
   switch(k,
   "1" = {
     last_op <-  last_opday - months(15)},
   "2" = {
     last_op <-  last_opday - months(27)})
-  df <- df %>%
+df <- df %>%
     dplyr::mutate(
       et_nor_m = nitti_m(dag = .data$Operasjonsdato),
       et_nor_p = nitti_p(dag = .data$Operasjonsdato),
       to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato),
       to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato),
-      pTWL = 100 * (.data$BR_Vekt - .data$`a2_Vekt`) / .data$BR_Vekt)
-
-df <- df %>%
-    dplyr::mutate(
-      et_nt = .data$a1_KontrollDato %within%
+      pTWL = 100 * (.data$BR_Vekt - .data$a2_Vekt) / .data$BR_Vekt,
+       et_nt = .data$a1_KontrollDato %within%
         lubridate::interval(.data$et_nor_m, .data$et_nor_p),
       to_nt = .data$a2_KontrollDato %within%
         lubridate::interval(.data$to_nor_m, .data$to_nor_p),
@@ -327,7 +324,8 @@ df <- df %>%
       et_lt = .data$a1_KontrollDato > .data$et_nor_p,
       to_b4 = .data$a2_KontrollDato %within%
         lubridate::interval(.data$Operasjonsdato + 1, .data$to_nor_m - 1),
-      to_lt = .data$a2_KontrollDato > .data$to_nor_p)
+      to_lt = .data$a2_KontrollDato > .data$to_nor_p
+      )
 
 df <- df %>% dplyr::select(
     c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar",
@@ -340,10 +338,10 @@ switch(k,
   df %>%
     dplyr::filter(.data$Operasjonsdato < last_op) %>%
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-    dplyr::mutate(ops = dplyr::n()) %>%
-    dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = .data$ops[1],
-                     ktl = sum(et_nt, na.rm = T) / .data$ops[1]) %>%
-    dplyr::arrange(dplyr::desc(.data$ktl))},
+#    dplyr::mutate(ops = dplyr::n()) %>%
+    dplyr::summarise(ktrl = sum(et_nt, na.rm = T),   oprs = dplyr::n(),
+                     ktl = sum(et_nt, na.rm = T) / dplyr::n()) %>%
+    dplyr::arrange(dplyr::desc(.data$ktl)) },
 "2" = {
   df %>%
     dplyr::filter(.data$Operasjonsdato < last_op) %>%
@@ -356,7 +354,6 @@ switch(k,
 }
 
 
-
 #' lage aarskontrollfigur
 #' @param df data frame
 #' @param k which year control
@@ -365,7 +362,7 @@ switch(k,
 
 
 aar_ktr_gr <- function(df, k) {
-  nt <- et_nt <- to_nt <- NULL
+#  nt <- et_nt <- to_nt <- NULL
   last_opday <- max(df$Operasjonsdato)
   switch(k,
          "1" = {
@@ -378,10 +375,7 @@ aar_ktr_gr <- function(df, k) {
       et_nor_p = nitti_p(dag = .data$Operasjonsdato),
       to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato),
       to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato),
-      pTWL = 100 * (.data$BR_Vekt - .data$`a2_Vekt`) / .data$BR_Vekt)
-
-  df <- df %>%
-    dplyr::mutate(
+      pTWL = 100 * (.data$BR_Vekt - .data$a2_Vekt) / .data$BR_Vekt,
       et_nt = .data$a1_KontrollDato %within%
         lubridate::interval(.data$et_nor_m, .data$et_nor_p),
       to_nt = .data$a2_KontrollDato %within%
