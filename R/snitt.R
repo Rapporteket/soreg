@@ -470,7 +470,7 @@ detail <- function(dm) {
       dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
       dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
                        "ops" = dplyr::n(),
-                       "minst20" = tyve/ops ) # 100 * mean(.data$del20, na.rm = TRUE))
+                       "minst20" = tyve/ops )
     res$op_aar <- format(res$op_aar, digits = 4)
     names(res) <- c("Sjukehus", "År", "Vekttap ≥ 20%", "Operasjonar", "%")
     res %>%  dplyr::arrange(dplyr::desc(.data$`%`))}
@@ -485,7 +485,7 @@ aggrwl <- function(dm) {
     dplyr::group_by(.data$OperererendeSykehus) %>%
     dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
                      "ops" = dplyr::n(),
-                     "minst20" = 100 * mean(.data$del20, na.rm = TRUE))
+                     "minst20" =tyve/ops )
   names(res) <- c("Sjukehus", "Vekttap ≥ 20%", "Operasjonar", "%")
   res %>%  dplyr::arrange(dplyr::desc(.data$`%`))}
 
