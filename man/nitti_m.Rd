@@ -4,7 +4,7 @@
 \alias{nitti_m}
 \title{slingringsmonn for aarskontrollar, minus}
 \usage{
-nitti_m(yr = 1, dag = lubridate::today(), l = 90)
+nitti_m(yr, dag, l)
 }
 \arguments{
 \item{yr}{years}

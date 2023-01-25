@@ -294,6 +294,29 @@ ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
   ggplot2::theme_minimal()
 }
 
+
+#' lage aarskontrolltabell
+#' @param df data frame
+#' @return df data frame grouped by year and hospital
+#' @export
+
+aarK1 <- function(df){
+  last_op <- max(df$Operasjonsdato) - months(15)
+  df <- df %>%
+    dplyr::mutate(
+      et_nor_m = nitti_m(yr = 1, dag =  Operasjonsdato, l = 90),
+      et_nor_p = nitti_p(yr = 1, dag =  Operasjonsdato, l = 90),
+  et_nt =  a1_KontrollDato %within%
+    lubridate::interval(et_nor_m, et_nor_p))
+  df$op_aar <- format(df$op_aar, digits = 4)
+  df %>%
+    dplyr::filter( Operasjonsdato < last_op) %>%
+    dplyr::group_by( OperererendeSykehus,  op_aar) %>%
+    dplyr::summarise(ktrl = sum(et_nt, na.rm = T),   oprs = dplyr::n(),
+                     ktl = sum(et_nt, na.rm = T) / dplyr::n()) %>%
+    dplyr::arrange(dplyr::desc(ktl))
+}
+
 #' lage aarskontrolltabell
 #' @param df data frame
 #' @param k which year control
@@ -370,11 +393,11 @@ aar_ktr_gr <- function(df, k) {
            last_op <-  last_opday - months(27)})
   df <- df %>%
     dplyr::mutate(
-      et_nor_m = nitti_m(dag = .data$Operasjonsdato),
-      et_nor_p = nitti_p(dag = .data$Operasjonsdato),
-      to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato),
-      to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato),
-      pTWL = 100 * (.data$BR_Vekt - .data$a2_Vekt) / .data$BR_Vekt,
+      et_nor_m = nitti_m(yr = 1, dag = .data$Operasjonsdato, l = 90),
+      et_nor_p = nitti_p(yr = 1, dag = .data$Operasjonsdato, l = 90),
+      to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato, l = 90),
+      to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato, l = 90),
+  #    pTWL = 100 * (.data$BR_Vekt - .data$a2_Vekt) / .data$BR_Vekt,
       et_nt = .data$a1_KontrollDato %within%
         lubridate::interval(.data$et_nor_m, .data$et_nor_p),
       to_nt = .data$a2_KontrollDato %within%
