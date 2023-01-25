@@ -17,7 +17,8 @@ ki <- function(df, indicator) {
     kompl = sum(df$u6_KomplAlvorGrad >= 4, na.rm = TRUE),
     dag30 = sum(df$u6_Behandling30Dager == 1, na.rm = TRUE),
     K1 = sum(df$et_nt, na.rm = TRUE),
-    K2 = sum(df$to_nt, na.rm = TRUE)
+    K2 = sum(df$to_nt, na.rm = TRUE),
+    TWL20 = sum(df$del20, na.rm = TRUE)
   )
 
   denominator <- nrow(df)
