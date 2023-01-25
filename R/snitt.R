@@ -105,7 +105,7 @@ RESH_sh <- function(ct, RESHId){
 #' @return beginning day of 'normtid'
 #' @export
 
-  nitti_m <- function(yr = 1, dag = lubridate::today(), l = 90) {
+  nitti_m <- function(yr, dag, l) {
     dag - lubridate::ddays(l) + lubridate::years(yr)
   }
 
@@ -116,7 +116,7 @@ RESH_sh <- function(ct, RESHId){
 #' @return end day of 'normtid'
 #' @export
 
-  nitti_p <- function(yr = 1, dag = lubridate::today(), l = 90) {
+  nitti_p <- function(yr, dag, l) {
     dag + lubridate::ddays(l) + lubridate::years(yr)
   }
 
@@ -127,7 +127,7 @@ RESH_sh <- function(ct, RESHId){
 #' @return interval of 'normtid'
 #' @export
 
-  nitti <- function(yr = 1, dag = lubridate::today(), l = 90) {
+  nitti <- function(yr, dag = lubridate::today(), l = 90) {
     c(dag - lubridate::ddays(l) + lubridate::years(yr),
       dag + lubridate::ddays(l) + lubridate::years(yr))
   }
@@ -310,11 +310,11 @@ aarKtrl <- function(df, k) {
     last_op <-  last_opday - months(27)})
 df <- df %>%
     dplyr::mutate(
-      et_nor_m = nitti_m(dag = .data$Operasjonsdato),
-      et_nor_p = nitti_p(dag = .data$Operasjonsdato),
-      to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato),
-      to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato),
-      pTWL = 100 * (.data$BR_Vekt - .data$a2_Vekt) / .data$BR_Vekt,
+      et_nor_m = nitti_m(yr = 1, dag = .data$Operasjonsdato, l = 90),
+      et_nor_p = nitti_p(yr = 1, dag = .data$Operasjonsdato, l = 90),
+      to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato, l = 90),
+      to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato, l = 90),
+  #    pTWL = 100 * (.data$BR_Vekt - .data$a2_Vekt) / .data$BR_Vekt,
        et_nt = .data$a1_KontrollDato %within%
         lubridate::interval(.data$et_nor_m, .data$et_nor_p),
       to_nt = .data$a2_KontrollDato %within%
@@ -332,13 +332,12 @@ df <- df %>% dplyr::select(
       "Operasjonsmetode", "Opmetode_GBP", "et_b4", "et_nt", "et_lt",
       "to_b4",  "to_nt", "to_lt", "pTWL"))
 df$op_aar <- format(df$op_aar, digits = 4)
-
+# print(df$op_aar)
 switch(k,
 "1" = {
   df %>%
     dplyr::filter(.data$Operasjonsdato < last_op) %>%
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-#    dplyr::mutate(ops = dplyr::n()) %>%
     dplyr::summarise(ktrl = sum(et_nt, na.rm = T),   oprs = dplyr::n(),
                      ktl = sum(et_nt, na.rm = T) / dplyr::n()) %>%
     dplyr::arrange(dplyr::desc(.data$ktl)) },
@@ -471,7 +470,7 @@ detail <- function(dm) {
       dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
       dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
                        "ops" = dplyr::n(),
-                       "minst20" = 100 * mean(.data$del20, na.rm = TRUE))
+                       "minst20" = tyve/ops ) # 100 * mean(.data$del20, na.rm = TRUE))
     res$op_aar <- format(res$op_aar, digits = 4)
     names(res) <- c("Sjukehus", "År", "Vekttap ≥ 20%", "Operasjonar", "%")
     res %>%  dplyr::arrange(dplyr::desc(.data$`%`))}
