@@ -10,12 +10,14 @@
 
 ki <- function(df, indicator) {
 
-  stopifnot(indicator %in% c("liggetid", "kompl", "dag30", "TWL20"))
+  stopifnot(indicator %in% c("liggetid", "kompl", "dag30", "K1", "K2", "TWL20"))
 
   numerator <- switch(indicator,
     liggetid = sum(df$LiggeDogn <= 3, na.rm = TRUE),
     kompl = sum(df$u6_KomplAlvorGrad >= 4, na.rm = TRUE),
-    dag30 = sum(df$u6_Behandling30Dager == 1, na.rm = TRUE)
+    dag30 = sum(df$u6_Behandling30Dager == 1, na.rm = TRUE),
+    K1 = sum(df$et_nt, na.rm = TRUE),
+    K2 = sum(df$to_nt, na.rm = TRUE)
   )
 
   denominator <- nrow(df)

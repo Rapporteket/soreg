@@ -65,7 +65,16 @@ server <- function(input, output, session) {
       op_aar = lubridate::year(Operasjonsdato),
       op_primar = (TidlFedmeOp == 0),
       pTWL = 100 * (BR_Vekt - a2_Vekt) / BR_Vekt,
-      del20 = pTWL >= 20.0)
+      del20 = pTWL >= 20.0,
+  et_nor_m = nitti_m(yr = 1, dag =  Operasjonsdato, l = 90),
+  et_nor_p = nitti_p(yr = 1, dag =  Operasjonsdato, l = 90),
+  et_nt =  a1_KontrollDato %within%
+    lubridate::interval(et_nor_m, et_nor_p),
+  to_nor_m = nitti_m(yr = 2, dag =  Operasjonsdato, l = 90),
+  to_nor_p = nitti_p(yr = 2, dag =  Operasjonsdato, l = 90),
+  to_nt =  a2_KontrollDato %within%
+    lubridate::interval(to_nor_m, to_nor_p))
+
 
   # #-------- user controls----------  hospital ------
   output$kIix <- shiny::renderUI({
@@ -180,7 +189,7 @@ kI <- shiny::reactive({
            "Ki1 Liggedøgn" = soreg::lgg_tb(slc()),
            "Ki2 Reinnlagt" = slc(), # soreg::reinn_tb(slc()),
            "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(slc()),
-           "Ki4 Kontroll normtid eitt år" = soreg::aarK1(slc()),
+           "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(slc(), k = 1),
            "Ki5 Kontroll normtid to år" = soreg::aarKtrl(slc(), k = 2),
            if (dtl()) {"Ki6 Vekttap to år" = soreg::detail(slc())} else
            {"Ki6 Vekttap to år" = soreg::aggrwl(slc())}

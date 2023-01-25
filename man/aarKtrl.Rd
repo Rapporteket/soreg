@@ -8,8 +8,6 @@ aarKtrl(df, k)
 }
 \arguments{
 \item{df}{data frame}
-
-\item{k}{which year control}
 }
 \value{
 df data frame grouped by year and hospital

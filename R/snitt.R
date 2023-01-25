@@ -141,8 +141,7 @@ lgg_tb <- function(df) {
   res <- df %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
  dplyr::summarise(soreg::ki(dplyr::across(), "liggetid")) %>%
- dplyr::arrange(dplyr::desc(.data$indicator)) %>%
- dplyr::ungroup()
+ dplyr::arrange(dplyr::desc(.data$indicator))
   res$op_aar <- format(res$op_aar, digits = 4)
   names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
   res
@@ -297,83 +296,29 @@ ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
 
 #' lage aarskontrolltabell
 #' @param df data frame
-#' @return df data frame grouped by year and hospital
-#' @export
-
-aarK1 <- function(df){
-  last_op <- max(df$Operasjonsdato) - months(15)
-  df <- df %>%
-    dplyr::mutate(
-      et_nor_m = nitti_m(yr = 1, dag =  Operasjonsdato, l = 90),
-      et_nor_p = nitti_p(yr = 1, dag =  Operasjonsdato, l = 90),
-  et_nt =  a1_KontrollDato %within%
-    lubridate::interval(et_nor_m, et_nor_p))
-  df$op_aar <- format(df$op_aar, digits = 4)
-  df %>%
-    dplyr::filter( Operasjonsdato < last_op) %>%
-    dplyr::group_by( OperererendeSykehus,  op_aar) %>%
-    dplyr::summarise(ktrl = sum(et_nt, na.rm = T),   oprs = dplyr::n(),
-                     ktl = sum(et_nt, na.rm = T) / dplyr::n()) %>%
-    dplyr::arrange(dplyr::desc(ktl))
-}
-
-#' lage aarskontrolltabell
-#' @param df data frame
 #' @param k which year control
 #' @return df data frame grouped by year and hospital
 #' @export
 
-aarKtrl <- function(df, k) {
-
-  last_opday <- max(df$Operasjonsdato)
+aarKtrl <- function(df, k){
   switch(k,
-  "1" = {
-    last_op <-  last_opday - months(15)},
-  "2" = {
-    last_op <-  last_opday - months(27)})
-df <- df %>%
-    dplyr::mutate(
-      et_nor_m = nitti_m(yr = 1, dag = .data$Operasjonsdato, l = 90),
-      et_nor_p = nitti_p(yr = 1, dag = .data$Operasjonsdato, l = 90),
-      to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato, l = 90),
-      to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato, l = 90),
-  #    pTWL = 100 * (.data$BR_Vekt - .data$a2_Vekt) / .data$BR_Vekt,
-       et_nt = .data$a1_KontrollDato %within%
-        lubridate::interval(.data$et_nor_m, .data$et_nor_p),
-      to_nt = .data$a2_KontrollDato %within%
-        lubridate::interval(.data$to_nor_m, .data$to_nor_p),
-      et_b4 = .data$a1_KontrollDato %within%
-        lubridate::interval(.data$Operasjonsdato + 1, .data$et_nor_m - 1),
-      et_lt = .data$a1_KontrollDato > .data$et_nor_p,
-      to_b4 = .data$a2_KontrollDato %within%
-        lubridate::interval(.data$Operasjonsdato + 1, .data$to_nor_m - 1),
-      to_lt = .data$a2_KontrollDato > .data$to_nor_p
-      )
-
-df <- df %>% dplyr::select(
-    c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar",
-      "Operasjonsmetode", "Opmetode_GBP", "et_b4", "et_nt", "et_lt",
-      "to_b4",  "to_nt", "to_lt", "pTWL"))
-df$op_aar <- format(df$op_aar, digits = 4)
-# print(df$op_aar)
-switch(k,
-"1" = {
-  df %>%
-    dplyr::filter(.data$Operasjonsdato < last_op) %>%
+  "1" = {res <- df %>%
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-    dplyr::summarise(ktrl = sum(et_nt, na.rm = T),   oprs = dplyr::n(),
-                     ktl = sum(et_nt, na.rm = T) / dplyr::n()) %>%
-    dplyr::arrange(dplyr::desc(.data$ktl)) },
-"2" = {
-  df %>%
-    dplyr::filter(.data$Operasjonsdato < last_op) %>%
+    dplyr::summarise(soreg::ki(dplyr::across(), "K1")) %>%
+    dplyr::arrange(dplyr::desc(.data$indicator))
+  res$op_aar <- format(res$op_aar, digits = 4)
+  names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
+  res},
+  "2" =  {res <- df %>%
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-    dplyr::mutate(ops = dplyr::n()) %>%
-    dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = .data$ops[1],
-                     ktl = sum(to_nt, na.rm = T) / .data$ops[1]) %>%
-    dplyr::arrange(dplyr::desc(.data$ktl))}
-)
+    dplyr::summarise(soreg::ki(dplyr::across(), "K2")) %>%
+    dplyr::arrange(dplyr::desc(.data$indicator))
+  res$op_aar <- format(res$op_aar, digits = 4)
+  names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
+  res}
+  )
 }
+
 
 
 #' lage aarskontrollfigur
