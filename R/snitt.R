@@ -134,6 +134,7 @@ RESH_sh <- function(ct, RESHId){
 
 #' lage liggedogntabell
 #' @param df data frame
+#' @param agg lgl
 #' @return df data frame grouped by year and hospital
 #' @export
 
@@ -199,6 +200,7 @@ df %>%
 
 #' lage reinnleggningtabell
 #' @param df data frame
+#' @param agg lgl
 #' @return df data frame grouped by year and hospital
 #' @export
 
@@ -251,6 +253,7 @@ reinn_gr <- function(df) {
 
 #' lage komplikasjontabell
 #' @param df data frame
+#' @param agg lgl
 #' @return df data frame grouped by year and hospital
 #' @export
 
@@ -319,6 +322,7 @@ ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
 #' lage aarskontrolltabell
 #' @param df data frame
 #' @param k which year control
+#' @param agg lgl resultater aggregert
 #' @return df data frame grouped by year and hospital
 #' @export
 
@@ -428,45 +432,9 @@ aar_ktr_gr <- function(df, k) {
 }
 
 
-#----------------------------------------------------------------------------80
-#' lage vekttaptabell
-#' @param df data frame full data
-#' @param opr_tp operasjonstype sleeve, bypass
-#' @param opr_oa oagb
-#' @return df data frame grouped by year and hospital
-#' @export
-
-# twlTb <- function(df, opr_tp, opr_oa) {
-#
-#  dTwl  <- df %>%
-#   dplyr::filter(!is.na(.data$a2_Vekt))
-# # %>%
-# #  dplyr::mutate(
-# #    pTWL = 100 * (.data$BR_Vekt - .data$a2_Vekt) / .data$BR_Vekt) %>%
-# #  dplyr::mutate(del20 = .data$pTWL >= 20.0)
-#  # pTWL at 2 year must exist!
-#  d_slv  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 6)
-#  d_gbp  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 1,
-#                                    .data$Opmetode_GBP == 1)
-#  d_oa   <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 1,
-#                                    .data$Opmetode_GBP == 2)
-#  switch(opr_tp,
-#  "6"  = {
-#    detail(d_slv)},
-#  "1"  = {
-#    switch(opr_oa,
-#     "1" = detail(d_gbp),
-#     "2" = detail(d_oa)
-#     )}
-#  )
-# }
-
-
-twlTb <- function(){detail(slc())}
-
-
 #' lage vekttapdetaljer
 #' @param dm data frame
+#' @param agg lgl resulater aggregert
 #' @return df data frame grouped by year and hospital
 #' @export
 
@@ -489,64 +457,6 @@ detail <- function(dm, agg) {
     names(res) <- c("Sjukehus", "År", "Vekttap ≥ 20%", "Operasjonar", "%")
     res %>%  dplyr::arrange(dplyr::desc(.data$`%`))}}
 
-#' aggregerte vekttap
-#' @param dm data frame
-#' @return df data frame grouped by year and hospital
-#' @export
-
-aggrwl <- function(dm) {
-  res <- dm %>%
-    dplyr::group_by(.data$OperererendeSykehus) %>%
-    dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
-                     "ops" = dplyr::n(),
-                     "minst20" =tyve/ops )
-  names(res) <- c("Sjukehus", "Vekttap ≥ 20%", "Operasjonar", "%")
-  res %>%  dplyr::arrange(dplyr::desc(.data$`%`))}
-
-#----------------------------------------------------------------------------80
-#' lage vekttaptabell
-#' @param df data frame full data
-#' @param opr_tp operasjonstype sleeve, bypass,
-#' @param opr_oa oagb
-#' @return df data frame grouped by year and hospital
-#' @export
-
-twlGr <- function(df, opr_tp, opr_oa) {
-  dTwl  <- df %>%
-    dplyr::filter(!is.na(.data$a2_Vekt)) %>%
-    dplyr::mutate(
-      pTWL = 100 * (.data$BR_Vekt - .data$a2_Vekt) / .data$BR_Vekt) %>%
-    dplyr::mutate(del20 = .data$pTWL >= 20.0)
-  # pTWL at 2 year must exist!
-  d_slv  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 6)
-  d_gbp  <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 1,
-                                   .data$Opmetode_GBP == 1)
-  d_oa   <- dTwl %>% dplyr::filter(.data$Operasjonsmetode == 1,
-                                   .data$Opmetode_GBP == 2)
-   dr = switch(opr_tp,
-         "6"  = {
-          detail( d_slv)},
-         "1"  = {
-           switch(opr_oa,
-                  "1" = detail(d_gbp),
-                  "2" = detail(d_oa)
-           )}
-  )
-
-ggplot2::ggplot(data = dr,
-                ggplot2::aes(x=År , y=`%`, color=Sjukehus, group=Sjukehus)) +
-  ggplot2::geom_line() +
-  ggplot2::theme_minimal()
-  # ggplot2::ggplot(data = d_fr) +
-  # ggplot2::geom_density(    ggplot2::aes(stat = "identity",
-  #                                        x = pTWL,
-  #                                        color = OperererendeSykehus)
-  # ) +
-  #   ggplot2::geom_vline(xintercept = 20,
-  #                       linetype = "dashed",
-  #                       color = "red") +
-  # ggplot2::theme_minimal()
-}
 
 #' lage vekttapgraf
 #' @param df data frame sliced

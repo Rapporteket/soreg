@@ -205,7 +205,7 @@ pl <- shiny::reactive({
          "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(slc()),
          "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_gr(slc(), k = 1 ),
          "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_gr(slc(), k = 2 ),
-         "Ki6 Vekttap to år" = soreg::wlGr( soreg::detail(slc()) )
+         "Ki6 Vekttap to år" = soreg::wlGr( soreg::detail(slc(), dtl()) )
   )
 })
   output$graf <- shiny::renderPlot(pl()) # .... kvalitetsindikatorgrafer
