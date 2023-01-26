@@ -322,23 +322,38 @@ ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
 #' @return df data frame grouped by year and hospital
 #' @export
 
-aarKtrl <- function(df, k){
-  switch(k,
-  "1" = {res <- df %>%
-    dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-    dplyr::summarise(soreg::ki(dplyr::across(), "K1")) %>%
-    dplyr::arrange(dplyr::desc(.data$indicator))
-  res$op_aar <- format(res$op_aar, digits = 4)
-  names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
-  res},
-  "2" =  {res <- df %>%
-    dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-    dplyr::summarise(soreg::ki(dplyr::across(), "K2")) %>%
-    dplyr::arrange(dplyr::desc(.data$indicator))
-  res$op_aar <- format(res$op_aar, digits = 4)
-  names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
-  res}
-  )
+aarKtrl <- function(df, k, agg){
+  if (!agg) {
+    switch(k,
+           "1" = {res <- df %>%
+             dplyr::group_by(.data$OperererendeSykehus) %>%
+             dplyr::summarise(soreg::ki(dplyr::across(), "K1")) %>%
+             dplyr::arrange(dplyr::desc(.data$indicator))
+           names(res) <- c("Sjukehus",   "teljare", "nemnare", "%")
+           res},
+           "2" =  {res <- df %>%
+             dplyr::group_by(.data$OperererendeSykehus ) %>%
+             dplyr::summarise(soreg::ki(dplyr::across(), "K2")) %>%
+             dplyr::arrange(dplyr::desc(.data$indicator))
+           names(res) <- c("Sjukehus",   "teljare", "nemnare", "%")
+           res})
+  } else {
+    switch(k,
+           "1" = {res <- df %>%
+             dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+             dplyr::summarise(soreg::ki(dplyr::across(), "K1")) %>%
+             dplyr::arrange(dplyr::desc(.data$indicator))
+           res$op_aar <- format(res$op_aar, digits = 4)
+           names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
+           res},
+           "2" =  {res <- df %>%
+             dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+             dplyr::summarise(soreg::ki(dplyr::across(), "K2")) %>%
+             dplyr::arrange(dplyr::desc(.data$indicator))
+           res$op_aar <- format(res$op_aar, digits = 4)
+           names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
+           res}
+    )}
 }
 
 
@@ -456,7 +471,7 @@ twlTb <- function(){detail(slc())}
 #' @export
 
 detail <- function(dm, agg) {
-  if (agg) {
+  if (!agg) {
     res <- dm %>%
       dplyr::group_by(.data$OperererendeSykehus) %>%
       dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
