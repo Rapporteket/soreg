@@ -137,14 +137,23 @@ RESH_sh <- function(ct, RESHId){
 #' @return df data frame grouped by year and hospital
 #' @export
 
-lgg_tb <- function(df) {
-  res <- df %>%
+lgg_tb <- function(df, agg) {
+  if (agg) {
+    res <- df %>%
+      dplyr::group_by(.data$OperererendeSykehus) %>%
+      dplyr::summarise(soreg::ki(dplyr::across(), "liggetid")) %>%
+      dplyr::arrange(dplyr::desc(.data$indicator))
+    res$op_aar <- format(res$op_aar, digits = 4)
+    names(res) <- c("Sjukehus", "teljare", "nemnare", "%")
+    res
+  } else
+    {  res <- df %>%
  dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
  dplyr::summarise(soreg::ki(dplyr::across(), "liggetid")) %>%
  dplyr::arrange(dplyr::desc(.data$indicator))
   res$op_aar <- format(res$op_aar, digits = 4)
   names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
-  res
+  res}
 }
 
 #' lage liggedogngraf
