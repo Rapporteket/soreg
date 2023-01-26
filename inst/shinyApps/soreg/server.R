@@ -187,8 +187,8 @@ kI <- shiny::reactive({
 
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
            "Ki1 Liggedøgn" = soreg::lgg_tb(slc(), dtl()),
-           "Ki2 Reinnlagt" =  soreg::reinn_tb(slc()), # slc(),
-           "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(slc()),
+           "Ki2 Reinnlagt" =  soreg::reinn_tb(slc(), dtl()), # slc(),
+           "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(slc(), dtl()),
            "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(slc(), k = 1),
            "Ki5 Kontroll normtid to år" = soreg::aarKtrl(slc(), k = 2),
            "Ki6 Vekttap to år" = soreg::detail(slc(), dtl())
