@@ -187,12 +187,13 @@ kI <- shiny::reactive({
 
     switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
            "Ki1 Liggedøgn" = soreg::lgg_tb(slc()),
-           "Ki2 Reinnlagt" = slc(), # soreg::reinn_tb(slc()),
+           "Ki2 Reinnlagt" =  soreg::reinn_tb(slc()), # slc(),
            "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(slc()),
            "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(slc(), k = 1),
            "Ki5 Kontroll normtid to år" = soreg::aarKtrl(slc(), k = 2),
-           if (dtl()) {"Ki6 Vekttap to år" = soreg::detail(slc())} else
-           {"Ki6 Vekttap to år" = soreg::aggrwl(slc())}
+           "Ki6 Vekttap to år" = soreg::detail(slc(), dtl())
+         #  if (dtl()) {"Ki6 Vekttap to år" = soreg::detail(slc())} else
+         #  {"Ki6 Vekttap to år" = soreg::aggrwl(slc())}
     )
   })
   output$Sw <- shiny::renderText({input$out_aggr})
