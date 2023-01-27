@@ -2,11 +2,7 @@
 % Please edit documentation in R/snitt.R
 \name{aar_ktr_gr}
 \alias{aar_ktr_gr}
-\title{#' lage aarskontrolltabell
-#' @param df data frame
-#' @param k which year control
-#' @return df data frame grouped by year and hospital
-#' @export}
+\title{lage aarskontrollfigur}
 \usage{
 aar_ktr_gr(df, k)
 }
@@ -19,8 +15,5 @@ aar_ktr_gr(df, k)
 df data frame grouped by year and hospital
 }
 \description{
-
-}
-\details{
-
+lage aarskontrollfigur
 }

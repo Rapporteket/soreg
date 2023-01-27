@@ -4,10 +4,12 @@
 \alias{reinn_tb}
 \title{lage reinnleggningtabell}
 \usage{
-reinn_tb(df)
+reinn_tb(df, agg)
 }
 \arguments{
 \item{df}{data frame}
+
+\item{agg}{lgl}
 }
 \value{
 df data frame grouped by year and hospital

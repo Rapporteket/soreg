@@ -4,10 +4,12 @@
 \alias{kompl_tb}
 \title{lage komplikasjontabell}
 \usage{
-kompl_tb(df)
+kompl_tb(df, agg)
 }
 \arguments{
 \item{df}{data frame}
+
+\item{agg}{lgl}
 }
 \value{
 df data frame grouped by year and hospital

@@ -371,12 +371,12 @@ aarKtrl <- function(df, k, agg){
 
 aar_ktr_gr <- function(df, k) {
 #  nt <- et_nt <- to_nt <- NULL
-  last_opday <- max(df$Operasjonsdato)
-  switch(k,
-         "1" = {
-           last_op <-  last_opday - months(15)},
-         "2" = {
-           last_op <-  last_opday - months(27)})
+  # last_opday <- max(df$Operasjonsdato)
+  # switch(k,
+  #        "1" = {
+  #          last_op <-  last_opday - months(15)},
+  #        "2" = {
+  #          last_op <-  last_opday - months(27)})
   df <- df %>%
     dplyr::mutate(
       et_nor_m = nitti_m(yr = 1, dag = .data$Operasjonsdato, l = 90),
@@ -404,7 +404,7 @@ aar_ktr_gr <- function(df, k) {
   switch(k,
          "1" = {
            df %>%
-             dplyr::filter(.data$Operasjonsdato < last_op) %>%
+             # dplyr::filter(.data$Operasjonsdato < last_op) %>%
              dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
              dplyr::mutate(ops = dplyr::n()) %>%
              dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = .data$ops[1],
@@ -417,7 +417,7 @@ aar_ktr_gr <- function(df, k) {
                },
          "2" = {
            df %>%
-             dplyr::filter(.data$Operasjonsdato < last_op) %>%
+             # dplyr::filter(.data$Operasjonsdato < last_op) %>%
              dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
              dplyr::mutate(ops = dplyr::n()) %>%
              dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = .data$ops[1],
