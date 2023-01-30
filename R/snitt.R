@@ -371,22 +371,22 @@ aarKtrl <- function(df, k, agg){
 
 aar_ktr_gr <- function(df, k) {
 
-  df <- df %>%
-    dplyr::mutate(
-      et_nor_m = nitti_m(yr = 1, dag = .data$Operasjonsdato, l = 90),
-      et_nor_p = nitti_p(yr = 1, dag = .data$Operasjonsdato, l = 90),
-      to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato, l = 90),
-      to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato, l = 90),
-      et_nt = .data$a1_KontrollDato %within%
-        lubridate::interval(.data$et_nor_m, .data$et_nor_p),
-      to_nt = .data$a2_KontrollDato %within%
-        lubridate::interval(.data$to_nor_m, .data$to_nor_p),
-      et_b4 = .data$a1_KontrollDato %within%
-        lubridate::interval(.data$Operasjonsdato + 1, .data$et_nor_m - 1),
-      et_lt = .data$a1_KontrollDato > .data$et_nor_p,
-      to_b4 = .data$a2_KontrollDato %within%
-        lubridate::interval(.data$Operasjonsdato + 1, .data$to_nor_m - 1),
-      to_lt = .data$a2_KontrollDato > .data$to_nor_p)
+  # df <- df %>%
+  #   dplyr::mutate(
+  #     et_nor_m = nitti_m(yr = 1, dag = .data$Operasjonsdato, l = 90),
+  #     et_nor_p = nitti_p(yr = 1, dag = .data$Operasjonsdato, l = 90),
+  #     to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato, l = 90),
+  #     to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato, l = 90),
+  #     et_nt = .data$a1_KontrollDato %within%
+  #       lubridate::interval(.data$et_nor_m, .data$et_nor_p),
+  #     to_nt = .data$a2_KontrollDato %within%
+  #       lubridate::interval(.data$to_nor_m, .data$to_nor_p),
+  #     et_b4 = .data$a1_KontrollDato %within%
+  #       lubridate::interval(.data$Operasjonsdato + 1, .data$et_nor_m - 1),
+  #     et_lt = .data$a1_KontrollDato > .data$et_nor_p,
+  #     to_b4 = .data$a2_KontrollDato %within%
+  #       lubridate::interval(.data$Operasjonsdato + 1, .data$to_nor_m - 1),
+  #     to_lt = .data$a2_KontrollDato > .data$to_nor_p)
 
   df <- df %>% dplyr::select(
     c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar",
