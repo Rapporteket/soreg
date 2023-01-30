@@ -433,8 +433,18 @@ detail <- function(dm, agg) {
 #' @param df data frame sliced
 #' @export
 
-wlGr <- function(df){
+wlGr <- function(df, agg){
+  if (agg) {
   df %>% ggplot2::ggplot(ggplot2::aes(x = År, y = `%`, color=Sjukehus, group=Sjukehus)) +
     ggplot2::geom_line() +
-    ggplot2::theme_minimal()
+    ggplot2::theme_minimal()} else
+    {
+      df %>% ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
+        ggplot2::geom_bar( stat = "identity", ) +
+        ggplot2::theme_minimal()
+
+ #     ggplot(d_opmet, aes(x=opmetode_tekst, y  = pros)) +
+#        geom_bar(stat='identity', fill=colPrim[3], width=2/3) +
+
+    }
 }
