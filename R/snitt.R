@@ -371,37 +371,17 @@ aarKtrl <- function(df, k, agg){
 
 aar_ktr_gr <- function(df, k) {
 
-  # df <- df %>%
-  #   dplyr::mutate(
-  #     et_nor_m = nitti_m(yr = 1, dag = .data$Operasjonsdato, l = 90),
-  #     et_nor_p = nitti_p(yr = 1, dag = .data$Operasjonsdato, l = 90),
-  #     to_nor_m = nitti_m(yr = 2, dag = .data$Operasjonsdato, l = 90),
-  #     to_nor_p = nitti_p(yr = 2, dag = .data$Operasjonsdato, l = 90),
-  #     et_nt = .data$a1_KontrollDato %within%
-  #       lubridate::interval(.data$et_nor_m, .data$et_nor_p),
-  #     to_nt = .data$a2_KontrollDato %within%
-  #       lubridate::interval(.data$to_nor_m, .data$to_nor_p),
-  #     et_b4 = .data$a1_KontrollDato %within%
-  #       lubridate::interval(.data$Operasjonsdato + 1, .data$et_nor_m - 1),
-  #     et_lt = .data$a1_KontrollDato > .data$et_nor_p,
-  #     to_b4 = .data$a2_KontrollDato %within%
-  #       lubridate::interval(.data$Operasjonsdato + 1, .data$to_nor_m - 1),
-  #     to_lt = .data$a2_KontrollDato > .data$to_nor_p)
-
-  df <- df %>% dplyr::select(
+    df <- df %>% dplyr::select(
     c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar",
-      "Operasjonsmetode", "Opmetode_GBP", "et_b4", "et_nt", "et_lt",
-      "to_b4",  "to_nt", "to_lt", "pTWL"))
+      "Operasjonsmetode", "Opmetode_GBP", "et_nt", "to_nt",  "pTWL"))
   df$op_aar <- format(df$op_aar, digits = 4)
 
   switch(k,
          "1" = {
            df %>%
-             # dplyr::filter(.data$Operasjonsdato < last_op) %>%
              dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-             dplyr::mutate(ops = dplyr::n()) %>%
-             dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = .data$ops[1],
-                              ktl = sum(et_nt, na.rm = T) / .data$ops[1]) %>%
+             dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
+                              ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
              ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
                                           group = OperererendeSykehus,
                                           color = OperererendeSykehus)  ) +
@@ -410,11 +390,9 @@ aar_ktr_gr <- function(df, k) {
                },
          "2" = {
            df %>%
-             # dplyr::filter(.data$Operasjonsdato < last_op) %>%
              dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-             dplyr::mutate(ops = dplyr::n()) %>%
-             dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = .data$ops[1],
-                              ktl = sum(to_nt, na.rm = T) / .data$ops[1]) %>%
+             dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = dplyr::n(),
+                              ktl = sum(to_nt, na.rm = T) / dplyr::n()) %>%
              ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
                                           group = OperererendeSykehus,
                                           color = OperererendeSykehus)  ) +

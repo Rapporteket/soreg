@@ -68,12 +68,10 @@ server <- function(input, output, session) {
       del20 = pTWL >= 20.0,
   et_nor_m = nitti_m(yr = 1, dag =  Operasjonsdato, l = 90),
   et_nor_p = nitti_p(yr = 1, dag =  Operasjonsdato, l = 90),
-  et_nt =  a1_KontrollDato %within%
-    lubridate::interval(et_nor_m, et_nor_p),
+  et_nt =  a1_KontrollDato %within%  lubridate::interval(et_nor_m, et_nor_p),
   to_nor_m = nitti_m(yr = 2, dag =  Operasjonsdato, l = 90),
   to_nor_p = nitti_p(yr = 2, dag =  Operasjonsdato, l = 90),
-  to_nt =  a2_KontrollDato %within%
-    lubridate::interval(to_nor_m, to_nor_p))
+  to_nt =  a2_KontrollDato %within%  lubridate::interval(to_nor_m, to_nor_p))
 
 
   # #-------- user controls----------  hospital ------
@@ -204,7 +202,7 @@ pl <- shiny::reactive({
          "Ki2 Reinnlagt" = soreg::reinn_gr(slc()),
          "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(slc()),
          "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_gr(slc(), k = 1 ),
-         "Ki5 Kontroll normtid eitt år" = soreg::aar_ktr_gr(slc(), k = 2 ),
+         "Ki5 Kontroll normtid to år"   = soreg::aar_ktr_gr(slc(), k = 2 ),
          "Ki6 Vekttap to år" = soreg::wlGr( soreg::detail(slc(), dtl()) )
   )
 })
