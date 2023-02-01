@@ -163,38 +163,33 @@ lgg_tb <- function(df, agg) {
 
 lgg_gr <- function(df) {
   maksdogn_vis <- 14
-  LiggeDogn <- liggedognTrunk <- liggedognLenge <- NULL
-  # r-bloggers.com/2019/08/no-visible-binding-for-global-variable
-df %<>%
-  dplyr::mutate(
-    liggedognLenge = LiggeDogn > maksdogn_vis,
-    liggedognTrunk = pmin(LiggeDogn, maksdogn_vis + 1))
-    # liggedognMaks <- max(df$LiggeDogn, na.rm = TRUE)
-    # liggedognBreaks <- seq(
-    #     pmin(1, min(df$LiggeDogn, na.rm = TRUE)),
-    #     maksdogn_vis + 1)
-liggedognMaks <- max( LiggeDogn, na.rm = T)
-liggedognBreaks <- 0:15
-    liggedognTekst <- liggedognBreaks
-    liggedognTekst[length(liggedognTekst)] <-
-      paste0("\u2265", maksdogn_vis + 1)
+   df %<>%
+    dplyr::mutate(
+      liggedognLenge = df$LiggeDogn > maksdogn_vis,
+      liggedognTrunk = pmin(df$LiggeDogn, maksdogn_vis + 1))
 
-df %>%
-  dplyr::filter(!is.na(LiggeDogn) & !(LiggeDogn < 0)) %>%
-  ggplot2::ggplot(ggplot2::aes(x = liggedognTrunk,
-                               fill = liggedognLenge)) +
-  ggplot2::geom_bar(stat = "count",
-                    show.legend = FALSE) +
-  ggplot2::scale_fill_manual(values = c("FALSE" = "blue",
-                                        "TRUE" = "red")) +
-  ggplot2::scale_x_continuous(breaks = liggedognBreaks,
-                              labels = liggedognTekst,
-                              expand = c(0, .6)) +
-  ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.0, .05),
-                                                          add = 0)) +
-  ggplot2::xlab("Ligged\u00F8gn") +
-  ggplot2::ylab("Talet p\u00E5 pasienter")+
-  ggplot2::theme_minimal()
+  liggedognMaks <- max( df$LiggeDogn, na.rm = T)
+  liggedognBreaks <- 0:15
+  liggedognTekst <- liggedognBreaks
+  liggedognTekst[length(liggedognTekst)] <-
+    paste0("\u2265", maksdogn_vis + 1)
+
+  df %>%
+    dplyr::filter(!is.na(LiggeDogn) & !(LiggeDogn < 0)) %>%
+    ggplot2::ggplot(ggplot2::aes(x = liggedognTrunk,
+                                 fill = liggedognLenge)) +
+    ggplot2::geom_bar(stat = "count",
+                      show.legend = FALSE) +
+    ggplot2::scale_fill_manual(values = c("FALSE" = "blue",
+                                          "TRUE" = "red")) +
+    ggplot2::scale_x_continuous(breaks = liggedognBreaks,
+                                labels = liggedognTekst,
+                                expand = c(0, .6)) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.0, .05),
+                                                            add = 0)) +
+    ggplot2::xlab("Ligged\u00F8gn") +
+    ggplot2::ylab("Talet p\u00E5 pasienter")+
+    ggplot2::theme_minimal()
 }
 
 

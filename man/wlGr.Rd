@@ -4,7 +4,7 @@
 \alias{wlGr}
 \title{lage vekttapgraf}
 \usage{
-wlGr(df)
+wlGr(df, agg)
 }
 \arguments{
 \item{df}{data frame sliced}
