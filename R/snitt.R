@@ -168,7 +168,7 @@ lgg_gr <- function(df) {
       liggedognLenge = df$LiggeDogn > maksdogn_vis,
       liggedognTrunk = pmin(df$LiggeDogn, maksdogn_vis + 1))
 
-  liggedognMaks <- max( df$LiggeDogn, na.rm = T)
+  # liggedognMaks <- max( df$LiggeDogn, na.rm = T)
   liggedognBreaks <- 0:15
   liggedognTekst <- liggedognBreaks
   liggedognTekst[length(liggedognTekst)] <-
@@ -430,7 +430,7 @@ detail <- function(dm, agg) {
 
 wlGr <- function(df, agg){
   if (agg) {
-  df %>% ggplot2::ggplot(ggplot2::aes(x = År, y = `%`, color=Sjukehus, group=Sjukehus)) +
+  df %>% ggplot2::ggplot(ggplot2::aes(x = `År`, y = `%`, color=Sjukehus, group=Sjukehus)) +
     ggplot2::geom_line() +
     ggplot2::theme_minimal()} else
     {

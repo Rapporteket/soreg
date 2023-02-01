@@ -73,7 +73,6 @@ server <- function(input, output, session) {
   to_nor_p = nitti_p(yr = 2, dag =  Operasjonsdato, l = 90),
   to_nt =  a2_KontrollDato %within%  lubridate::interval(to_nor_m, to_nor_p))
 
-
   # #-------- user controls----------  hospital ------
   output$kIix <- shiny::renderUI({
     shiny::selectInput(
@@ -192,7 +191,7 @@ kI <- shiny::reactive({
          "Ki6 Vekttap to år" = soreg::detail(slc(), dtl())
   )
 })
-  output$Sw <- shiny::renderText({input$out_aggr})
+#  output$Sw <- shiny::renderText({input$out_aggr})
   output$dT <- shiny::renderTable(kI()) # .... kvalitetsindikatortabeller
   #
 pl <- shiny::reactive({
