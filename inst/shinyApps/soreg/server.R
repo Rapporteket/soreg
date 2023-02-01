@@ -57,8 +57,7 @@ server <- function(input, output, session) {
   output$veiledning <- renderUI({
     htmlRenderRmd("veiledning.Rmd")
   })
-  # #------------------ KI
-  # # read in data
+  # #------------------ KI   # # read in data
   dFull <- soreg::get_arsrp("soreg")
   dFull %<>%
     dplyr::mutate(
@@ -117,7 +116,6 @@ server <- function(input, output, session) {
     shiny::checkboxGroupInput(
       inputId = "prim",
       label = "Operasjonstype:",
-     #  choices = unique(dFull$op_primar),
      choiceNames  = list("Primæroperasjon", "Revisjonsoperasjon"),
      choiceValues = list(TRUE, FALSE),
      selected = TRUE,
