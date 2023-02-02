@@ -143,7 +143,6 @@ server <- function(input, output, session) {
   # # -------------  OAGB
   output$uc_oagb <- shiny::renderUI({
     if (1 %in% input$op_tech) {
-      # shinyWidgets::awesomeCheckboxGroup(
       shiny::checkboxGroupInput(
       inputId = "oagb",
       label = "RYGBP OAGB",
@@ -165,24 +164,20 @@ server <- function(input, output, session) {
   # })
 
   # ................. reaktivitet
-
-# sntt <- shiny::reactive({soreg::snitt(dFull, input$sh, input$op_aar)})
 dtl <- shiny::reactive({input$out_aggr})
-# output$value <- renderText({ input$somevalue })
 
 slc <- shiny::reactive({
-  if (is.null(input$oagb))
-{soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)} else
-{soreg::siivu(dFull, input$sh, input$op_aar, input$prim, input$op_tech,
-              input$oagb)}
-    })
-
+    if (is.null(input$oagb))
+    {soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)} else
+    {soreg::siivu(dFull, input$sh, input$op_aar, input$prim, input$op_tech,
+                  input$oagb)}
+})
 
 kI <- shiny::reactive({
 
   switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
          "Ki1 Liggedøgn" = soreg::lgg_tb(slc(), dtl()),
-         "Ki2 Reinnlagt" =  soreg::reinn_tb(slc(), dtl()), # slc(),
+         "Ki2 Reinnlagt" = soreg::reinn_tb(slc(), dtl()), # slc(),
          "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(slc(), dtl()),
          "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(slc(), k = 1, dtl()),
          "Ki5 Kontroll normtid to år" = soreg::aarKtrl(slc(), k = 2, dtl()),
@@ -191,7 +186,7 @@ kI <- shiny::reactive({
 })
 #  output$Sw <- shiny::renderText({input$out_aggr})
   output$dT <- shiny::renderTable(kI()) # .... kvalitetsindikatortabeller
-  #
+
 pl <- shiny::reactive({
 
   switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,

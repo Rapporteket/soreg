@@ -240,6 +240,7 @@ reinn_gr <- function(df) {
     ggplot2::aes(x=op_aar, y = indicator,
                  group = OperererendeSykehus, color = OperererendeSykehus) +
     ggplot2::geom_line() +
+    ggplot2::labs(x = "Operasjonsår", y = "Reinnleggelse, %")+
     ggplot2::theme_minimal()
 #  d_reinn_graf
 }
@@ -353,8 +354,6 @@ aarKtrl <- function(df, k, agg){
     )}
 }
 
-
-
 #' lage aarskontrollfigur
 #' @param df data frame
 #' @param k which year control
@@ -369,30 +368,32 @@ aar_ktr_gr <- function(df, k) {
       "Operasjonsmetode", "Opmetode_GBP", "et_nt", "to_nt",  "pTWL"))
   df$op_aar <- format(df$op_aar, digits = 4)
 
-  switch(k,
-         "1" = {
-           df %>%
-             dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-             dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
-                              ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
-             ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
-                                          group = OperererendeSykehus,
-                                          color = OperererendeSykehus)  ) +
-             ggplot2::geom_line()+
-             ggplot2::theme_minimal()
-               },
-         "2" = {
-           df %>%
-             dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-             dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = dplyr::n(),
-                              ktl = sum(to_nt, na.rm = T) / dplyr::n()) %>%
-             ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
-                                          group = OperererendeSykehus,
-                                          color = OperererendeSykehus)  ) +
-             ggplot2::geom_line()+
-             ggplot2::theme_minimal()
-         }
-  )
+    switch(k,
+           "1" =   {
+             df %>%
+               dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+               dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
+                                ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
+               ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
+                                            group = OperererendeSykehus,
+                                            color = OperererendeSykehus)  ) +
+               ggplot2::geom_line()+
+               ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
+               ggplot2::theme_minimal()
+           },
+           "2" = {
+             df %>%
+               dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+               dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = dplyr::n(),
+                                ktl = sum(to_nt, na.rm = T) / dplyr::n()) %>%
+               ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
+                                            group = OperererendeSykehus,
+                                            color = OperererendeSykehus)  ) +
+               ggplot2::geom_line()+
+               ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
+               ggplot2::theme_minimal()
+           }
+    )
 }
 
 
@@ -431,11 +432,14 @@ wlGr <- function(df, agg){
   if (agg) {
     df %>% ggplot2::ggplot(ggplot2::aes(x = `År`, y = `%`, color=Sjukehus, group=Sjukehus)) +
       ggplot2::geom_line() +
+      ggplot2::labs(x = "Operasjonsår", y="To års vekttap ≥ 20%, %")+
       ggplot2::theme_minimal()} else
       {
-        df %>%  dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
+        p <-  df %>%  dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
           ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
           ggplot2::geom_bar( stat = "identity" ) +
+          ggplot2::labs(x = "Sjukehus", y="To års vekttap ≥ 20%, %")+
           ggplot2::theme_minimal()
+        p +  ggplot2::theme(axis.text.x = ggplot2::element_text(  angle = 90))
       }
 }
