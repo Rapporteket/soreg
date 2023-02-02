@@ -367,19 +367,27 @@ aar_ktr_gr <- function(df, k) {
     c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar",
       "Operasjonsmetode", "Opmetode_GBP", "et_nt", "to_nt",  "pTWL"))
   df$op_aar <- format(df$op_aar, digits = 4)
-
+# print( length(unique(df$op_aar)))
     switch(k,
            "1" =   {
-             df %>%
-               dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-               dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
-                                ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
-               ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
-                                            group = OperererendeSykehus,
-                                            color = OperererendeSykehus)  ) +
-               ggplot2::geom_line()+
-               ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
-               ggplot2::theme_minimal()
+             if   ( length(unique(df$op_aar)) >1) {
+               df %>%
+                 dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+                 dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
+                                  ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
+                 ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
+                                              group = OperererendeSykehus,
+                                              color = OperererendeSykehus)  ) +
+                 ggplot2::geom_line()+
+                 ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
+                 ggplot2::theme_minimal()} else {df %>%
+                     dplyr::group_by(.data$OperererendeSykehus ) %>%
+                     dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
+                                      ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
+                     ggplot2::ggplot(ggplot2::aes(  y = ktl,
+                                                  group = OperererendeSykehus,
+                                                  color = OperererendeSykehus)  ) +
+                     ggplot2::geom_point()   }
            },
            "2" = {
              df %>%
