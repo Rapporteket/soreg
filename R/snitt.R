@@ -450,10 +450,13 @@ detail <- function(dm, agg) {
 
 wlGr <- function(df, agg){
   if (agg) {
+    if   ( length(unique(df$op_aar)) >1) {
     df %>% ggplot2::ggplot(ggplot2::aes(x = `År`, y = `%`, color=Sjukehus, group=Sjukehus)) +
       ggplot2::geom_line() +
       ggplot2::labs(x = "Operasjonsår", y="To års vekttap ≥ 20%, %")+
-      ggplot2::theme_minimal()} else
+      ggplot2::theme_minimal()} else {
+
+      }} else
       {
         p <-  df %>%  dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
           ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
