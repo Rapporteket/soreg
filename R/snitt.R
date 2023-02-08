@@ -142,7 +142,7 @@ lgg_tb <- function(df, agg) {
       dplyr::group_by(.data$OperererendeSykehus) %>%
       dplyr::summarise(soreg::ki(dplyr::across(), "liggetid")) %>%
       dplyr::arrange(dplyr::desc(.data$indicator))
-    names(res) <- c("Sjukehus", "teljare", "nemnare", "%")
+    names(res) <- c("Sjukehus", "Liggedøgn ⩽4", "Operasjonar", "%")
     res
   } else
   {  res <- df %>%
@@ -150,7 +150,7 @@ lgg_tb <- function(df, agg) {
     dplyr::summarise(soreg::ki(dplyr::across(), "liggetid")) %>%
     dplyr::arrange(dplyr::desc(.data$indicator))
   res$op_aar <- format(res$op_aar, digits = 4)
-  names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
+  names(res) <- c("Sjukehus", "År", "Liggedøgn ⩽4", "Operasjonar", "%")
   res}
 }
 
@@ -207,7 +207,7 @@ reinn_tb <- function(df, agg)  {
       dplyr::group_by(.data$OperererendeSykehus ) %>%
       dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
       dplyr::arrange(dplyr::desc(.data$indicator))
-    names(res) <- c("Sjukehus",   "teljare", "operasjonar", "%")
+    names(res) <- c("Sjukehus",   "Reinnlagt", "Operasjonar", "%")
     res
   } else {
   res <- df %>%
@@ -215,7 +215,7 @@ reinn_tb <- function(df, agg)  {
     dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
     dplyr::arrange(dplyr::desc(.data$indicator))
   res$op_aar <- format(res$op_aar, digits = 4)
-  names(res) <- c("Sjukehus", "Opr.år", "teljare", "operasjonar", "%")
+  names(res) <- c("Sjukehus", "Opr.år", "Reinnlagt", "Operasjonar", "%")
   res}
 }
 
