@@ -142,7 +142,7 @@ lgg_tb <- function(df, agg) {
       dplyr::group_by(.data$OperererendeSykehus) %>%
       dplyr::summarise(soreg::ki(dplyr::across(), "liggetid")) %>%
       dplyr::arrange(dplyr::desc(.data$indicator))
-    names(res) <- c("Sjukehus", "Liggedøgn ⩽4", "Operasjonar", "%")
+    names(res) <- c("Sjukehus", "Liggedøgn ≤4", "Operasjonar", "%")
     res
   } else
   {  res <- df %>%
@@ -150,7 +150,7 @@ lgg_tb <- function(df, agg) {
     dplyr::summarise(soreg::ki(dplyr::across(), "liggetid")) %>%
     dplyr::arrange(dplyr::desc(.data$indicator))
   res$op_aar <- format(res$op_aar, digits = 4)
-  names(res) <- c("Sjukehus", "År", "Liggedøgn ⩽4", "Operasjonar", "%")
+  names(res) <- c("Sjukehus", "År", "Liggedøgn ≤4", "Operasjonar", "%")
   res}
 }
 
