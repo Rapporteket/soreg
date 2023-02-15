@@ -187,7 +187,12 @@ lgg_gr <- function(df) {
                                                             add = 0)) +
     ggplot2::xlab("Ligged\u00F8gn") +
     ggplot2::ylab("Talet p\u00E5 pasienter")+
-    ggplot2::theme_minimal()
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+      axis.title.x = ggplot2::element_text(size = 20),
+      axis.title.y = ggplot2::element_text(size = 20),
+      axis.text = ggplot2::element_text(size = 14)
+    )
 }
 
 
@@ -235,14 +240,16 @@ reinn_gr <- function(df) {
     dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
     dplyr::arrange(dplyr::desc(.data$indicator))  %>%
 
-#  d_reinn_graf <- res %>%
     ggplot2::ggplot() +
     ggplot2::aes(x=op_aar, y = indicator,
                  group = OperererendeSykehus, color = OperererendeSykehus) +
     ggplot2::geom_line() +
     ggplot2::labs(x = "Operasjonsår", y = "Reinnleggelse, %")+
-    ggplot2::theme_minimal()
-#  d_reinn_graf
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+      axis.title.x = ggplot2::element_text(size = 20),
+      axis.title.y = ggplot2::element_text(size = 20),
+      axis.text = ggplot2::element_text(size = 14))
 }
 
 #' lage komplikasjontabell
@@ -309,7 +316,11 @@ ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
   ggplot2::xlab(NULL) + ggplot2::ylab("Talet p\u00E5 pasienter") +
   ggplot2::coord_flip() + fjern_y +  fjern_y_ticks +
   ggplot2::theme(panel.grid.minor.x =  ggplot2::element_blank()) +
-  ggplot2::theme_minimal()
+  ggplot2::theme_minimal() +
+  ggplot2::theme(
+    axis.title.x = ggplot2::element_text(size = 20),
+    axis.title.y = ggplot2::element_text(size = 20),
+    axis.text = ggplot2::element_text(size = 14))
 }
 
 
@@ -371,29 +382,29 @@ aar_ktr_gr <- function(df, k) {
   switch(k,
          "1" =   {
            if   ( length(unique(df$op_aar)) >1) {
-             df %>%
+             p <- df %>%
                dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
                dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
                                 ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
                ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
                                             group = OperererendeSykehus,
                                             color = OperererendeSykehus)  ) +
-               ggplot2::geom_line()+
+               ggplot2::geom_line(linewidth=2)+
                ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
-               ggplot2::theme_minimal()} else {df %>%
+               ggplot2::theme_minimal() } else {p <-df %>%
                    dplyr::group_by(.data$OperererendeSykehus ) %>%
                    dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
                                     ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
                    ggplot2::ggplot(ggplot2::aes(x = unique(df$op_aar),  y = ktl,
                                                 group = OperererendeSykehus,
                                                 color = OperererendeSykehus)  ) +
-                   ggplot2::geom_point()+
+                   ggplot2::geom_point(size=3)+
                    ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
-                   ggplot2::theme_minimal()   }
+                   ggplot2::theme_minimal()    }
          },
          "2" = {
            if   ( length(unique(df$op_aar)) >1) {
-             df %>%
+             p<- df %>%
                dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
                dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = dplyr::n(),
                                 ktl = sum(to_nt, na.rm = T) / dplyr::n()) %>%
@@ -402,18 +413,22 @@ aar_ktr_gr <- function(df, k) {
                                             color = OperererendeSykehus)  ) +
                ggplot2::geom_line()+
                ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
-               ggplot2::theme_minimal()} else {df %>%
-                   dplyr::group_by(.data$OperererendeSykehus ) %>%
-                   dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = dplyr::n(),
-                                    ktl = sum(to_nt, na.rm = T) /dplyr::n()) %>%
-                   ggplot2::ggplot(ggplot2::aes(x = unique(df$op_aar),  y = ktl,
-                                                group = OperererendeSykehus,
-                                                color = OperererendeSykehus)  ) +
-                   ggplot2::geom_point()+
-                   ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
-                   ggplot2::theme_minimal()   }
+               ggplot2::theme_minimal()  } else {p<- df %>%
+                 dplyr::group_by(.data$OperererendeSykehus ) %>%
+                 dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = dplyr::n(),
+                                  ktl = sum(to_nt, na.rm = T) /dplyr::n()) %>%
+                 ggplot2::ggplot(ggplot2::aes(x = unique(df$op_aar),  y = ktl,
+                                              group = OperererendeSykehus,
+                                              color = OperererendeSykehus)  ) +
+                 ggplot2::geom_point()+
+                 ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
+                 ggplot2::theme_minimal()  }
          }
   )
+  p  +    ggplot2::theme(
+    axis.title.x = ggplot2::element_text(size = 20),
+    axis.title.y = ggplot2::element_text(size = 20),
+    axis.text = ggplot2::element_text(size = 14))
 }
 
 
@@ -450,24 +465,28 @@ detail <- function(dm, agg) {
 
 wlGr <- function(df, agg){
   if (agg)
-    {  if (length(unique(df$`År`))>1) { length(unique(df$`År`))
+  {  if (length(unique(df$`År`))>1) { length(unique(df$`År`))
     df %>% ggplot2::ggplot(ggplot2::aes(x = `År`, y = `%`, color=Sjukehus, group=Sjukehus)) +
       ggplot2::geom_line() +
-      ggplot2::labs(x = "Operasjonsår", y="To års vekttap ≥ 20%, %")+
-      ggplot2::theme_minimal() } else
-        {
-        df %>% ggplot2::ggplot(ggplot2::aes(x = År, y = `%`, color=Sjukehus, group=Sjukehus)) +
+      ggplot2::labs(x = "Operasjonsår", y="Prosent to års vekttap ≥ 20%")+
+      ggplot2::theme_minimal()  } else
+      { # ett år
+        p<-   df %>% ggplot2::ggplot(ggplot2::aes(x = År, y = `%`, color=Sjukehus, group=Sjukehus)) +
           ggplot2::geom_point() +
-          ggplot2::labs(x = "Operasjonsår", y="To års vekttap ≥ 20%, %")+
-          ggplot2::theme_minimal()
-          }
-    } else
-      {
-        p <-  df %>%  dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
-          ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
-          ggplot2::geom_bar( stat = "identity" ) +
-          ggplot2::labs(x = "Sjukehus", y="To års vekttap ≥ 20%, %")+
-          ggplot2::theme_minimal()
-        p +  ggplot2::theme(axis.text.x = ggplot2::element_text(  angle = 90))
+          ggplot2::labs(x = "Operasjonsår", y="Prosent to års vekttap ≥ 20%") +
+          ggplot2::theme(
+            axis.title.x = ggplot2::element_text(size = 20),
+            axis.title.y = ggplot2::element_text(size = 20, angle=90),
+            axis.text = ggplot2::element_text(size = 14))
+        p+ ggplot2::theme_minimal()
       }
+  } else
+  {
+    p <-  df %>%  dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
+      ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
+      ggplot2::geom_bar( stat = "identity" ) +
+      ggplot2::labs(x = "Sjukehus", y="Prosent to års vekttap ≥ 20%")+
+      ggplot2::theme_minimal()
+    p +  ggplot2::theme(axis.text.x = ggplot2::element_text(  angle = 90))
+  }
 }
