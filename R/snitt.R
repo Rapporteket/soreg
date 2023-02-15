@@ -249,7 +249,7 @@ reinn_gr <- function(df, agg)  {
     names(res) <- c("Sjukehus",   "Reinnlagt", "Operasjonar", "%")
    p <- res %>%  dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
       ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
-      ggplot2::geom_bar( stat = "identity" ) +
+      ggplot2::geom_bar( stat = "identity" ) +  # histogram
       ggplot2::scale_x_discrete( "Sjukehus")+
       ggplot2::scale_y_continuous("Reinnlagt, %")+
       ggplot2::theme_minimal()
@@ -281,6 +281,7 @@ reinn_gr <- function(df, agg)  {
       ggplot2::scale_y_continuous("Reinnlagt, %")+
       ggplot2::theme_minimal()
   }
+
   p +  ggplot2::theme(
     axis.title.x = ggplot2::element_text(size = tl_sz),
     axis.title.y = ggplot2::element_text(size = tl_sz),
@@ -516,34 +517,34 @@ wlGr <- function(df, agg){
   {  if (length(unique(df$`År`))>1) { # length(unique(df$`År`))
    p <- df %>% ggplot2::ggplot(ggplot2::aes(x = `År`, y = `%`, color=Sjukehus, group=Sjukehus)) +
       ggplot2::geom_line(linewidth=lw) +
+    # ggplot2::labs(x = "Operasjonsår", y="Prosent to års vekttap ≥ 20%") +
       ggplot2::scale_x_discrete( "Operasjonsår")+
       ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent)+
-      ggplot2::theme_minimal() +
-    p+  ggplot2::theme(
-        axis.title.x = ggplot2::element_text(size = tl_sz),
-        axis.title.y = ggplot2::element_text(size = tl_sz ),
-        axis.text = ggplot2::element_text(size = 14)) } else
+      ggplot2::theme_minimal()
+   } else
       { # ett år
         p<-   df %>% ggplot2::ggplot(ggplot2::aes(x = År, y = `%`, color=Sjukehus, group=Sjukehus)) +
           ggplot2::geom_point(size = p_sz) +
-          ggplot2::labs(x = "Operasjonsår", y="Prosent to års vekttap ≥ 20%") +
+       #   ggplot2::labs(x = "Operasjonsår", y="Prosent to års vekttap ≥ 20%") +
+          ggplot2::scale_x_discrete( "Operasjonsår")+
+          ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent)+
           ggplot2::theme_minimal()
-        p+  ggplot2::theme(
-            axis.title.x = ggplot2::element_text(size = tl_sz),
-            axis.title.y = ggplot2::element_text(size = tl_sz ),
-            axis.text = ggplot2::element_text(size = 14))
       }
+    p+  ggplot2::theme(
+      axis.title.x = ggplot2::element_text(size = tl_sz),
+      axis.title.y = ggplot2::element_text(size = tl_sz ),
+      axis.text = ggplot2::element_text(size = 14))
   } else
   { # histogram
     p <-  df %>%  dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
       ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
       ggplot2::geom_bar( stat = "identity" ) +
-      ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent)+
-      ggplot2::labs(x = "Sjukehus" )+
+      ggplot2::scale_x_discrete( "Sjukehus") +
+      ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent) +
       ggplot2::theme_minimal()
     p +        ggplot2::theme(
-        axis.title.x = ggplot2::element_text(size = tl_sz, angle = ang ),
-        axis.title.y = ggplot2::element_text(size = tl_sz),
-        axis.text = ggplot2::element_text(size = tl_sz ))
+        axis.title.x = ggplot2::element_text(size = tl_sz   ),
+        axis.title.y = ggplot2::element_text(size = tl_sz, angle = ang),
+        axis.text = ggplot2::element_text(size = tl_sz, angle = ang ))
   }
 }
