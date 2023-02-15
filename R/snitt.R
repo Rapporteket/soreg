@@ -373,6 +373,9 @@ aarKtrl <- function(df, k, agg){
 
 
 aar_ktr_gr <- function(df, k) {
+  # # ------- grafikk-parameters
+  p_sz = 3
+  lw = 2
 
   df <- df %>% dplyr::select(
     c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar",
@@ -389,8 +392,10 @@ aar_ktr_gr <- function(df, k) {
                ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
                                             group = OperererendeSykehus,
                                             color = OperererendeSykehus)  ) +
-               ggplot2::geom_line(linewidth=2)+
-               ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
+               ggplot2::geom_line(linewidth=lw)+
+               ggplot2::scale_x_discrete( "Operasjonsår")+
+               ggplot2::scale_y_continuous("Kontroll i normtid, %")+
+             #  ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
                ggplot2::theme_minimal() } else {p <-df %>%
                    dplyr::group_by(.data$OperererendeSykehus ) %>%
                    dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
@@ -398,8 +403,10 @@ aar_ktr_gr <- function(df, k) {
                    ggplot2::ggplot(ggplot2::aes(x = unique(df$op_aar),  y = ktl,
                                                 group = OperererendeSykehus,
                                                 color = OperererendeSykehus)  ) +
-                   ggplot2::geom_point(size=3)+
-                   ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
+                   ggplot2::geom_point(size=p_sz)+
+                 ggplot2::scale_x_discrete( "Operasjonsår")+
+                 ggplot2::scale_y_continuous("Kontroll i normtid, %")+
+              #     ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
                    ggplot2::theme_minimal()    }
          },
          "2" = {
@@ -411,7 +418,7 @@ aar_ktr_gr <- function(df, k) {
                ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
                                             group = OperererendeSykehus,
                                             color = OperererendeSykehus)  ) +
-               ggplot2::geom_line()+
+               ggplot2::geom_line(linewidth=lw)+
                ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
                ggplot2::theme_minimal()  } else {p<- df %>%
                  dplyr::group_by(.data$OperererendeSykehus ) %>%
@@ -420,7 +427,7 @@ aar_ktr_gr <- function(df, k) {
                  ggplot2::ggplot(ggplot2::aes(x = unique(df$op_aar),  y = ktl,
                                               group = OperererendeSykehus,
                                               color = OperererendeSykehus)  ) +
-                 ggplot2::geom_point()+
+                 ggplot2::geom_point(size=p_sz)+
                  ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
                  ggplot2::theme_minimal()  }
          }

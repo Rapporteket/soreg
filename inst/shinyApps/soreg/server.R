@@ -71,7 +71,6 @@ server <- function(input, output, session) {
   to_nor_m = nitti_m(yr = 2, dag =  Operasjonsdato, l = 90),
   to_nor_p = nitti_p(yr = 2, dag =  Operasjonsdato, l = 90),
   to_nt =  a2_KontrollDato %within%  lubridate::interval(to_nor_m, to_nor_p))
-
   # #-------- user controls----------  hospital ------
   output$kIix <- shiny::renderUI({
     shiny::selectInput(
