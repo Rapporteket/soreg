@@ -394,20 +394,18 @@ aar_ktr_gr <- function(df, k) {
                                             color = OperererendeSykehus)  ) +
                ggplot2::geom_line(linewidth=lw)+
                ggplot2::scale_x_discrete( "Operasjonsår")+
-               ggplot2::scale_y_continuous("Kontroll i normtid, %")+
-             #  ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
+               ggplot2::scale_y_continuous("Kontroll i normtid, %", labels = scales::percent)+
                ggplot2::theme_minimal() } else {p <-df %>%
-                   dplyr::group_by(.data$OperererendeSykehus ) %>%
-                   dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
-                                    ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
-                   ggplot2::ggplot(ggplot2::aes(x = unique(df$op_aar),  y = ktl,
-                                                group = OperererendeSykehus,
-                                                color = OperererendeSykehus)  ) +
-                   ggplot2::geom_point(size=p_sz)+
+                 dplyr::group_by(.data$OperererendeSykehus ) %>%
+                 dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
+                                  ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
+                 ggplot2::ggplot(ggplot2::aes(x = unique(df$op_aar),  y = ktl,
+                                              group = OperererendeSykehus,
+                                              color = OperererendeSykehus)  ) +
+                 ggplot2::geom_point(size=p_sz)+
                  ggplot2::scale_x_discrete( "Operasjonsår")+
-                 ggplot2::scale_y_continuous("Kontroll i normtid, %")+
-              #     ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
-                   ggplot2::theme_minimal()    }
+                 ggplot2::scale_y_continuous("Kontroll i normtid, %", labels = scales::percent )+
+                 ggplot2::theme_minimal()    }
          },
          "2" = {
            if   ( length(unique(df$op_aar)) >1) {
@@ -419,7 +417,8 @@ aar_ktr_gr <- function(df, k) {
                                             group = OperererendeSykehus,
                                             color = OperererendeSykehus)  ) +
                ggplot2::geom_line(linewidth=lw)+
-               ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
+               ggplot2::scale_x_discrete( "Operasjonsår")+
+               ggplot2::scale_y_continuous("Kontroll i normtid, %", labels = scales::percent)+
                ggplot2::theme_minimal()  } else {p<- df %>%
                  dplyr::group_by(.data$OperererendeSykehus ) %>%
                  dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = dplyr::n(),
@@ -428,7 +427,8 @@ aar_ktr_gr <- function(df, k) {
                                               group = OperererendeSykehus,
                                               color = OperererendeSykehus)  ) +
                  ggplot2::geom_point(size=p_sz)+
-                 ggplot2::labs(x = "Operasjonsår", y="Kontroll i normtid, %")+
+                 ggplot2::scale_x_discrete( "Operasjonsår")+
+                 ggplot2::scale_y_continuous("Kontroll i normtid, %", labels = scales::percent)+
                  ggplot2::theme_minimal()  }
          }
   )
@@ -471,19 +471,27 @@ detail <- function(dm, agg) {
 #' @export
 
 wlGr <- function(df, agg){
+  # # ------- grafikk-parameters
+  p_sz = 3
+  lw = 2
+  tl_sz = 20
+  tc_sz = 12
+  ang = 90
   if (agg)
   {  if (length(unique(df$`År`))>1) { length(unique(df$`År`))
     df %>% ggplot2::ggplot(ggplot2::aes(x = `År`, y = `%`, color=Sjukehus, group=Sjukehus)) +
       ggplot2::geom_line() +
-      ggplot2::labs(x = "Operasjonsår", y="Prosent to års vekttap ≥ 20%")+
+      ggplot2::scale_x_discrete( "Operasjonsår")+
+      ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent)+
+#      ggplot2::labs(x = "Operasjonsår", y="Prosent to års vekttap ≥ 20%")+
       ggplot2::theme_minimal()  } else
       { # ett år
         p<-   df %>% ggplot2::ggplot(ggplot2::aes(x = År, y = `%`, color=Sjukehus, group=Sjukehus)) +
-          ggplot2::geom_point() +
+          ggplot2::geom_point(size = p_sz) +
           ggplot2::labs(x = "Operasjonsår", y="Prosent to års vekttap ≥ 20%") +
           ggplot2::theme(
-            axis.title.x = ggplot2::element_text(size = 20),
-            axis.title.y = ggplot2::element_text(size = 20, angle=90),
+            axis.title.x = ggplot2::element_text(size = tl_sz),
+            axis.title.y = ggplot2::element_text(size = tl_sz, angle=ang),
             axis.text = ggplot2::element_text(size = 14))
         p+ ggplot2::theme_minimal()
       }
@@ -492,8 +500,9 @@ wlGr <- function(df, agg){
     p <-  df %>%  dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
       ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
       ggplot2::geom_bar( stat = "identity" ) +
-      ggplot2::labs(x = "Sjukehus", y="Prosent to års vekttap ≥ 20%")+
+      ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent)+
+      ggplot2::labs(x = "Sjukehus" )+
       ggplot2::theme_minimal()
-    p +  ggplot2::theme(axis.text.x = ggplot2::element_text(  angle = 90))
+    p +  ggplot2::theme(axis.text.x = ggplot2::element_text(  angle = ang))
   }
 }
