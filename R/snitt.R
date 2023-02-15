@@ -233,8 +233,8 @@ reinn_tb <- function(df, agg)  {
 reinn_gr <- function(df, agg)  {
   p_sz = 3
   lw = 2
-  tl_sz = 20
-  tc_sz = 12
+  tl_sz = ggplot2::rel(1.8)
+  tc_sz = ggplot2::rel(1.2)
   ang = 90
 
   df <- df %>%
@@ -253,9 +253,9 @@ reinn_gr <- function(df, agg)  {
       ggplot2::scale_x_discrete( "Sjukehus")+
       ggplot2::scale_y_continuous("Reinnlagt, %")+
       ggplot2::theme_minimal()
-    p +  ggplot2::theme(axis.text.x = ggplot2::element_text(size = tl_sz,  angle = 90),
+    p +  ggplot2::theme(axis.text.x = ggplot2::element_text(size = tl_sz,  angle = ang),
                         axis.title.y = ggplot2::element_text(size = tl_sz),
-                        axis.text = ggplot2::element_text(size = 24)
+                        axis.text = ggplot2::element_text(size = tc_sz)
                         )
   } else
   {   res <- df %>%
