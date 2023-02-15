@@ -251,7 +251,7 @@ reinn_gr <- function(df, agg)  {
       ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
       ggplot2::geom_bar( stat = "identity" ) +  # histogram
       ggplot2::scale_x_discrete( "Sjukehus")+
-      ggplot2::scale_y_continuous("Reinnlagt, %")+
+      ggplot2::scale_y_continuous("Reinnlagt, %", labels = scales::label_number())+
       ggplot2::theme_minimal()
     p +  ggplot2::theme(axis.text.x = ggplot2::element_text(size = tl_sz,  angle = ang),
                         axis.title.y = ggplot2::element_text(size = tl_sz),
@@ -271,14 +271,14 @@ reinn_gr <- function(df, agg)  {
       ggplot2::aes(x = Opr.år, y = `%`, group = Sjukehus, color = Sjukehus )+
       ggplot2::geom_line(linewidth = lw) +
       ggplot2::scale_x_discrete( "Operasjonsår")+
-      ggplot2::scale_y_continuous("Reinnlagt, %")+
+      ggplot2::scale_y_continuous("Reinnlagt, %", labels = scales::label_number())+
       ggplot2::theme_minimal()
   } else {
     p <-res %>% ggplot2::ggplot( ) +
       ggplot2::aes(x = Opr.år, y = `%`, group = Sjukehus, color = Sjukehus )+
       ggplot2::geom_point(size=p_sz) +
       ggplot2::scale_x_discrete( "Operasjonsår")+
-      ggplot2::scale_y_continuous("Reinnlagt, %")+
+      ggplot2::scale_y_continuous("Reinnlagt, %", labels = scales::label_number())+
       ggplot2::theme_minimal()
   }
 
