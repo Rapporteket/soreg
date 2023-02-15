@@ -226,32 +226,67 @@ reinn_tb <- function(df, agg)  {
 
 #' lage reinnleggninggraf
 #' @param df data frame
+#' @param agg lgl
 #' @return df data frame grouped by year and hospital
 #' @export
 
-reinn_gr <- function(df) {
- # df <-
-  df %>%
+reinn_gr <- function(df, agg)  {
+  p_sz = 3
+  lw = 2
+  tl_sz = 20
+  tc_sz = 12
+  ang = 90
+
+  df <- df %>%
     dplyr::filter(((.data$u6_KontrollType %in% 1:3) |
                      (.data$u6_Behandling30Dager == 1)) &
-                    (.data$u6_Behandling30Dager != 2))  %>%
-#  res <- df %>%
+                    (.data$u6_Behandling30Dager != 2))
+  if (!agg) {
+    res <- df %>%
+      dplyr::group_by(.data$OperererendeSykehus ) %>%
+      dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
+      dplyr::arrange(dplyr::desc(.data$indicator))
+    names(res) <- c("Sjukehus",   "Reinnlagt", "Operasjonar", "%")
+   p <- res %>%  dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
+      ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
+      ggplot2::geom_bar( stat = "identity" ) +
+      ggplot2::scale_x_discrete( "Sjukehus")+
+      ggplot2::scale_y_continuous("Reinnlagt, %")+
+      ggplot2::theme_minimal()
+    p +  ggplot2::theme(axis.text.x = ggplot2::element_text(size = tl_sz,  angle = 90),
+                        axis.title.y = ggplot2::element_text(size = tl_sz),
+                        axis.text = ggplot2::element_text(size = 24)
+                        )
+  } else
+  {   res <- df %>%
     dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
     dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
-    dplyr::arrange(dplyr::desc(.data$indicator))  %>%
+    dplyr::arrange(dplyr::desc(.data$indicator))
+  res$op_aar <- format(res$op_aar, digits = 4)
+  names(res) <- c("Sjukehus", "Opr.år", "Reinnlagt", "Operasjonar", "%")
 
-    ggplot2::ggplot() +
-    ggplot2::aes(x=op_aar, y = indicator,
-                 group = OperererendeSykehus, color = OperererendeSykehus) +
-    ggplot2::geom_line() +
-    ggplot2::labs(x = "Operasjonsår", y = "Reinnleggelse, %")+
-    ggplot2::theme_minimal() +
-    ggplot2::theme(
-      axis.title.x = ggplot2::element_text(size = 20),
-      axis.title.y = ggplot2::element_text(size = 20),
-      axis.text = ggplot2::element_text(size = 14))
+  if (length(unique(df$op_aar))>1)
+  {
+    p <-res %>% ggplot2::ggplot( ) +
+      ggplot2::aes(x = Opr.år, y = `%`, group = Sjukehus, color = Sjukehus )+
+      ggplot2::geom_line(linewidth = lw) +
+      ggplot2::scale_x_discrete( "Operasjonsår")+
+      ggplot2::scale_y_continuous("Reinnlagt, %")+
+      ggplot2::theme_minimal()
+  } else {
+    p <-res %>% ggplot2::ggplot( ) +
+      ggplot2::aes(x = Opr.år, y = `%`, group = Sjukehus, color = Sjukehus )+
+      ggplot2::geom_point(size=p_sz) +
+      ggplot2::scale_x_discrete( "Operasjonsår")+
+      ggplot2::scale_y_continuous("Reinnlagt, %")+
+      ggplot2::theme_minimal()
+  }
+  p +  ggplot2::theme(
+    axis.title.x = ggplot2::element_text(size = tl_sz),
+    axis.title.y = ggplot2::element_text(size = tl_sz),
+    axis.text = ggplot2::element_text(size = 14))
+  }
 }
-
 #' lage komplikasjontabell
 #' @param df data frame
 #' @param agg lgl
@@ -474,35 +509,41 @@ wlGr <- function(df, agg){
   # # ------- grafikk-parameters
   p_sz = 3
   lw = 2
-  tl_sz = 20
+  tl_sz = 16
   tc_sz = 12
   ang = 90
   if (agg)
-  {  if (length(unique(df$`År`))>1) { length(unique(df$`År`))
-    df %>% ggplot2::ggplot(ggplot2::aes(x = `År`, y = `%`, color=Sjukehus, group=Sjukehus)) +
-      ggplot2::geom_line() +
+  {  if (length(unique(df$`År`))>1) { # length(unique(df$`År`))
+   p <- df %>% ggplot2::ggplot(ggplot2::aes(x = `År`, y = `%`, color=Sjukehus, group=Sjukehus)) +
+      ggplot2::geom_line(linewidth=lw) +
       ggplot2::scale_x_discrete( "Operasjonsår")+
       ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent)+
-#      ggplot2::labs(x = "Operasjonsår", y="Prosent to års vekttap ≥ 20%")+
-      ggplot2::theme_minimal()  } else
+      ggplot2::theme_minimal() +
+    p+  ggplot2::theme(
+        axis.title.x = ggplot2::element_text(size = tl_sz),
+        axis.title.y = ggplot2::element_text(size = tl_sz ),
+        axis.text = ggplot2::element_text(size = 14)) } else
       { # ett år
         p<-   df %>% ggplot2::ggplot(ggplot2::aes(x = År, y = `%`, color=Sjukehus, group=Sjukehus)) +
           ggplot2::geom_point(size = p_sz) +
           ggplot2::labs(x = "Operasjonsår", y="Prosent to års vekttap ≥ 20%") +
-          ggplot2::theme(
+          ggplot2::theme_minimal()
+        p+  ggplot2::theme(
             axis.title.x = ggplot2::element_text(size = tl_sz),
-            axis.title.y = ggplot2::element_text(size = tl_sz, angle=ang),
+            axis.title.y = ggplot2::element_text(size = tl_sz ),
             axis.text = ggplot2::element_text(size = 14))
-        p+ ggplot2::theme_minimal()
       }
   } else
-  {
+  { # histogram
     p <-  df %>%  dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
       ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
       ggplot2::geom_bar( stat = "identity" ) +
       ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent)+
       ggplot2::labs(x = "Sjukehus" )+
       ggplot2::theme_minimal()
-    p +  ggplot2::theme(axis.text.x = ggplot2::element_text(  angle = ang))
+    p +        ggplot2::theme(
+        axis.title.x = ggplot2::element_text(size = tl_sz, angle = ang ),
+        axis.title.y = ggplot2::element_text(size = tl_sz),
+        axis.text = ggplot2::element_text(size = tl_sz ))
   }
 }

@@ -190,7 +190,7 @@ pl <- shiny::reactive({
 
   switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
          "Ki1 Liggedøgn" = soreg::lgg_gr(slc()),
-         "Ki2 Reinnlagt" = soreg::reinn_gr(slc()),
+         "Ki2 Reinnlagt" = soreg::reinn_gr(slc(), dtl()),
          "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(slc()),
          "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_gr(slc(), k = 1 ),
          "Ki5 Kontroll normtid to år"   = soreg::aar_ktr_gr(slc(), k = 2 ),
