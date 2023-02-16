@@ -303,14 +303,14 @@ kompl_tb <- function(df, agg) {
     dplyr::group_by(.data$OperererendeSykehus) %>%
     dplyr::summarise(soreg::ki(dplyr::across(), "kompl")) %>%
     dplyr::arrange(dplyr::desc(.data$indicator))
-  names(res) <- c("Sjukehus",  "teljare", "nemnare", "%")
+  names(res) <- c("Sjukehus",  "Komplikasjonar", "Operasjonar", "%")
   res} else {
     res <- df  %>%
       dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
       dplyr::summarise(soreg::ki(dplyr::across(), "kompl")) %>%
       dplyr::arrange(dplyr::desc(.data$indicator))
     res$op_aar <- format(res$op_aar, digits = 4)
-    names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
+    names(res) <- c("Sjukehus", "År", "Komplikasjonar", "Operasjonar", "%")
     res}
 }
 
@@ -336,13 +336,13 @@ kompl_gr <- function(df) {
     dplyr::mutate(kompl_grad_tekst =
                     factor(u6_KomplAlvorGrad,
                            levels = rev(c(1:4, 6:7, 5)),
-                           labels = rev(c("Grad I: Ingen tiltak",
-                                          "Grad II: Farmakologiske tiltak",
-                                      "Grad IIIa: Intervensjon uten narkose",
-                                      "Grad IIIb: Intervensjon i narkose",
-          "Grad IVa: Intensivbehandling med eitt sviktande organ",
-          "Grad IVb: Intensivbehandling med meir enn eitt sviktande organ",
-                                          "Grad V: D\u00F8d"))))
+                           labels = rev(c("Grad I: ",
+                                          "Grad II: ",
+                                      "Grad IIIa:  ",
+                                      "Grad IIIb:  ",
+          "Grad IVa:  ",
+          "Grad IVb: ",
+                                          "Grad V: "))))  # D\u00F8d
 
 ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
   ggplot2::geom_bar(stat = "identity", fill = colPrim[3], width = 2 / 3) +
@@ -355,7 +355,7 @@ ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
   ggplot2::theme_minimal() +
   ggplot2::theme(
     axis.title.x = ggplot2::element_text(size = 12),
-    axis.text.x = ggplot2::element_text(size = 10 ),
+    axis.text.x = ggplot2::element_text(size = 10, angle = 90 ),
    # axis.title.y = ggplot2::element_text(size =16),
     axis.text.y = ggplot2::element_text(size = 12 ))
 }
@@ -375,13 +375,13 @@ aarKtrl <- function(df, k, agg){
              dplyr::group_by(.data$OperererendeSykehus) %>%
              dplyr::summarise(soreg::ki(dplyr::across(), "K1")) %>%
              dplyr::arrange(dplyr::desc(.data$indicator))
-           names(res) <- c("Sjukehus",   "teljare", "nemnare", "%")
+           names(res) <- c("Sjukehus",   "Kontroll i normtid", "Operasjonar", "%")
            res},
            "2" =  {res <- df %>%
              dplyr::group_by(.data$OperererendeSykehus ) %>%
              dplyr::summarise(soreg::ki(dplyr::across(), "K2")) %>%
              dplyr::arrange(dplyr::desc(.data$indicator))
-           names(res) <- c("Sjukehus",   "teljare", "nemnare", "%")
+           names(res) <- c("Sjukehus",   "Kontroll i normtid", "Operasjonar", "%")
            res})
   } else {
     switch(k,
@@ -390,14 +390,14 @@ aarKtrl <- function(df, k, agg){
              dplyr::summarise(soreg::ki(dplyr::across(), "K1")) %>%
              dplyr::arrange(dplyr::desc(.data$indicator))
            res$op_aar <- format(res$op_aar, digits = 4)
-           names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
+           names(res) <- c("Sjukehus", "År", "Kontroll i normtid", "Operasjonar", "%")
            res},
            "2" =  {res <- df %>%
              dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
              dplyr::summarise(soreg::ki(dplyr::across(), "K2")) %>%
              dplyr::arrange(dplyr::desc(.data$indicator))
            res$op_aar <- format(res$op_aar, digits = 4)
-           names(res) <- c("Sjukehus", "År", "teljare", "nemnare", "%")
+           names(res) <- c("Sjukehus", "År", "Kontroll i normtid", "Operasjonar", "%")
            res}
     )}
 }
