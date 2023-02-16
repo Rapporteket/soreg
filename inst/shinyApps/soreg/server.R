@@ -135,7 +135,7 @@ server <- function(input, output, session) {
   output$uc_agg <- shiny::renderUI({
     shiny::checkboxInput(
       inputId = "out_aggr",
-      label = "Vis alle valgte år:",
+      label = "Vis valde operasjonsår separat:",
       value = FALSE)
   })
 

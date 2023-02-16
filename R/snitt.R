@@ -233,8 +233,8 @@ reinn_tb <- function(df, agg)  {
 reinn_gr <- function(df, agg)  {
   p_sz = 3
   lw = 2
-  tl_sz = ggplot2::rel(1.2)
-  tc_sz = ggplot2::rel(1.2)
+  tl_sz = 18  # rel()
+  tc_sz = 16
   ang = 90
 
   df <- df %>%
@@ -253,9 +253,10 @@ reinn_gr <- function(df, agg)  {
       ggplot2::scale_x_discrete( "Sjukehus")+
       ggplot2::scale_y_continuous("Reinnlagt, %", labels = scales::label_number())+
       ggplot2::theme_minimal()
-    p +  ggplot2::theme(axis.text.x = ggplot2::element_text(size = tl_sz,  angle = ang),
-                        axis.title.y = ggplot2::element_text(size = tl_sz),
-                        axis.text = ggplot2::element_text(size = tc_sz)
+    p +  ggplot2::theme(axis.text.x = ggplot2::element_text(size = tc_sz,  angle = ang),
+                        axis.title.y = ggplot2::element_text(size = tc_sz),
+                         axis.text = ggplot2::element_text(size = tl_sz),
+                        legend.position = "none"
                         )
   } else
   {   res <- df %>%
@@ -285,7 +286,7 @@ reinn_gr <- function(df, agg)  {
   p +  ggplot2::theme(
     axis.title.x = ggplot2::element_text(size = tl_sz),
     axis.title.y = ggplot2::element_text(size = tl_sz),
-    axis.text = ggplot2::element_text(size = 14))
+    axis.text.x  = ggplot2::element_text(size = tl_sz))
   }
 }
 #' lage komplikasjontabell
@@ -345,18 +346,18 @@ kompl_gr <- function(df) {
 
 ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
   ggplot2::geom_bar(stat = "identity", fill = colPrim[3], width = 2 / 3) +
-  ggplot2::scale_y_continuous(breaks = 5,
-                              expand = ggplot2::expansion(mult = c(0.0, .05),
-                                                          add = 0)) +
+  ggplot2::scale_y_continuous(breaks =scales::breaks_width (5),
+                              expand = ggplot2::expansion(mult = c(0, .05))) +
   ggplot2::scale_x_discrete(drop = FALSE) +
   ggplot2::xlab(NULL) + ggplot2::ylab("Talet p\u00E5 pasienter") +
   ggplot2::coord_flip() + fjern_y +  fjern_y_ticks +
   ggplot2::theme(panel.grid.minor.x =  ggplot2::element_blank()) +
   ggplot2::theme_minimal() +
   ggplot2::theme(
-    axis.title.x = ggplot2::element_text(size = 20),
-    axis.title.y = ggplot2::element_text(size = 20),
-    axis.text = ggplot2::element_text(size = 14))
+    axis.title.x = ggplot2::element_text(size = 18),
+    axis.text.x = ggplot2::element_text(size = 16 ),
+   # axis.title.y = ggplot2::element_text(size =16),
+    axis.text.y = ggplot2::element_text(size = 18 ))
 }
 
 
@@ -510,14 +511,14 @@ wlGr <- function(df, agg){
   # # ------- grafikk-parameters
   p_sz = 3
   lw = 2
-  tl_sz = 16
-  tc_sz = 12
+  tl_sz = 18
+  tc_sz = 16
   ang = 90
   if (agg)
   {  if (length(unique(df$`År`))>1) { # length(unique(df$`År`))
    p <- df %>% ggplot2::ggplot(ggplot2::aes(x = `År`, y = `%`, color=Sjukehus, group=Sjukehus)) +
       ggplot2::geom_line(linewidth=lw) +
-    # ggplot2::labs(x = "Operasjonsår", y="Prosent to års vekttap ≥ 20%") +
+    # ggplot2::labs(x = "Operasjonsår", y="Prosent toårs vekttap ≥ 20%") +
       ggplot2::scale_x_discrete( "Operasjonsår")+
       ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent)+
       ggplot2::theme_minimal()
@@ -525,7 +526,7 @@ wlGr <- function(df, agg){
       { # ett år
         p<-   df %>% ggplot2::ggplot(ggplot2::aes(x = År, y = `%`, color=Sjukehus, group=Sjukehus)) +
           ggplot2::geom_point(size = p_sz) +
-       #   ggplot2::labs(x = "Operasjonsår", y="Prosent to års vekttap ≥ 20%") +
+       #   ggplot2::labs(x = "Operasjonsår", y="Prosent toårs vekttap ≥ 20%") +
           ggplot2::scale_x_discrete( "Operasjonsår")+
           ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent)+
           ggplot2::theme_minimal()
@@ -540,11 +541,13 @@ wlGr <- function(df, agg){
       ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
       ggplot2::geom_bar( stat = "identity" ) +
       ggplot2::scale_x_discrete( "Sjukehus") +
-      ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent) +
+      ggplot2::scale_y_continuous("Prosent toårs vekttap ≥ 20%", labels = scales::percent) +
       ggplot2::theme_minimal()
     p +        ggplot2::theme(
-        axis.title.x = ggplot2::element_text(size = tl_sz   ),
+        axis.title.x = ggplot2::element_text(size = tl_sz, angle = 0   ),
         axis.title.y = ggplot2::element_text(size = tl_sz, angle = ang),
-        axis.text = ggplot2::element_text(size = tl_sz, angle = ang ))
+        axis.text = ggplot2::element_text(size = tc_sz ),
+        axis.text.x = ggplot2::element_text(angle = ang),
+        legend.position = "none")
   }
 }
