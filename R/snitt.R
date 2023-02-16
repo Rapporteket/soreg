@@ -354,10 +354,10 @@ ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
   ggplot2::theme(panel.grid.minor.x =  ggplot2::element_blank()) +
   ggplot2::theme_minimal() +
   ggplot2::theme(
-    axis.title.x = ggplot2::element_text(size = 18),
-    axis.text.x = ggplot2::element_text(size = 16 ),
+    axis.title.x = ggplot2::element_text(size = 12),
+    axis.text.x = ggplot2::element_text(size = 10 ),
    # axis.title.y = ggplot2::element_text(size =16),
-    axis.text.y = ggplot2::element_text(size = 18 ))
+    axis.text.y = ggplot2::element_text(size = 12 ))
 }
 
 
