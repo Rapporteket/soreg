@@ -233,7 +233,7 @@ reinn_tb <- function(df, agg)  {
 reinn_gr <- function(df, agg)  {
   p_sz = 3
   lw = 2
-  tl_sz = ggplot2::rel(1.8)
+  tl_sz = ggplot2::rel(1.2)
   tc_sz = ggplot2::rel(1.2)
   ang = 90
 
