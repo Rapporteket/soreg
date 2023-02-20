@@ -354,10 +354,10 @@ ggplot2::ggplot(d_kompl_graf, ggplot2::aes(x = kompl_grad_tekst, y = n)) +
   ggplot2::theme(panel.grid.minor.x =  ggplot2::element_blank()) +
   ggplot2::theme_minimal() +
   ggplot2::theme(
-    axis.title.x = ggplot2::element_text(size = 12),
-    axis.text.x = ggplot2::element_text(size = 10, angle = 90 ),
+    axis.title.x = ggplot2::element_text(size = 14),
+    axis.text.x = ggplot2::element_text(size = 12, angle = 90 ),
    # axis.title.y = ggplot2::element_text(size =16),
-    axis.text.y = ggplot2::element_text(size = 12 ))
+    axis.text.y = ggplot2::element_text(size = 14 ))
 }
 
 
@@ -541,7 +541,9 @@ wlGr <- function(df, agg){
       ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
       ggplot2::geom_bar( stat = "identity" ) +
       ggplot2::scale_x_discrete( "Sjukehus") +
-      ggplot2::scale_y_continuous("Prosent toårs vekttap ≥ 20%", labels = scales::percent) +
+      ggplot2::scale_y_continuous("Prosent toårs vekttap ≥ 20%", labels = scales::percent,
+                                  expand = ggplot2::expansion(mult = c(0.0, .5),
+                                                              add = 0)) +
       ggplot2::theme_minimal()
     p +        ggplot2::theme(
         axis.title.x = ggplot2::element_text(size = tl_sz, angle = 0   ),
