@@ -274,7 +274,8 @@ reinn_gr <- function(df, agg)  {
       ggplot2::scale_x_discrete( "Operasjonsår")+
       ggplot2::scale_y_continuous("Reinnlagt, %", labels = scales::label_number())+
       ggplot2::theme_minimal()
-  } else {
+  } else if  (length(unique(df$op_aar))<1) {message("tomt valg!")}
+  else {
     p <-res %>% ggplot2::ggplot( ) +
       ggplot2::aes(x = Opr.år, y = `%`, group = Sjukehus, color = Sjukehus )+
       ggplot2::geom_point(size=p_sz) +
