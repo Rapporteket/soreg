@@ -1,6 +1,6 @@
 library(magrittr)
 library(shinyWidgets)
-
+library(soreg)
 server <- function(input, output, session) {
 
   rapbase::appLogger(session = session, msg = "Starting Soreg application")
