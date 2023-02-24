@@ -16,7 +16,7 @@ server <- function(input, output, session) {
     userHosp <- setNames(as.list(shsene$SykehusNavn), shsene$AvdRESH)
     userHsp <- RESH_to_sh(shsene, reshId)  # VV = 103091
     brkrSh <- RESH_sh(userHosp, reshId)
-    brkrSh <- "Oslo universitetssykehus"
+   # brkrSh <- "Oslo universitetssykehus"
     author <- paste0(userFullName, "/", "Rapporteket")
   } else {
     ### if need be, define your (local) values here
