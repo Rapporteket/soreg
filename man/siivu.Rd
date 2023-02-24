@@ -4,7 +4,7 @@
 \alias{siivu}
 \title{Pick particular hospitals and years from a data frame}
 \usage{
-siivu(df, sh, yr, prm, opr, oa, dayIv)
+siivu(df, sh, yr, prm, opr, oa)
 }
 \arguments{
 \item{df}{Data frame holding SoReg data}

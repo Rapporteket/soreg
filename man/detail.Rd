@@ -4,10 +4,12 @@
 \alias{detail}
 \title{lage vekttapdetaljer}
 \usage{
-detail(dm)
+detail(dm, agg)
 }
 \arguments{
 \item{dm}{data frame}
+
+\item{agg}{lgl resulater aggregert}
 }
 \value{
 df data frame grouped by year and hospital

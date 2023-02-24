@@ -4,12 +4,14 @@
 \alias{aarKtrl}
 \title{lage aarskontrolltabell}
 \usage{
-aarKtrl(df, k)
+aarKtrl(df, k, agg)
 }
 \arguments{
 \item{df}{data frame}
 
 \item{k}{which year control}
+
+\item{agg}{lgl resultater aggregert}
 }
 \value{
 df data frame grouped by year and hospital

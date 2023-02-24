@@ -34,6 +34,7 @@ NULL
 #' @usage lhs \%$\% rhs
 NULL
 
+
 #' Interval inclusion operator
 #'
 #' @name %within%

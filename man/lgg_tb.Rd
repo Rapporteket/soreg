@@ -4,10 +4,12 @@
 \alias{lgg_tb}
 \title{lage liggedogntabell}
 \usage{
-lgg_tb(df)
+lgg_tb(df, agg)
 }
 \arguments{
 \item{df}{data frame}
+
+\item{agg}{lgl}
 }
 \value{
 df data frame grouped by year and hospital

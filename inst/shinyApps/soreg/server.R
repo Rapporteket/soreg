@@ -1,9 +1,26 @@
 library(magrittr)
 library(shinyWidgets)
-
+library(soreg)
 server <- function(input, output, session) {
 
   rapbase::appLogger(session = session, msg = "Starting Soreg application")
+
+  # Parameters that will remain throughout the session
+  ## setting values that do depend on a Rapporteket context
+  if (rapbase::isRapContext()) {
+    reshId <- rapbase::getUserReshId(session)
+    # reshIch <- as.character(reshId)
+    userFullName <- rapbase::getUserFullName(session)
+    userRole <- rapbase::getUserRole(session)
+    shsene <-  RESH_table("soreg")
+    userHosp <- setNames(as.list(shsene$SykehusNavn), shsene$AvdRESH)
+    userHsp <- RESH_to_sh(shsene, reshId)  # VV = 103091
+    brkrSh <- RESH_sh(userHosp, reshId)
+   # brkrSh <- "Oslo universitetssykehus"
+    author <- paste0(userFullName, "/", "Rapporteket")
+  } else {
+    ### if need be, define your (local) values here
+  }
 
   # Faste verdier i sesjonen
   registryName <- "soreg"
@@ -40,100 +57,101 @@ server <- function(input, output, session) {
   output$veiledning <- renderUI({
     htmlRenderRmd("veiledning.Rmd")
   })
-  # #------------------ KI
-  # # read in data
-  # dFull <- soreg::get_arsrp("soreg")
-  # dFull %<>%
-  #   dplyr::mutate(
-  #     op_aar = lubridate::year(Operasjonsdato),
-  #     op_primar = (TidlFedmeOp == 0))
-  # d_prim <- dFull %>%
-  #   dplyr::filter(op_primar)
-  # d_prim_6v <- d_prim %>%
-  #   dplyr::filter(`6U_KontrollType` %in% 1:3)
-  # d_ligg <- lgg_tb(d_prim_6v)
-  # d_innlegg30 <- reinn_tb(d_prim)
-  # d_kompl <- kompl_tb(d_prim)
-  #
-  # dTwl  <- dFull %>%
-  #   dplyr::filter(!is.na(`ToAar_Vekt`)) %>% # pTWL at 2 year must exist!
-  #   dplyr::mutate(
-  #     pTWL = 100 * (BR_Vekt - `ToAar_Vekt`) / BR_Vekt) %>%
-  #   dplyr::mutate(del20 = pTWL >= 20.0)
-  #
-  # d_slv <- dTwl %>%
-  #   dplyr::filter(Operasjonsmetode == 6)
-  # d_gbp <- dTwl %>%
-  #   dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 1)
-  # d_oa <- dTwl %>%
-  #   dplyr::filter(Operasjonsmetode == 1, Opmetode_GBP == 2)
-  #
-  #
+  # #------------------ KI   # # read in data
+  dFull <- soreg::get_arsrp("soreg")
+  dFull %<>%
+    dplyr::mutate(
+      op_aar = lubridate::year(Operasjonsdato),
+      op_primar = (TidlFedmeOp == 0),
+      pTWL = 100 * (BR_Vekt - a2_Vekt) / BR_Vekt,
+      del20 = pTWL >= 20.0,
+  et_nor_m = nitti_m(yr = 1, dag =  Operasjonsdato, l = 90),
+  et_nor_p = nitti_p(yr = 1, dag =  Operasjonsdato, l = 90),
+  et_nt =  a1_KontrollDato %within%  lubridate::interval(et_nor_m, et_nor_p),
+  to_nor_m = nitti_m(yr = 2, dag =  Operasjonsdato, l = 90),
+  to_nor_p = nitti_p(yr = 2, dag =  Operasjonsdato, l = 90),
+  to_nt =  a2_KontrollDato %within%  lubridate::interval(to_nor_m, to_nor_p))
   # #-------- user controls----------  hospital ------
-  # output$kIix <- shiny::renderUI({
-  #   shiny::selectInput(
-  #     inputId = "kIix",
-  #     label = "Kvalitetsindikator:",
-  #     choices = c("KI1", "KI2", "KI3", "KI4", "KI5", "KI6"))
-  # })
-  # output$uc_sh <- shiny::renderUI({
-  #   shinyWidgets::pickerInput(
-  #     inputId = "sh",
-  #     label = "velg sjukehus",
-  #     choices = (unique(dFull$OperererendeSykehus)),
-  #     selected = "Testsjukhus Norge",
-  #     multiple = TRUE,
-  #     options = shinyWidgets::pickerOptions(
-  #       actionsBox = TRUE,
-  #       title = "Please select a hospital",
-  #       header = "This is a list of hospitals")
-  #   )
-  # })
+  output$kIix <- shiny::renderUI({
+    shiny::selectInput(
+      inputId = "kIix",
+      label = "Kvalitetsindikator:",
+      choices = c("Ki1 Liggedøgn", "Ki2 Reinnlagt",
+                  "Ki3 Alvorlege komplikasjonar", "Ki4 Kontroll normtid eitt år",
+                  "Ki5 Kontroll normtid to år", "Ki6 Vekttap to år"))
+  })
+  output$uc_sh <- shiny::renderUI({
+    shinyWidgets::pickerInput(
+      inputId = "sh",
+      label = "Vel sjukehus",
+      choices =  unique(dFull$OperererendeSykehus), #unique(dFull$OpererendeRESH), #
+      selected = brkrSh , #   userHsp  # "Helse Bergen",  # eget sjukehus?
+      multiple = TRUE,
+      options = shinyWidgets::pickerOptions(
+        actionsBox = TRUE,
+        title = "Please select a hospital",
+        header = "Vel sjukehus")
+    )
+  })
   # # -------------------------------  operation years
-  # output$uc_years <- shiny::renderUI({
-  #   ## years available, hardcoded if outside known context
-  #   if (rapbase::isRapContext()) {
-  #     years <- soreg::data_years(registryName)
-  #     # remove NAs if they exist (bad registry)
-  #     years <- years[!is.na(years)]
-  #   } else {
-  #     years <- c("2016", "2017", "2018", "2019", "2020")
-  #   }
-  #   shiny::checkboxGroupInput(
-  #     inputId = "op_aar",
-  #     label = "År:",
-  #     choices = years,
-  #     selected = 2015:2018)
-  # })
+  output$uc_years <- shiny::renderUI({
+    ## years available, hardcoded if outside known context
+    if (rapbase::isRapContext()) {
+      years <- soreg::data_years(registryName)
+      # remove NAs if they exist (bad registry)
+      years <- years[!is.na(years)]
+    } else {
+      years <- c("2017", "2018", "2019", "2020")
+    }
+    shiny::checkboxGroupInput(
+      inputId = "op_aar",
+      label = "Operasjonsår:",
+      choices = years,
+      selected = c("2017", "2019"), # 2016:2019,
+      inline = TRUE)
+  })
   # #--------- primæroperasjon?
-  # output$uc_prim <- shiny::renderUI({
-  #   shiny::checkboxGroupInput(
-  #     inputId = "prim",
-  #     label = "Primæaroperasjon ?",
-  #     choices = unique(dFull$op_primar),
-  #     selected = TRUE
-  #   )
-  # })
+  output$uc_prim <- shiny::renderUI({
+    shiny::checkboxGroupInput(
+      inputId = "prim",
+      label = "Operasjonstype:",
+     choiceNames  = list("Primæroperasjon", "Revisjonsoperasjon"),
+     choiceValues = list(TRUE, FALSE),
+     selected = TRUE,
+     inline = TRUE
+    )
+  })
   # #----------- operasjonsteknikk
-  # output$uc_opr <- shiny::renderUI({
-  #   shiny::checkboxGroupInput(
-  #     inputId = "op_tech",
-  #     label = "Operasjonsteknikk",
-  #     choices = unique(dFull$Operasjonsmetode),
-  #     selected = 6
-  #   )
-  # })
+  output$uc_opr <- shiny::renderUI({
+    shiny::checkboxGroupInput(
+      inputId = "op_tech",
+      label = "Operasjonsmetode:",
+      choices = unique(dFull$Operasjonsmetode),
+      selected = 6,
+      inline = TRUE
+    )
+  })
+  # #----------- aggregate
+  output$uc_agg <- shiny::renderUI({
+    shiny::checkboxInput(
+      inputId = "out_aggr",
+      label = "Vis valde operasjonsår separat:",
+      value = FALSE)
+  })
+
   # # -------------  OAGB
-  # output$uc_oagb <- shiny::renderUI({
-  #    shiny::conditionalPanel(
-  #      condition = "input.op_tech == 1", #  "`1` %in% input.op_tech",
-  #      shiny::checkboxGroupInput(
-  #        inputId = "oagb",
-  #        label = "OAGB GBP",
-  #        choices = c(1, 2),
-  #        selected = 2)
-  #     )
-  # })
+  output$uc_oagb <- shiny::renderUI({
+    if (1 %in% input$op_tech) {
+      shiny::checkboxGroupInput(
+      inputId = "oagb",
+      label = "RYGBP OAGB",
+      choices = c(1, 2),
+      # selected = 2,
+      inline = TRUE,
+      )
+    } else {NULL}
+  })
+
   # #------------- opr date interval
   # output$uc_dates <- shiny::renderUI({
   #   shiny::dateRangeInput(
@@ -143,49 +161,46 @@ server <- function(input, output, session) {
   #     end = max(dFull$Operasjonsdato)
   #   )
   # })
-  # # liggedøgn
-  # # .................
-  # kI <- shiny::reactive({
-  #   switch(if (is.null(input$kIix)) "KI1" else input$kIix,
-  #          "KI1" = soreg::lgg_tb(
-  #            soreg::slice(dFull, input$sh, input$op_aar, input$prim,
-  #                         input$op_tech)), # input$dato_iv
-  #          "KI2" = soreg::reinn_tb(
-  #            soreg::snitt(dFull, input$sh, input$op_aar)),
-  #          "KI3" = soreg::kompl_tb(
-  #            soreg::snitt(dFull, input$sh, input$op_aar)),
-  #          "KI4" = soreg::aarKtrl(
-  #            soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
-  #          "KI5" = soreg::aarKtrl(
-  #            soreg::snitt(dFull, input$sh, input$op_aar), k = 2),
-  #          "KI6" = soreg::twlTb(
-  #            soreg::snitt(dFull, input$sh, input$op_aar),
-  #            opr_tp = input$op_tech,
-  #            opr_oa = input$oagb)
-  #   )
-  # })
-  #
-  # output$dT <- shiny::renderTable(kI())
-  #
-  # pl <- shiny::reactive({
-  #   switch(if (is.null(input$kIix)) "KI1" else input$kIix,
-  #          "KI1" = soreg::lgg_gr(
-  #        #    soreg::snitt(dFull, input$sh, input$op_aar)),
-  #           soreg::slice(dFull, input$sh, input$op_aar, input$prim,
-  #                         input$op_tech)),
-  #          "KI3" = soreg::kompl_gr(
-  #            soreg::snitt(dFull, input$sh, input$op_aar)),
-  #          "KI4" = soreg::aar_ktr_tb(
-  #            soreg::snitt(dFull, input$sh, input$op_aar), k = 1),
-  #          "KI6" = soreg::twlGr(
-  #            soreg::snitt(dTwl, input$sh, input$op_aar),
-  #            input$op_tech, input$oagb)
-  #   )
-  # })
-  # output$graf <- shiny::renderPlot(pl())
+
+  # ................. reaktivitet
+dtl <- shiny::reactive({input$out_aggr})
+
+slc <- shiny::reactive({
+    if (is.null(input$oagb))
+    {soreg::slice(dFull, input$sh, input$op_aar, input$prim, input$op_tech)} else
+    {soreg::siivu(dFull, input$sh, input$op_aar, input$prim, input$op_tech,
+                  input$oagb)}
+})
+
+kI <- shiny::reactive({
+
+  switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
+         "Ki1 Liggedøgn" = soreg::lgg_tb(slc(), dtl()),
+         "Ki2 Reinnlagt" = soreg::reinn_tb(slc(), dtl()), # slc(),
+         "Ki3 Alvorlege komplikasjonar" = soreg::kompl_tb(slc(), dtl()),
+         "Ki4 Kontroll normtid eitt år" = soreg::aarKtrl(slc(), k = 1, dtl()),
+         "Ki5 Kontroll normtid to år" = soreg::aarKtrl(slc(), k = 2, dtl()),
+         "Ki6 Vekttap to år" = soreg::detail(slc(), dtl())
+  )
+})
+#  output$Sw <- shiny::renderText({input$out_aggr})
+  output$dT <- shiny::renderTable(kI()) # .... kvalitetsindikatortabeller
+
+pl <- shiny::reactive({
+
+  switch(if (is.null(input$kIix)) "Ki1 Liggedøgn" else input$kIix,
+         "Ki1 Liggedøgn" = soreg::lgg_gr(slc()),
+         "Ki2 Reinnlagt" = soreg::reinn_gr(slc(), dtl()),
+         "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(slc()),
+         "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_gr(slc(), k = 1 ),
+         "Ki5 Kontroll normtid to år"   = soreg::aar_ktr_gr(slc(), k = 2 ),
+         "Ki6 Vekttap to år" = soreg::wlGr( soreg::detail(slc(), dtl()), dtl())
+         )
+})
+  output$graf <- shiny::renderPlot(pl()) # .... kvalitetsindikatorgrafer
   # #------------------
 
-  # Datadump
+# Datadump
   ## metadata fra registerdatabasen
   meta <- reactive({
     rapbase::describeRegistryDb(registryName)
