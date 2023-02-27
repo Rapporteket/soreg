@@ -457,7 +457,7 @@ aar_ktr_gr <- function(df, k) {
                ggplot2::geom_line(linewidth=lw)+
                ggplot2::scale_x_discrete( "Operasjonsår")+
                ggplot2::scale_y_continuous("Kontroll i normtid, %", labels = scales::percent)+
-               ggplot2::theme_minimal()  } else {p<- df %>%
+               ggplot2::theme_minimal()  }  else if  (length(unique(df$op_aar))<1) {message("tomt valg!")} else {p<- df %>%
                  dplyr::group_by( OperererendeSykehus ) %>%
                  dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = dplyr::n(),
                                   ktl = sum(to_nt, na.rm = T) /dplyr::n()) %>%
@@ -523,7 +523,7 @@ wlGr <- function(df, agg){
       ggplot2::scale_x_discrete( "Operasjonsår")+
       ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent)+
       ggplot2::theme_minimal()
-   } else
+   } else if (length(unique(df$op_aar))<1) {message("tomt valg!")}  else
       { # ett år
         p<-   df %>% ggplot2::ggplot(ggplot2::aes(x = År, y = `%`, color=Sjukehus, group=Sjukehus)) +
           ggplot2::geom_point(size = p_sz) +
