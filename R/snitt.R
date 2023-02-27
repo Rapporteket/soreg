@@ -10,9 +10,9 @@
 
 snitt <- function(df, sh, yr) {
   df %>%
-  dplyr::filter(.data$OperererendeSykehus %in% sh,
-                .data$op_aar %in% yr)
-  } # as.character(.data$OpererendeRESH)
+  dplyr::filter( OperererendeSykehus %in% sh,
+                 op_aar %in% yr)
+  } # as.character( OpererendeRESH)
 
 #' Pick particular hospitals and years from a data frame
 #'
@@ -28,10 +28,10 @@ snitt <- function(df, sh, yr) {
 
 slice <- function(df, sh, yr, prm, opr) {
   df %>%
-    dplyr::filter(.data$OperererendeSykehus %in% sh,
-                  .data$op_aar %in% yr,
-                  .data$op_primar %in% prm,
-                  .data$Operasjonsmetode %in% opr)
+    dplyr::filter( OperererendeSykehus %in% sh,
+                   op_aar %in% yr,
+                   op_primar %in% prm,
+                   Operasjonsmetode %in% opr)
 }
 
 #' Pick particular hospitals and years from a data frame
@@ -51,11 +51,11 @@ slice <- function(df, sh, yr, prm, opr) {
 siivu <- function(df, sh, yr, prm, opr, oa) {
   # if dato_iv exists()
   df %>%
-    dplyr::filter(.data$OperererendeSykehus %in% sh,
-                  .data$op_aar %in% yr,
-                  .data$op_primar %in% prm,
-                  .data$Operasjonsmetode %in% opr,
-                  .data$Opmetode_GBP %in% oa)
+    dplyr::filter( OperererendeSykehus %in% sh,
+                   op_aar %in% yr,
+                   op_primar %in% prm,
+                   Operasjonsmetode %in% opr,
+                   Opmetode_GBP %in% oa)
 }
 
 #' Lag RESH tabellen
@@ -139,16 +139,16 @@ RESH_sh <- function(ct, RESHId){
 lgg_tb <- function(df, agg) {
   if (!agg) {
     res <- df %>%
-      dplyr::group_by(.data$OperererendeSykehus) %>%
+      dplyr::group_by( OperererendeSykehus) %>%
       dplyr::summarise(soreg::ki(dplyr::across(), "liggetid")) %>%
-      dplyr::arrange(dplyr::desc(.data$indicator))
+      dplyr::arrange(dplyr::desc( indicator))
     names(res) <- c("Sjukehus", "Liggedøgn ≤4", "Operasjonar", "%")
     res
   } else
   {  res <- df %>%
-    dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+    dplyr::group_by( OperererendeSykehus,  op_aar) %>%
     dplyr::summarise(soreg::ki(dplyr::across(), "liggetid")) %>%
-    dplyr::arrange(dplyr::desc(.data$indicator))
+    dplyr::arrange(dplyr::desc( indicator))
   res$op_aar <- format(res$op_aar, digits = 4)
   names(res) <- c("Sjukehus", "År", "Liggedøgn ≤4", "Operasjonar", "%")
   res}
@@ -204,21 +204,21 @@ lgg_gr <- function(df) {
 
 reinn_tb <- function(df, agg)  {
   df <- df %>%
-    dplyr::filter(((.data$u6_KontrollType %in% 1:3) |
-                     (.data$u6_Behandling30Dager == 1)) &
-                    (.data$u6_Behandling30Dager != 2))
+    dplyr::filter((( u6_KontrollType %in% 1:3) |
+                     ( u6_Behandling30Dager == 1)) &
+                    ( u6_Behandling30Dager != 2))
   if (!agg) {
     res <- df %>%
-      dplyr::group_by(.data$OperererendeSykehus ) %>%
+      dplyr::group_by( OperererendeSykehus ) %>%
       dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
-      dplyr::arrange(dplyr::desc(.data$indicator))
+      dplyr::arrange(dplyr::desc( indicator))
     names(res) <- c("Sjukehus",   "Reinnlagt", "Operasjonar", "%")
     res
   } else {
   res <- df %>%
-    dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+    dplyr::group_by( OperererendeSykehus,  op_aar) %>%
     dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
-    dplyr::arrange(dplyr::desc(.data$indicator))
+    dplyr::arrange(dplyr::desc( indicator))
   res$op_aar <- format(res$op_aar, digits = 4)
   names(res) <- c("Sjukehus", "Opr.år", "Reinnlagt", "Operasjonar", "%")
   res}
@@ -238,14 +238,14 @@ reinn_gr <- function(df, agg)  {
   ang = 90
 
   df <- df %>%
-    dplyr::filter(((.data$u6_KontrollType %in% 1:3) |
-                     (.data$u6_Behandling30Dager == 1)) &
-                    (.data$u6_Behandling30Dager != 2))
+    dplyr::filter((( u6_KontrollType %in% 1:3) |
+                     ( u6_Behandling30Dager == 1)) &
+                    ( u6_Behandling30Dager != 2))
   if (!agg) {
     res <- df %>%
-      dplyr::group_by(.data$OperererendeSykehus ) %>%
+      dplyr::group_by( OperererendeSykehus ) %>%
       dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
-      dplyr::arrange(dplyr::desc(.data$indicator))
+      dplyr::arrange(dplyr::desc( indicator))
     names(res) <- c("Sjukehus",   "Reinnlagt", "Operasjonar", "%")
    p <- res %>%  dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
       ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
@@ -260,9 +260,9 @@ reinn_gr <- function(df, agg)  {
                         )
   } else
   {   res <- df %>%
-    dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+    dplyr::group_by( OperererendeSykehus,  op_aar) %>%
     dplyr::summarise(soreg::ki(dplyr::across(), "dag30")) %>%
-    dplyr::arrange(dplyr::desc(.data$indicator))
+    dplyr::arrange(dplyr::desc( indicator))
   res$op_aar <- format(res$op_aar, digits = 4)
   names(res) <- c("Sjukehus", "Opr.år", "Reinnlagt", "Operasjonar", "%")
 
@@ -298,18 +298,18 @@ reinn_gr <- function(df, agg)  {
 
 kompl_tb <- function(df, agg) {
   df <- df %>%
-    dplyr::filter((.data$u6_KontrollType %in% 1:3) |
-                    (!is.na(.data$u6_KomplAlvorGrad)))
+    dplyr::filter(( u6_KontrollType %in% 1:3) |
+                    (!is.na( u6_KomplAlvorGrad)))
   if (!agg) {res <- df  %>%
-    dplyr::group_by(.data$OperererendeSykehus) %>%
+    dplyr::group_by( OperererendeSykehus) %>%
     dplyr::summarise(soreg::ki(dplyr::across(), "kompl")) %>%
-    dplyr::arrange(dplyr::desc(.data$indicator))
+    dplyr::arrange(dplyr::desc( indicator))
   names(res) <- c("Sjukehus",  "Komplikasjonar", "Operasjonar", "%")
   res} else {
     res <- df  %>%
-      dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+      dplyr::group_by( OperererendeSykehus,  op_aar) %>%
       dplyr::summarise(soreg::ki(dplyr::across(), "kompl")) %>%
-      dplyr::arrange(dplyr::desc(.data$indicator))
+      dplyr::arrange(dplyr::desc( indicator))
     res$op_aar <- format(res$op_aar, digits = 4)
     names(res) <- c("Sjukehus", "År", "Komplikasjonar", "Operasjonar", "%")
     res}
@@ -373,30 +373,30 @@ aarKtrl <- function(df, k, agg){
   if (!agg) {
     switch(k,
            "1" = {res <- df %>%
-             dplyr::group_by(.data$OperererendeSykehus) %>%
+             dplyr::group_by( OperererendeSykehus) %>%
              dplyr::summarise(soreg::ki(dplyr::across(), "K1")) %>%
-             dplyr::arrange(dplyr::desc(.data$indicator))
+             dplyr::arrange(dplyr::desc( indicator))
            names(res) <- c("Sjukehus",   "Kontroll i normtid", "Operasjonar", "%")
            res},
            "2" =  {res <- df %>%
-             dplyr::group_by(.data$OperererendeSykehus ) %>%
+             dplyr::group_by( OperererendeSykehus ) %>%
              dplyr::summarise(soreg::ki(dplyr::across(), "K2")) %>%
-             dplyr::arrange(dplyr::desc(.data$indicator))
+             dplyr::arrange(dplyr::desc( indicator))
            names(res) <- c("Sjukehus",   "Kontroll i normtid", "Operasjonar", "%")
            res})
   } else {
     switch(k,
            "1" = {res <- df %>%
-             dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+             dplyr::group_by( OperererendeSykehus,  op_aar) %>%
              dplyr::summarise(soreg::ki(dplyr::across(), "K1")) %>%
-             dplyr::arrange(dplyr::desc(.data$indicator))
+             dplyr::arrange(dplyr::desc( indicator))
            res$op_aar <- format(res$op_aar, digits = 4)
            names(res) <- c("Sjukehus", "År", "Kontroll i normtid", "Operasjonar", "%")
            res},
            "2" =  {res <- df %>%
-             dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+             dplyr::group_by( OperererendeSykehus,  op_aar) %>%
              dplyr::summarise(soreg::ki(dplyr::across(), "K2")) %>%
-             dplyr::arrange(dplyr::desc(.data$indicator))
+             dplyr::arrange(dplyr::desc( indicator))
            res$op_aar <- format(res$op_aar, digits = 4)
            names(res) <- c("Sjukehus", "År", "Kontroll i normtid", "Operasjonar", "%")
            res}
@@ -424,7 +424,7 @@ aar_ktr_gr <- function(df, k) {
          "1" =   {
            if   ( length(unique(df$op_aar)) >1) {
              p <- df %>%
-               dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+               dplyr::group_by( OperererendeSykehus,  op_aar) %>%
                dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
                                 ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
                ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
@@ -434,7 +434,7 @@ aar_ktr_gr <- function(df, k) {
                ggplot2::scale_x_discrete( "Operasjonsår")+
                ggplot2::scale_y_continuous("Kontroll i normtid, %", labels = scales::percent)+
                ggplot2::theme_minimal() } else {p <-df %>%
-                 dplyr::group_by(.data$OperererendeSykehus ) %>%
+                 dplyr::group_by( OperererendeSykehus ) %>%
                  dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
                                   ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
                  ggplot2::ggplot(ggplot2::aes(x = unique(df$op_aar),  y = ktl,
@@ -448,7 +448,7 @@ aar_ktr_gr <- function(df, k) {
          "2" = {
            if   ( length(unique(df$op_aar)) >1) {
              p<- df %>%
-               dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
+               dplyr::group_by( OperererendeSykehus,  op_aar) %>%
                dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = dplyr::n(),
                                 ktl = sum(to_nt, na.rm = T) / dplyr::n()) %>%
                ggplot2::ggplot(ggplot2::aes(x = op_aar , y = ktl,
@@ -458,7 +458,7 @@ aar_ktr_gr <- function(df, k) {
                ggplot2::scale_x_discrete( "Operasjonsår")+
                ggplot2::scale_y_continuous("Kontroll i normtid, %", labels = scales::percent)+
                ggplot2::theme_minimal()  } else {p<- df %>%
-                 dplyr::group_by(.data$OperererendeSykehus ) %>%
+                 dplyr::group_by( OperererendeSykehus ) %>%
                  dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = dplyr::n(),
                                   ktl = sum(to_nt, na.rm = T) /dplyr::n()) %>%
                  ggplot2::ggplot(ggplot2::aes(x = unique(df$op_aar),  y = ktl,
@@ -486,21 +486,21 @@ aar_ktr_gr <- function(df, k) {
 detail <- function(dm, agg) {
   if (!agg) {
     res <- dm %>%
-      dplyr::group_by(.data$OperererendeSykehus) %>%
-      dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
+      dplyr::group_by( OperererendeSykehus) %>%
+      dplyr::summarise("tyve" = sum( del20, na.rm = TRUE),
                        "ops" = dplyr::n(),
                        "minst20" =tyve/ops )
     names(res) <- c("Sjukehus", "Vekttap ≥ 20%", "Operasjonar", "%")
-    res %>%  dplyr::arrange(dplyr::desc(.data$`%`))
+    res %>%  dplyr::arrange(dplyr::desc( `%`))
   } else {
    res <- dm %>%
-      dplyr::group_by(.data$OperererendeSykehus, .data$op_aar) %>%
-      dplyr::summarise("tyve" = sum(.data$del20, na.rm = TRUE),
+      dplyr::group_by( OperererendeSykehus,  op_aar) %>%
+      dplyr::summarise("tyve" = sum( del20, na.rm = TRUE),
                        "ops" = dplyr::n(),
                        "minst20" = tyve/ops )
     res$op_aar <- format(res$op_aar, digits = 4)
     names(res) <- c("Sjukehus", "År", "Vekttap ≥ 20%", "Operasjonar", "%")
-    res %>%  dplyr::arrange(dplyr::desc(.data$`%`))}}
+    res %>%  dplyr::arrange(dplyr::desc( `%`))}}
 
 
 #' lage vekttapgraf
