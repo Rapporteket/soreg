@@ -432,18 +432,21 @@ aar_ktr_gr <- function(df, k) {
                                             color = OperererendeSykehus)  ) +
                ggplot2::geom_line(linewidth=lw)+
                ggplot2::scale_x_discrete( "Operasjonsår")+
-               ggplot2::scale_y_continuous("Kontroll i normtid, %", labels = scales::percent)+
-               ggplot2::theme_minimal() } else {p <-df %>%
-                 dplyr::group_by( OperererendeSykehus ) %>%
-                 dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
-                                  ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
-                 ggplot2::ggplot(ggplot2::aes(x = unique(df$op_aar),  y = ktl,
-                                              group = OperererendeSykehus,
-                                              color = OperererendeSykehus)  ) +
-                 ggplot2::geom_point(size=p_sz)+
-                 ggplot2::scale_x_discrete( "Operasjonsår")+
-                 ggplot2::scale_y_continuous("Kontroll i normtid, %", labels = scales::percent )+
-                 ggplot2::theme_minimal()    }
+               ggplot2::scale_y_continuous("Kontroll i normtid, %",
+                                           labels = scales::percent)+
+               ggplot2::theme_minimal() }  else if
+           (length(unique(df$op_aar))<1) {message("tomt valg!")} else {p <- df %>%
+             dplyr::group_by( OperererendeSykehus ) %>%
+             dplyr::summarise(ktrl = sum(et_nt, na.rm = T), oprs = dplyr::n(),
+                              ktl = sum(et_nt, na.rm = T) /dplyr::n()) %>%
+             ggplot2::ggplot(ggplot2::aes(x = unique(df$op_aar),  y = ktl,
+                                          group = OperererendeSykehus,
+                                          color = OperererendeSykehus)  ) +
+             ggplot2::geom_point(size=p_sz)+
+             ggplot2::scale_x_discrete( "Operasjonsår")+
+             ggplot2::scale_y_continuous("Kontroll i normtid, %",
+                                         labels = scales::percent )+
+             ggplot2::theme_minimal()    }
          },
          "2" = {
            if   ( length(unique(df$op_aar)) >1) {
@@ -456,18 +459,21 @@ aar_ktr_gr <- function(df, k) {
                                             color = OperererendeSykehus)  ) +
                ggplot2::geom_line(linewidth=lw)+
                ggplot2::scale_x_discrete( "Operasjonsår")+
-               ggplot2::scale_y_continuous("Kontroll i normtid, %", labels = scales::percent)+
-               ggplot2::theme_minimal()  }  else if  (length(unique(df$op_aar))<1) {message("tomt valg!")} else {p<- df %>%
-                 dplyr::group_by( OperererendeSykehus ) %>%
-                 dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = dplyr::n(),
-                                  ktl = sum(to_nt, na.rm = T) /dplyr::n()) %>%
-                 ggplot2::ggplot(ggplot2::aes(x = unique(df$op_aar),  y = ktl,
-                                              group = OperererendeSykehus,
-                                              color = OperererendeSykehus)  ) +
-                 ggplot2::geom_point(size=p_sz)+
-                 ggplot2::scale_x_discrete( "Operasjonsår")+
-                 ggplot2::scale_y_continuous("Kontroll i normtid, %", labels = scales::percent)+
-                 ggplot2::theme_minimal()  }
+               ggplot2::scale_y_continuous("Kontroll i normtid, %",
+                                           labels = scales::percent)+
+               ggplot2::theme_minimal()  }  else if
+           (length(unique(df$op_aar))<1) {message("tomt valg!")} else {p<- df %>%
+             dplyr::group_by( OperererendeSykehus ) %>%
+             dplyr::summarise(ktrl = sum(to_nt, na.rm = T), oprs = dplyr::n(),
+                              ktl = sum(to_nt, na.rm = T) /dplyr::n()) %>%
+             ggplot2::ggplot(ggplot2::aes(x = unique(df$op_aar),  y = ktl,
+                                          group = OperererendeSykehus,
+                                          color = OperererendeSykehus)  ) +
+             ggplot2::geom_point(size=p_sz)+
+             ggplot2::scale_x_discrete( "Operasjonsår")+
+             ggplot2::scale_y_continuous("Kontroll i normtid, %",
+                                         labels = scales::percent)+
+             ggplot2::theme_minimal()  }
          }
   )
   p  +    ggplot2::theme(
