@@ -59,6 +59,9 @@ server <- function(input, output, session) {
   })
   # #------------------ KI   # # read in data
   dFull <- soreg::get_arsrp("soreg")
+  dFull <- dFull %>%
+    dplyr::filter(!(OperererendeSykehus %in% c("Volvat Bergen", "Volvat Oslo",
+                                               "Haraldsplass Diakonale Sykehus AS")))
   dFull %<>%
     dplyr::mutate(
       op_aar = lubridate::year(Operasjonsdato),
@@ -194,7 +197,7 @@ pl <- shiny::reactive({
          "Ki3 Alvorlege komplikasjonar" = soreg::kompl_gr(slc()),
          "Ki4 Kontroll normtid eitt år" = soreg::aar_ktr_gr(slc(), k = 1 ),
          "Ki5 Kontroll normtid to år"   = soreg::aar_ktr_gr(slc(), k = 2 ),
-         "Ki6 Vekttap to år" = soreg::wlGr( soreg::detail(slc(), dtl()), dtl())
+         "Ki6 Vekttap to år" = soreg::wlGr(soreg::detail(slc(), dtl()), dtl())
          )
 })
   output$graf <- shiny::renderPlot(pl()) # .... kvalitetsindikatorgrafer

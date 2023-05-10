@@ -495,7 +495,7 @@ detail <- function(dm, agg) {
       dplyr::group_by( OperererendeSykehus) %>%
       dplyr::summarise("tyve" = sum( del20, na.rm = TRUE),
                        "ops" = dplyr::n(),
-                       "minst20" =tyve/ops )
+                       "minst20" = round(100*tyve/ops, digits = 1))
     names(res) <- c("Sjukehus", "Vekttap ≥ 20%", "Operasjonar", "%")
     res %>%  dplyr::arrange(dplyr::desc( `%`))
   } else {
@@ -503,7 +503,7 @@ detail <- function(dm, agg) {
       dplyr::group_by( OperererendeSykehus,  op_aar) %>%
       dplyr::summarise("tyve" = sum( del20, na.rm = TRUE),
                        "ops" = dplyr::n(),
-                       "minst20" = tyve/ops )
+                       "minst20" = round(100*tyve/ops, digits = 1))
     res$op_aar <- format(res$op_aar, digits = 4)
     names(res) <- c("Sjukehus", "År", "Vekttap ≥ 20%", "Operasjonar", "%")
     res %>%  dplyr::arrange(dplyr::desc( `%`))}}
@@ -544,7 +544,7 @@ wlGr <- function(df, agg){
       axis.text = ggplot2::element_text(size = 14))
   } else
   { # histogram
-    p <-  df %>%  dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
+    p <-  df %>% dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
       ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
       ggplot2::geom_bar( stat = "identity" ) +
       ggplot2::scale_x_discrete( "Sjukehus") +
