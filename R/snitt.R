@@ -527,7 +527,8 @@ wlGr <- function(df, agg){
       ggplot2::geom_line(linewidth=lw) +
     # ggplot2::labs(x = "Operasjonsår", y="Prosent toårs vekttap ≥ 20%") +
       ggplot2::scale_x_discrete( "Operasjonsår")+
-      ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent)+
+      ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%",
+                                  labels = scales::label_percent(scale=1)) +
       ggplot2::theme_minimal()
    } else if (length(unique(df$op_aar))<1) {message("tomt valg!")}  else
       { # ett år
@@ -535,7 +536,8 @@ wlGr <- function(df, agg){
           ggplot2::geom_point(size = p_sz) +
        #   ggplot2::labs(x = "Operasjonsår", y="Prosent toårs vekttap ≥ 20%") +
           ggplot2::scale_x_discrete( "Operasjonsår")+
-          ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%", labels = scales::percent)+
+          ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%",
+                                      labels = scales::label_percent(scale=1))+
           ggplot2::theme_minimal()
       }
     p+  ggplot2::theme(
@@ -548,7 +550,8 @@ wlGr <- function(df, agg){
       ggplot2::ggplot(ggplot2::aes(x = Sjukehus,  y = `%`,  group = Sjukehus, fill = Sjukehus)) +
       ggplot2::geom_bar( stat = "identity" ) +
       ggplot2::scale_x_discrete( "Sjukehus") +
-      ggplot2::scale_y_continuous("Prosent toårs vekttap ≥ 20%", labels = scales::percent,
+      ggplot2::scale_y_continuous("Prosent toårs vekttap ≥ 20%",
+                                  labels = scales::label_percent(scale=1),
                                   expand = ggplot2::expansion(mult = c(0.0, .5),
                                                               add = 0)) +
       ggplot2::theme_minimal()
