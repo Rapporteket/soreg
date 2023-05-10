@@ -491,7 +491,7 @@ aar_ktr_gr <- function(df, k) {
 
 detail <- function(dm, agg) {
   if (!agg) {
-    res <- dm %>%
+    res <- dm %>% dplyr::filter(!is.na(del20)) %>%
       dplyr::group_by( OperererendeSykehus) %>%
       dplyr::summarise("tyve" = sum( del20, na.rm = TRUE),
                        "ops" = dplyr::n(),
@@ -499,7 +499,7 @@ detail <- function(dm, agg) {
     names(res) <- c("Sjukehus", "Vekttap ≥ 20%", "Operasjonar", "%")
     res %>%  dplyr::arrange(dplyr::desc( `%`))
   } else {
-   res <- dm %>%
+   res <- dm %>% dplyr::filter(!is.na(del20)) %>%
       dplyr::group_by( OperererendeSykehus,  op_aar) %>%
       dplyr::summarise("tyve" = sum( del20, na.rm = TRUE),
                        "ops" = dplyr::n(),
