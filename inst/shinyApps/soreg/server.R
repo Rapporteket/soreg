@@ -12,6 +12,7 @@ server <- function(input, output, session) {
     # reshIch <- as.character(reshId)
     userFullName <- rapbase::getUserFullName(session)
     userRole <- rapbase::getUserRole(session)
+    userRole = "LC"
     shsene <-  RESH_table("soreg")
     userHosp <- setNames(as.list(shsene$SykehusNavn), shsene$AvdRESH)
     userHsp <- RESH_to_sh(shsene, reshId)  # VV = 103091

@@ -48,6 +48,7 @@ ui <- shiny::tagList(
     ),
     shiny::tabPanel(
       "Datadump",
+      if ( TRUE) {
       shiny::sidebarLayout(
         shiny::sidebarPanel(
           width = 4,
@@ -68,7 +69,7 @@ ui <- shiny::tagList(
         shiny::mainPanel(
           htmlOutput("dumpDataInfo")
         )
-      )
+      )} else { print(  "LU kan ikkje lage datadump, kontakt LC!" )}
     ),
     tabPanel(
       "Metadata",
