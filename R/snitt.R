@@ -253,7 +253,7 @@ reinn_gr <- function(df, agg)  {
       ggplot2::scale_x_discrete( "Sjukehus")+
       ggplot2::scale_y_continuous("Reinnlagt, %", labels = scales::label_number())+
       ggplot2::theme_minimal()
-    p +  ggplot2::theme(axis.text.x = ggplot2::element_text(size = tc_sz,  angle = ang),
+  q<-     p +  ggplot2::theme(axis.text.x = ggplot2::element_text(size = tc_sz,  angle = ang),
                         axis.title.y = ggplot2::element_text(size = tc_sz),
                          axis.text = ggplot2::element_text(size = tl_sz),
                         legend.position = "none"
@@ -268,7 +268,7 @@ reinn_gr <- function(df, agg)  {
 
   if (length(unique(df$op_aar))>1)
   {
-    p <-res %>% ggplot2::ggplot( ) +
+        p <-res %>% ggplot2::ggplot( ) +
       ggplot2::aes(x = Opr.år, y = `%`, group = Sjukehus, color = Sjukehus )+
       ggplot2::geom_line(linewidth = lw) +
       ggplot2::scale_x_discrete( "Operasjonsår")+
@@ -276,7 +276,7 @@ reinn_gr <- function(df, agg)  {
       ggplot2::theme_minimal()
   } else if  (length(unique(df$op_aar))<1) {message("tomt valg!")}
   else {
-    p <-res %>% ggplot2::ggplot( ) +
+       p <-res %>% ggplot2::ggplot( ) +
       ggplot2::aes(x = Opr.år, y = `%`, group = Sjukehus, color = Sjukehus )+
       ggplot2::geom_point(size=p_sz) +
       ggplot2::scale_x_discrete( "Operasjonsår")+
@@ -284,11 +284,12 @@ reinn_gr <- function(df, agg)  {
       ggplot2::theme_minimal()
   }
 
-  p +  ggplot2::theme(
+q <-  p +  ggplot2::theme(
     axis.title.x = ggplot2::element_text(size = tl_sz),
     axis.title.y = ggplot2::element_text(size = tl_sz),
     axis.text.x  = ggplot2::element_text(size = tl_sz))
   }
+  plotly::ggplotly(q)
 }
 #' lage komplikasjontabell
 #' @param df data frame

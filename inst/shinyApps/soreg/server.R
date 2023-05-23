@@ -1,6 +1,8 @@
 library(magrittr)
 library(shinyWidgets)
 library(soreg)
+library(plotly)
+
 server <- function(input, output, session) {
 
   rapbase::appLogger(session = session, msg = "Starting Soreg application")
