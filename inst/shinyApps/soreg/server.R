@@ -131,7 +131,7 @@ server <- function(input, output, session) {
   output$uc_opr <- shiny::renderUI({
     shiny::checkboxGroupInput(
       inputId = "op_tech",
-      label = "Operasjonsmetode:",
+      label = "Operasjonsmetode (6 = GS, 1 = GB, ..):",
       choices = unique(dFull$Operasjonsmetode),
       selected = 6,
       inline = TRUE
