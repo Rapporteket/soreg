@@ -30,6 +30,20 @@ Du kan få tilsendt rapportane automatisk per e-post (sjå Abommement).
 ### Prosedyrar 
 Denne rapporten gir en oversikt over opptellinger relatert til utførte prosedyrer fra Andre prosedyrer- og AngioPCI-modulen.
 
+##### Operasjonsmetode (6 = GS, 1 = GB, ..):
+
+##### Komplikasjonar: Clavien-Dindo klassifiering 
+
+    Grad I: Ingen tiltak
+    Grad II: Farmakologiske tiltak
+    Grad IIIa: Intervensjon uten narkose
+    Grad IIIb: Intervensjon i narkose
+    Grad IVa: Intensivbehandling med eitt sviktande organ
+    Grad IVb: Intensivbehandling med meir enn eitt sviktande organ
+    Grad V: Død
+
+
+
 
 ### Datadump
 _Berre tilgjengeleg for bruakarar som har rolla "Systemkoordinator" (SC) i Rapporteket._
