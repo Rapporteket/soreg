@@ -41,7 +41,7 @@ ui <- shiny::tagList(
         shiny::tabsetPanel(
           # shiny::tabPanel("AG", shiny::uiOutput("Sw")),
           shiny::tabPanel("Tabell",   shiny::uiOutput("dT")),
-          shiny::tabPanel("Figur", shiny::plotOutput("graf"))
+          shiny::tabPanel("Figur", plotly::plotlyOutput("graf"))
         )
       )
       #   )

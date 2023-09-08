@@ -289,7 +289,7 @@ q <-  p +  ggplot2::theme(
     axis.title.y = ggplot2::element_text(size = tl_sz),
     axis.text.x  = ggplot2::element_text(size = tl_sz))
   }
-  plotly::ggplotly(q)
+  ggplotly(q)
 }
 #' lage komplikasjontabell
 #' @param df data frame
@@ -531,7 +531,7 @@ wlGr <- function(df, agg){
       ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%",
                                   labels = scales::label_percent(scale=1)) +
       ggplot2::theme_minimal()
-   plotly::ggplotly(p)
+   ggplotly(p)
    } else if (length(unique(df$op_aar))<1) {message("tomt valg!")}  else
       { # ett år
         p<-   df %>% ggplot2::ggplot(ggplot2::aes(x = År, y = `%`, color=Sjukehus, group=Sjukehus)) +
@@ -541,13 +541,13 @@ wlGr <- function(df, agg){
           ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%",
                                       labels = scales::label_percent(scale=1))+
           ggplot2::theme_minimal()
-        plotly::ggplotly(p)
+        ggplotly(p)
       }
    q<-  p+  ggplot2::theme(
       axis.title.x = ggplot2::element_text(size = tl_sz),
       axis.title.y = ggplot2::element_text(size = tl_sz ),
       axis.text = ggplot2::element_text(size = 14))
- plotly::ggplotly(q)
+ ggplotly(q)
   } else
   { # histogram
     p <-  df %>% dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
@@ -565,7 +565,7 @@ wlGr <- function(df, agg){
         axis.text = ggplot2::element_text(size = tc_sz ),
         axis.text.x = ggplot2::element_text(angle = ang),
         legend.position = "none")
- plotly::ggplotly(q)
+ ggplotly(q)
   }
 
 }

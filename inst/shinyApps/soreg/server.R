@@ -203,7 +203,7 @@ pl <- shiny::reactive({
          "Ki6 Vekttap to år" = soreg::wlGr(soreg::detail(slc(), dtl()), dtl())
          )
 })
-  output$graf <- shiny::renderPlot(pl()) # .... kvalitetsindikatorgrafer
+  output$graf <- plotly::renderPlotly(pl()) # .... kvalitetsindikatorgrafer
   # #------------------
 
 # Datadump
