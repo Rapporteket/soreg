@@ -517,8 +517,8 @@ detail <- function(dm, agg) {
 
 wlGr <- function(df, agg){
   # # ------- grafikk-parameters
-  p_sz = 3
-  lw = 2
+  p_sz = 2
+  lw = 1
   tl_sz = 18
   tc_sz = 16
   ang = 90
@@ -531,23 +531,23 @@ wlGr <- function(df, agg){
       ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%",
                                   labels = scales::label_percent(scale=1)) +
       ggplot2::theme_minimal()
-   ggplotly(p)
+   # ggplotly(p )
    } else if (length(unique(df$op_aar))<1) {message("tomt valg!")}  else
       { # ett år
         p<-   df %>% ggplot2::ggplot(ggplot2::aes(x = År, y = `%`, color=Sjukehus, group=Sjukehus)) +
-          ggplot2::geom_point(size = p_sz) +
+          ggplot2::geom_point(  size = p_sz) +
        #   ggplot2::labs(x = "Operasjonsår", y="Prosent toårs vekttap ≥ 20%") +
           ggplot2::scale_x_discrete( "Operasjonsår")+
           ggplot2::scale_y_continuous("Prosent to års vekttap ≥ 20%",
                                       labels = scales::label_percent(scale=1))+
           ggplot2::theme_minimal()
-        ggplotly(p)
+      #  ggplotly(p  )
       }
-   q<-  p+  ggplot2::theme(
-      axis.title.x = ggplot2::element_text(size = tl_sz),
-      axis.title.y = ggplot2::element_text(size = tl_sz ),
-      axis.text = ggplot2::element_text(size = 14))
- ggplotly(q)
+  q<-  p+  ggplot2::theme(
+     axis.title.x = ggplot2::element_text(size = tl_sz),
+     axis.title.y = ggplot2::element_text(size = tl_sz ),
+     axis.text = ggplot2::element_text(size = 14))
+ggplotly(q, tooltip = c("x", "y"))
   } else
   { # histogram
     p <-  df %>% dplyr::mutate(Sjukehus = forcats::fct_reorder(Sjukehus, dplyr::desc(`%`))) %>%
@@ -565,7 +565,7 @@ wlGr <- function(df, agg){
         axis.text = ggplot2::element_text(size = tc_sz ),
         axis.text.x = ggplot2::element_text(angle = ang),
         legend.position = "none")
- ggplotly(q)
+ ggplotly(q , tooltip = c("x", "y"))
   }
 
 }
