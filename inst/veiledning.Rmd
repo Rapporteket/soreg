@@ -28,7 +28,7 @@ Du kan få tilsendt rapportane automatisk per e-post (sjå Abommement).
 
 
 ### Prosedyrar 
-Denne rapporten gir en oversikt over opptellinger relatert til utførte prosedyrer fra Andre prosedyrer- og AngioPCI-modulen.
+Denne rapporten gir en oversikt over opptellinger relatert til utførte operasjonar.
 
 ##### Operasjonsmetode (6 = GS, 1 = GB, ..):
 
