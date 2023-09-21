@@ -14,7 +14,7 @@ server <- function(input, output, session) {
     # reshIch <- as.character(reshId)
     userFullName <- rapbase::getUserFullName(session)
     userRole <- rapbase::getUserRole(session)
-    userRole = "LC"
+    userRole = "LU"
     shsene <-  RESH_table("soreg")
     userHosp <- setNames(as.list(shsene$SykehusNavn), shsene$AvdRESH)
     userHsp <- RESH_to_sh(shsene, reshId)  # VV = 103091
@@ -225,8 +225,30 @@ pl <- shiny::reactive({
     }
   }
 
+
   output$dumpTabControl <- renderUI({
-    selectInput("dumpDataSet", "Velg datasett:", names(meta()))
+    if (userRole %in% c("LC", "SC")) {
+      shiny::sidebarLayout(
+    shiny::sidebarPanel( width = 4,
+      selectInput("dumpDataSet", "Velg datasett:", names(meta())),
+      dateRangeInput(
+        "dumpDateRange", "Velg periode:",
+        start = lubridate::ymd(Sys.Date()) - lubridate::years(1),
+        end = Sys.Date(), separator = "-",
+        weekstart = 1),
+      radioButtons(
+        "dumpFormat", "Velg filformat:",
+        choices = list(csv = "csv",
+                       `csv2 (nordisk format)` = "csv2",
+                       `xlsx-csv` = "xlsx-csv",
+                       `xlsx-csv2 (nordisk format)` = "xlsx-csv2")),
+      downloadButton("dumpDownload", "Hent!")) ,
+    shiny::mainPanel(
+      htmlOutput("dumpDataInfo")
+    )
+       )
+      } else
+      { renderPrint( print(  "LU kan ikkje lage datadump, kontakt LC!" ))}
   })
 
   output$dumpDataInfo <- renderUI({

@@ -48,28 +48,7 @@ ui <- shiny::tagList(
     ),
     shiny::tabPanel(
       "Datadump",
-      if ( TRUE) {
-      shiny::sidebarLayout(
-        shiny::sidebarPanel(
-          width = 4,
-          uiOutput("dumpTabControl"),
-          dateRangeInput(
-            "dumpDateRange", "Velg periode:",
-            start = lubridate::ymd(Sys.Date()) - lubridate::years(1),
-            end = Sys.Date(), separator = "-",
-            weekstart = 1),
-          radioButtons(
-            "dumpFormat", "Velg filformat:",
-            choices = list(csv = "csv",
-                           `csv2 (nordisk format)` = "csv2",
-                           `xlsx-csv` = "xlsx-csv",
-                           `xlsx-csv2 (nordisk format)` = "xlsx-csv2")),
-          downloadButton("dumpDownload", "Hent!")
-        ),
-        shiny::mainPanel(
-          htmlOutput("dumpDataInfo")
-        )
-      )} else { print(  "LU kan ikkje lage datadump, kontakt LC!" )}
+        uiOutput("dumpTabControl")
     ),
     tabPanel(
       "Metadata",
