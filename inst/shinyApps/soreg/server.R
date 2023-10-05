@@ -56,6 +56,15 @@ server <- function(input, output, session) {
     )
   })
 
+  # Grafikk-tema
+  theme_set(
+    theme_minimal(
+      base_size = 10,
+      base_family = 'Source Sans Pro'
+    ) +
+      theme(panel.grid.minor = element_blank())
+  )
+
   # Veiledning
   output$veiledning <- renderUI({
     htmlRenderRmd("veiledning.Rmd")
