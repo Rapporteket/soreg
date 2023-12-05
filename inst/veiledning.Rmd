@@ -5,30 +5,37 @@ date: "`r format(Sys.time(), "%d. %B %Y")`"
 ---
 
 # SoReg på Rapporteket
-Første utgave av SoReg på Rapporteket. Inneholder startside og mulighet for nedlasting av data.
+Første utgave av SOReg-N på Rapporteket. Inneheld startside og tilgang for nedlasting av data.
 
 
 
 ### Utforskar
-_Tilgjengeleg for brukarar med tilgang som "Systemkoordinator" (SC) og "Lokal koordinator" (LC) i Rapporteket._
+ 
+Tilgjengeleg for brukarar med tilgang som "Systemkoordinator" (SC) og "Lokal koordinator" (LC).
 
+Denne sida inneheld ei ny løysing som erstattar det som tidlegare heitte "*Ad Hoc View*". Løysinga nyttar ein R-pakke som heiter `rpivptTable`.
 
-Denne sida inneheld ei ny løysing som erstattar det som tidlegare heit "*Ad Hoc View*". Løysinga nyttar ein R-pakke som heiter `rpivptTable`.
+Det ligg ein kort videosnutt som gir eit overblikk i korleis løysinga fungerer [her] (https://i0.wp.com/nicolas.kruchten.com/pivottable/images/animation.gif "Videosnutt rpivotTable"). 
+Ein kan i tillegg finne meir informasjon om pakken på [heimesida til `rpivotTable`] (https://pivottable.js.org/examples/ "Hjemmesida til rpivotTable"). 
 
-Det ligg ein kort videosnutt som gir eit overblikk over korleis løysinga fungerer [her] (https://i0.wp.com/nicolas.kruchten.com/pivottable/images/animation.gif "Videosnutt rpivotTable"). 
-Ein kan i tillegg finna meir informasjon om pakken på [heimesida til `rpivotTable`] (https://pivottable.js.org/examples/ "Hjemmesida til rpivotTable"). 
-
-_Den enklaste måten å bli kjent med verktøyet er å prøva seg fram!_
+Den enklaste måten å bli kjent med verktøyet er å prøve seg fram!
 
 
 ### Månadsrapportar
 
-Månadsrapportar inneheld oppsummeringer av viktige aktivitetar ved eininga det siste året.
-Du kan få tilsendt rapportane automatisk per e-post (sjå Abommement).
+ 
+Månadsrapportar inneheld oppsummering av viktige resultat frå eige sjukehus det siste året. 
+Du kan få tilsendt rapportane automatisk per e-post (sjå abonnement).
 
 
 ### Prosedyrar 
-Denne rapporten gir en oversikt over opptellinger relatert til utførte operasjonar.
+ 
+Denne rapporten gir ein oversikt over tal utførte operasjonar. 
+
+### Datadump
+Berre tilgjengeleg for brukarar som har rolla "Systemkoordinator" (SC) eller lokal koordinator (LC) i Rapporteket.
+
+
 
 ##### Operasjonsmetode (6 = GS, 1 = GB, ..):
 
@@ -43,25 +50,25 @@ Denne rapporten gir en oversikt over opptellinger relatert til utførte operasjo
     Grad V: Død
 
 
-
-
-### Datadump
-_Berre tilgjengeleg for bruakarar som har rolla "Systemkoordinator" (SC) i Rapporteket._
-
+ 
 
 ### Metadata
-_Berre tilgjengeleg for brukarar som har rolla "Systemkoordinator" (SC) i Rapporteket._
-
-Denne sida inneheld metadata ("data om data") om dei ulike tabellane som som utgjer datagrunnlaget for Rapporteket (AndreProsedyrerVar, AngioPCIVar osv.). Viss du til dømes lurer på om datadumpen *Segmentstent* har ein variabel som heiter "Okklusjon", så kan du bruka søkeordet "okklusjon" i søkeboksen i høgre hjørne.
  
-Merk at desse tabellane er eit resultat av spørjingar mot databasen. Tabellane har derfor ikkje same struktur og variabelnamn som databasen.
+
+Berre tilgjengeleg for brukarar som har rolla "Systemkoordinator" (SC) i Rapporteket.
+
+Sida inneheld metadata ("data om data") om dei ulike tabellane som utgjer datagrunnlaget for Rapporteket. 
+ 
+Merk at desse tabellane er eit resultat av spørjingar mot databasen. Tabellane har difor ikkje same struktur og variabelnamn som databasen.
 
 
 ### Abbonement
  
-Her kan du administrera dine abonement på månadsrapportene.
-Du kan sjølv velja kor ofte du får dei tilsendt (frekvens) og ønska format (html eller pdf)
+Her kan du administrere dine abonnement på månadsrapportane. 
+Du kan sjølv velje kor ofte du vil ha dei tilsendt og ønska format (html eller pdf).
 
 
 ### Kontakinformasjon
-Ta gjerne kontakt ved spørsmål eller innspel til rapportar eller anna innhald på rapporteket. E-post: soreg-norge@helse-bergen.no
+ 
+Ta gjerne kontakt ved spørsmål eller om du har innspel til rapportar eller anna på rapporteket. E-post: soreg-norge@helse-bergen.no
+
