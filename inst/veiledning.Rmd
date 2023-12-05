@@ -19,7 +19,7 @@ Denne sida inneheld ei ny løysing som erstattar det som tidlegare heitte "*Ad H
 Den enklaste måten å bli kjent med verktøyet er å prøve seg fram!
 
 
-##### Operasjonsmetode (6 = GS, 1 = GB, ..):
+##### Operasjonsmetode (6 = GS, 1 = GB, ..).
 
 ##### Komplikasjonar: Clavien-Dindo klassifiering 
 
