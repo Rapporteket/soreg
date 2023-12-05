@@ -15,10 +15,22 @@ Tilgjengeleg for brukarar med tilgang som "Systemkoordinator" (SC) og "Lokal koo
 
 Denne sida inneheld ei ny løysing som erstattar det som tidlegare heitte "*Ad Hoc View*". Løysinga nyttar ein R-pakke som heiter `rpivptTable`.
 
-Det ligg ein kort videosnutt som gir eit overblikk i korleis løysinga fungerer [her] (https://i0.wp.com/nicolas.kruchten.com/pivottable/images/animation.gif "Videosnutt rpivotTable"). 
-Ein kan i tillegg finne meir informasjon om pakken på [heimesida til `rpivotTable`] (https://pivottable.js.org/examples/ "Hjemmesida til rpivotTable"). 
-
+ 
 Den enklaste måten å bli kjent med verktøyet er å prøve seg fram!
+
+
+##### Operasjonsmetode (6 = GS, 1 = GB, ..):
+
+##### Komplikasjonar: Clavien-Dindo klassifiering 
+
+    Grad I: Ingen tiltak
+    Grad II: Farmakologiske tiltak
+    Grad IIIa: Intervensjon uten narkose
+    Grad IIIb: Intervensjon i narkose
+    Grad IVa: Intensivbehandling med eitt sviktande organ
+    Grad IVb: Intensivbehandling med meir enn eitt sviktande organ
+    Grad V: Død
+
 
 
 ### Månadsrapportar
@@ -36,18 +48,6 @@ Denne rapporten gir ein oversikt over tal utførte operasjonar.
 Berre tilgjengeleg for brukarar som har rolla "Systemkoordinator" (SC) eller lokal koordinator (LC) i Rapporteket.
 
 
-
-##### Operasjonsmetode (6 = GS, 1 = GB, ..):
-
-##### Komplikasjonar: Clavien-Dindo klassifiering 
-
-    Grad I: Ingen tiltak
-    Grad II: Farmakologiske tiltak
-    Grad IIIa: Intervensjon uten narkose
-    Grad IIIb: Intervensjon i narkose
-    Grad IVa: Intensivbehandling med eitt sviktande organ
-    Grad IVb: Intensivbehandling med meir enn eitt sviktande organ
-    Grad V: Død
 
 
  
