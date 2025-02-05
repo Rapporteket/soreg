@@ -232,7 +232,7 @@ reinn_tb <- function(df, agg)  {
 
 reinn_gr <- function(df, agg)  {
   p_sz = 3
-  lw = 2
+  lw = 0.5
   tl_sz = 18  # rel()
   tc_sz = 16
   ang = 90
@@ -414,7 +414,7 @@ aarKtrl <- function(df, k, agg){
 aar_ktr_gr <- function(df, k) {
   # # ------- grafikk-parameters
   p_sz = 3
-  lw = 2
+  lw = 0.5
 
   df <- df %>% dplyr::select(
     c("PasientID", "OperererendeSykehus", "Operasjonsdato", "op_aar",
