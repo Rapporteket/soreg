@@ -519,8 +519,8 @@ wlGr <- function(df, agg){
   # # ------- grafikk-parameters
   p_sz = 2
   lw = 1
-  tl_sz = 18
-  tc_sz = 16
+  tl_sz = 12
+  tc_sz = 10
   ang = 90
   if (agg)
   {  if (length(unique(df$`År`))>1) { # length(unique(df$`År`))
