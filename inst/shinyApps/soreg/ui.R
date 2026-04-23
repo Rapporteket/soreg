@@ -2,9 +2,9 @@ regTitle <- "SoReg"
 
 ui <- shiny::tagList(
   shiny::navbarPage(
-    title = rapbase::title(regTitle),
+    title = rapbase::regTitle(regTitle),
     windowTitle = regTitle,
-    theme = rapbase::theme(),
+    theme = rapbase::rapTheme(),
     id = "tabs",
     shiny::tabPanel(
       "Start",
