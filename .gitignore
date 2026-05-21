@@ -11,3 +11,20 @@ inst/*.tex
 inst/shinyApps/soreg/samlerapport.md
 inst/shinyApps/soreg/veiledning.md
 
+# Many kinds of data files
+*.rda
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.sav
+*.dta
+*.sas7bdat
+*.rds
+*.RData
+*.sql
+
+*.zip
+*.tar
+*.gz
+
