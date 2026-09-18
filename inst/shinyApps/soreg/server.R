@@ -70,7 +70,8 @@ server <- function(input, output, session) {
     htmlRenderRmd("veiledning.Rmd")
   })
   # #------------------ KI   # # read in data
-  dFull <- soreg::get_arsrp("soreg")
+  # dFull <- soreg::get_arsrp("soreg")
+  dFull <- readr::read_csv2("~/SOReg_DatadumpArsrapport_datadump_2026-05-28.csv")
   dFull <- dFull %>%
     dplyr::filter(!(OperererendeSykehus %in% c("Volvat Bergen", "Volvat Oslo",
                                                "Haraldsplass Diakonale Sykehus AS")))
